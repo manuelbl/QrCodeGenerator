@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RootNamespace>Net.Codecrete.QrCodeGenerator.Demo</RootNamespace>
+    <PackageId>Net.Codecrete.QrCodeGenerator.Demo</PackageId>
+    <Version>1.4.1</Version>
+    <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
+    <Product>QR Code Generator for .NET</Product>
+    <Description>Demo application for QR Code Generation</Description>
+    <Copyright>Copyright Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
+    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/manuelbl/QrCodeGenerator</RepositoryUrl>
+    <Company>Codecrete</Company>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QrCodeGenerator\QrCodeGenerator.csproj" />
+  </ItemGroup>
+
+</Project>
