@@ -783,11 +783,12 @@ namespace Net.Codecrete.QrCodeGenerator
         private int GetPenaltyScore()
         {
             int result = 0;
+            RunHistory runHistory = new RunHistory();
 
             // Adjacent modules in row having same color, and finder-like patterns
             for (int y = 0; y < Size; y++)
             {
-                int[] runHistory = new int[7];
+                runHistory.Reset();
                 bool color = false;
                 int runX = 0;
                 for (int x = 0; x < Size; x++)
@@ -806,8 +807,8 @@ namespace Net.Codecrete.QrCodeGenerator
                     }
                     else
                     {
-                        AddRunToHistory(runX, runHistory);
-                        if (!color && HasFinderLikePattern(runHistory))
+                        runHistory.Add(runX);
+                        if (!color && runHistory.HasFinderLikePattern())
                         {
                             result += PenaltyN3;
                         }
@@ -816,13 +817,13 @@ namespace Net.Codecrete.QrCodeGenerator
                         runX = 1;
                     }
                 }
-                AddRunToHistory(runX, runHistory);
+                runHistory.Add(runX);
                 if (color)
                 {
-                    AddRunToHistory(0, runHistory);  // Dummy run of white
+                    runHistory.Add(0);  // Dummy run of white
                 }
 
-                if (HasFinderLikePattern(runHistory))
+                if (runHistory.HasFinderLikePattern())
                 {
                     result += PenaltyN3;
                 }
@@ -830,7 +831,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // Adjacent modules in column having same color, and finder-like patterns
             for (int x = 0; x < Size; x++)
             {
-                int[] runHistory = new int[7];
+                runHistory.Reset();
                 bool color = false;
                 int runY = 0;
                 for (int y = 0; y < Size; y++)
@@ -849,8 +850,8 @@ namespace Net.Codecrete.QrCodeGenerator
                     }
                     else
                     {
-                        AddRunToHistory(runY, runHistory);
-                        if (!color && HasFinderLikePattern(runHistory))
+                        runHistory.Add(runY);
+                        if (!color && runHistory.HasFinderLikePattern())
                         {
                             result += PenaltyN3;
                         }
@@ -859,13 +860,13 @@ namespace Net.Codecrete.QrCodeGenerator
                         runY = 1;
                     }
                 }
-                AddRunToHistory(runY, runHistory);
+                runHistory.Add(runY);
                 if (color)
                 {
-                    AddRunToHistory(0, runHistory);  // Dummy run of white
+                    runHistory.Add(0);  // Dummy run of white
                 }
 
-                if (HasFinderLikePattern(runHistory))
+                if (runHistory.HasFinderLikePattern())
                 {
                     result += PenaltyN3;
                 }
@@ -921,28 +922,26 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 return new int[] { };
             }
-            else
+
+            int numAlign = Version / 7 + 2;
+            int step;
+            if (Version == 32)  // Special snowflake
             {
-                int numAlign = Version / 7 + 2;
-                int step;
-                if (Version == 32)  // Special snowflake
-                {
-                    step = 26;
-                }
-                else  // step = ceil[(size - 13) / (numAlign*2 - 2)] * 2
-                {
-                    step = (Version * 4 + numAlign * 2 + 1) / (numAlign * 2 - 2) * 2;
-                }
-
-                int[] result = new int[numAlign];
-                result[0] = 6;
-                for (int i = result.Length - 1, pos = Size - 7; i >= 1; i--, pos -= step)
-                {
-                    result[i] = pos;
-                }
-
-                return result;
+                step = 26;
             }
+            else  // step = ceil[(size - 13) / (numAlign*2 - 2)] * 2
+            {
+                step = (Version * 4 + numAlign * 2 + 1) / (numAlign * 2 - 2) * 2;
+            }
+
+            int[] result = new int[numAlign];
+            result[0] = 6;
+            for (int i = result.Length - 1, pos = Size - 7; i >= 1; i--, pos -= step)
+            {
+                result[i] = pos;
+            }
+
+            return result;
         }
 
         // Returns the number of data bits that can be stored in a QR code of the given version number, after
@@ -987,23 +986,41 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
 
-        // Inserts the given value to the front of the given array, which shifts over the
-        // existing values and deletes the last value. A helper function for GetPenaltyScore().
-        private static void AddRunToHistory(int run, int[] history)
+        internal struct RunHistory
         {
-            Array.Copy(history, 0, history, 1, history.Length - 1);
-            history[0] = run;
-        }
+            private int _length;
+            private short[] _runHistory;
 
+            internal void Reset()
+            {
+                _length = 0;
+                if (_runHistory == null)
+                {
+                    _runHistory = new short[177];
+                }
+            }
 
-        // Tests whether the given run history has the pattern of ratio 1:1:3:1:1 in the middle, and
-        // surrounded by at least 4 on either or both ends. A helper function for GetPenaltyScore().
-        // Must only be called immediately after a run of white modules has ended.
-        private static bool HasFinderLikePattern(int[] runHistory)
-        {
-            int n = runHistory[1];
-            return n > 0 && runHistory[2] == n && runHistory[4] == n && runHistory[5] == n
-                && runHistory[3] == n * 3 && Math.Max(runHistory[0], runHistory[6]) >= n * 4;
+            // Adds the given value to the run history
+            internal void Add(int run)
+            {
+                _runHistory[_length] = (short)run;
+                _length++;
+            }
+
+            // Tests whether this run history has the pattern of ratio 1:1:3:1:1 in the middle, and
+            // surrounded by at least 4 on either or both ends.
+            // Must only be called immediately after a run of white modules has ended.
+            internal bool HasFinderLikePattern()
+            {
+                if (_length < 7)
+                {
+                    return false;
+                }
+
+                int n = _runHistory[_length - 6];
+                return n > 0 && _runHistory[_length - 5] == n && _runHistory[_length - 3] == n && _runHistory[_length - 2] == n
+                       && _runHistory[_length - 4] == n * 3 && Math.Max(_runHistory[_length - 1], _runHistory[_length - 7]) >= n * 4;
+            }
         }
 
 
