@@ -286,10 +286,10 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // The modules of this QR code (false = white, true = black).
         // Immutable after constructor finishes. Accessed through GetModule().
-        private readonly bool[,] _modules;
+        private readonly bool[] _modules;
 
         // Indicates function modules that are not subjected to masking. Discarded when constructor finishes.
-        private readonly bool[,] _isFunction;
+        private readonly bool[] _isFunction;
 
         #endregion
 
@@ -329,8 +329,8 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(ecl);
             ErrorCorrectionLevel = ecl;
             Objects.RequireNonNull(dataCodewords);
-            _modules = new bool[Size, Size];  // Initially all white
-            _isFunction = new bool[Size, Size];
+            _modules = new bool[Size * Size];  // Initially all white
+            _isFunction = new bool[Size * Size];
 
             // Compute ECC, draw modules, do masking
             DrawFunctionPatterns();
@@ -362,7 +362,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// for white modules (or if the coordinates are outside the bounds).</returns>
         public bool GetModule(int x, int y)
         {
-            return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y, x];
+            return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y * Size + x];
         }
 
 
@@ -405,12 +405,12 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(scale), "Scale or border too large");
             }
 
-            var bitmap = new Bitmap(dim, dim, PixelFormat.Format24bppRgb);
+            Bitmap bitmap = new Bitmap(dim, dim, PixelFormat.Format24bppRgb);
 
             // simple and inefficient
-            for (var y = 0; y < dim; y++)
+            for (int y = 0; y < dim; y++)
             {
-                for (var x = 0; x < dim; x++)
+                for (int x = 0; x < dim; x++)
                 {
                     bool color = GetModule(x / scale - border, y / scale - border);
                     bitmap.SetPixel(x, y, color ? Color.Black : Color.White);
@@ -449,10 +449,16 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 for (int x = 0; x < Size; x++)
                 {
-                    if (!GetModule(x, y)) continue;
+                    if (!GetModule(x, y))
+                    {
+                        continue;
+                    }
 
                     if (x != 0 || y != 0)
+                    {
                         sb.Append(" ");
+                    }
+
                     sb.Append($"M{x + border},{y + border}h1v1h-1z");
                 }
             }
@@ -615,8 +621,8 @@ namespace Net.Codecrete.QrCodeGenerator
         // Only used by the constructor. Coordinates must be in bounds.
         private void SetFunctionModule(int x, int y, bool isBlack)
         {
-            _modules[y, x] = isBlack;
-            _isFunction[y, x] = true;
+            _modules[y * Size + x] = isBlack;
+            _isFunction[y * Size + x] = true;
         }
 
         #endregion
@@ -700,11 +706,13 @@ namespace Net.Codecrete.QrCodeGenerator
                         int x = right - j;  // Actual x coordinate
                         bool upward = ((right + 1) & 2) == 0;
                         int y = upward ? Size - 1 - vert : vert;  // Actual y coordinate
-                        if (!_isFunction[y, x] && i < data.Length * 8)
+                        if (_isFunction[y * Size + x] || i >= data.Length * 8)
                         {
-                            _modules[y, x] = GetBit(data[(uint)i >> 3], 7 - (i & 7));
-                            i++;
+                            continue;
                         }
+
+                        _modules[y * Size + x] = GetBit(data[(uint)i >> 3], 7 - (i & 7));
+                        i++;
                         // If this QR code has any remainder bits (0 to 7), they were assigned as
                         // 0/false/white by the constructor and are left unchanged by this method
                     }
@@ -726,6 +734,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(mask), "Mask value out of range");
             }
 
+            int index = 0;
             for (int y = 0; y < Size; y++)
             {
                 for (int x = 0; x < Size; x++)
@@ -743,7 +752,8 @@ namespace Net.Codecrete.QrCodeGenerator
                         case 7: invert = ((x + y) % 2 + x * y % 3) % 2 == 0; break;
                         default: Debug.Assert(false); return;
                     }
-                    _modules[y, x] ^= invert & !_isFunction[y, x];
+                    _modules[index] ^= invert & !_isFunction[index];
+                    index++;
                 }
             }
         }
@@ -786,6 +796,7 @@ namespace Net.Codecrete.QrCodeGenerator
             RunHistory runHistory = new RunHistory();
 
             // Adjacent modules in row having same color, and finder-like patterns
+            int index = 0;
             for (int y = 0; y < Size; y++)
             {
                 runHistory.Reset();
@@ -793,7 +804,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 int runX = 0;
                 for (int x = 0; x < Size; x++)
                 {
-                    if (_modules[y, x] == color)
+                    if (_modules[index] == color)
                     {
                         runX++;
                         if (runX == 5)
@@ -813,9 +824,11 @@ namespace Net.Codecrete.QrCodeGenerator
                             result += PenaltyN3;
                         }
 
-                        color = _modules[y, x];
+                        color = _modules[index];
                         runX = 1;
                     }
+
+                    index++;
                 }
                 runHistory.Add(runX);
                 if (color)
@@ -828,15 +841,17 @@ namespace Net.Codecrete.QrCodeGenerator
                     result += PenaltyN3;
                 }
             }
+
             // Adjacent modules in column having same color, and finder-like patterns
             for (int x = 0; x < Size; x++)
             {
+                index = x;
                 runHistory.Reset();
                 bool color = false;
                 int runY = 0;
                 for (int y = 0; y < Size; y++)
                 {
-                    if (_modules[y, x] == color)
+                    if (_modules[index] == color)
                     {
                         runY++;
                         if (runY == 5)
@@ -856,9 +871,11 @@ namespace Net.Codecrete.QrCodeGenerator
                             result += PenaltyN3;
                         }
 
-                        color = _modules[y, x];
+                        color = _modules[index];
                         runY = 1;
                     }
+
+                    index += Size;
                 }
                 runHistory.Add(runY);
                 if (color)
@@ -873,31 +890,39 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // 2*2 blocks of modules having same color
+            index = 0;
             for (int y = 0; y < Size - 1; y++)
             {
                 for (int x = 0; x < Size - 1; x++)
                 {
-                    bool color = _modules[y, x];
-                    if (color == _modules[y, x + 1] &&
-                          color == _modules[y + 1, x] &&
-                          color == _modules[y + 1, x + 1])
+                    bool color = _modules[index];
+                    if (color == _modules[index + 1] &&
+                          color == _modules[index + Size] &&
+                          color == _modules[index + Size + 1])
                     {
                         result += PenaltyN2;
                     }
+
+                    index++;
                 }
+
+                index++;
             }
 
             // Balance of black and white modules
             int black = 0;
+            index = 0;
             for (int y = 0; y < Size; y++)
             {
                 for (int x = 0; x < Size; x++)
 
                 {
-                    if (_modules[y, x])
+                    if (_modules[index])
                     {
                         black++;
                     }
+
+                    index++;
                 }
             }
             int total = Size * Size;  // Note that size is odd, so black/total != 1/2
@@ -961,7 +986,10 @@ namespace Net.Codecrete.QrCodeGenerator
             result -= (size - 16) * 2;  // Subtract the timing patterns (excluding finders)
                                         // The five lines above are equivalent to: int result = (16 * ver + 128) * ver + 64;
 
-            if (ver < 2) return result;
+            if (ver < 2)
+            {
+                return result;
+            }
 
             int numAlign = ver / 7 + 2;
             result -= (numAlign - 1) * (numAlign - 1) * 25;  // Subtract alignment patterns not overlapping with timing patterns
