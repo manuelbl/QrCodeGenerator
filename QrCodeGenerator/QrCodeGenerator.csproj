@@ -7,8 +7,8 @@
     <Version>1.4.0</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
-    <Description>QR Code Generator for .NET derived from project Nayuki's generator (https://github.com/nayuki/QR-Code-generator). It aims to be clear, compact and well documentated.</Description>
-    <Copyright>Copyright Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
+    <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.</Description>
+    <Copyright>Copyright (c) Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
     <RepositoryUrl>https://github.com/manuelbl/QrCodeGenerator</RepositoryUrl>
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>

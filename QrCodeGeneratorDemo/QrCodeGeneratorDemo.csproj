@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QrCodeGenerator\QrCodeGenerator.csproj" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="1.4.0" />
   </ItemGroup>
 
 </Project>
