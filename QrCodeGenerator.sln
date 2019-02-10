@@ -10,7 +10,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QrCodeGeneratorTest", "QrCo
 		{36B0822E-28D7-43C7-BAF7-AF578E31E978} = {36B0822E-28D7-43C7-BAF7-AF578E31E978}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QrCodeGeneratorDemo", "QrCodeGeneratorDemo\QrCodeGeneratorDemo.csproj", "{D7FE0375-D44E-4F43-8AFC-DAF31848D1EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QrCodeGeneratorDemo", "QrCodeGeneratorDemo\QrCodeGeneratorDemo.csproj", "{D7FE0375-D44E-4F43-8AFC-DAF31848D1EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QrCodeGeneratorProfiling", "QrCodeGeneratorProfiling\QrCodeGeneratorProfiling.csproj", "{D4678805-3F0A-45FA-AB04-070EA9A42F88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +32,10 @@ Global
 		{D7FE0375-D44E-4F43-8AFC-DAF31848D1EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7FE0375-D44E-4F43-8AFC-DAF31848D1EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7FE0375-D44E-4F43-8AFC-DAF31848D1EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
