@@ -41,9 +41,16 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling
             int textLength = SampleText.Length;
             for (int len = 5; len <= textLength; len++)
             {
+                int start = 0;
+                int ll = len;
+                if (ll > 400)
+                {
+                    start = ll - 400;
+                    ll -= start;
+                }
                 foreach (Ecc ecc in eccLevels)
                 {
-                    EncodeText(SampleText.Substring(0, len), ecc);
+                    EncodeText(SampleText.Substring(start, ll), ecc);
                 }
             }
 
