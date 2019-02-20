@@ -15,6 +15,7 @@ Core features:
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
 - Significantly shorter code but more documentation compared to competing libraries
+- Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
 
 Manual parameters:
 - You can specify the minimum and maximum version number allowed, and the library will automatically choose the smallest version in the range that fits the data.
