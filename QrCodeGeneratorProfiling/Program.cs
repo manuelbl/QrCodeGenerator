@@ -39,6 +39,7 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling
             Ecc[] eccLevels = { Ecc.Low, Ecc.Medium, Ecc.Quartile, Ecc.High };
 
             int textLength = SampleText.Length;
+            int generationCount = 0;
             for (int len = 5; len <= textLength; len++)
             {
                 int start = 0;
@@ -51,13 +52,15 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling
                 foreach (Ecc ecc in eccLevels)
                 {
                     EncodeText(SampleText.Substring(start, ll), ecc);
+                    generationCount++;
                 }
             }
 
             watch.Stop();
             long elapsedMs = watch.ElapsedMilliseconds;
 
-            Console.WriteLine("Elapsed time: {0}", elapsedMs / 1000.0);
+            Console.WriteLine("Elapsed time: {0}s", elapsedMs / 1000.0);
+            Console.WriteLine("Avg time for generation: {0}ms", elapsedMs / (double) generationCount);
         }
 
         private const string SampleText = @"Sed ut perspiciatis unde omnis iste natus error sit voluptatem 

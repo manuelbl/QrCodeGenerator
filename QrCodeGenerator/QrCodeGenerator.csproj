@@ -7,12 +7,29 @@
     <Version>1.4.0</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
-    <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.</Description>
+    <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
+
+Core features:
+- Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
+- Output formats: Raw modules/pixels of the QR symbol, SVG XML string, raster bitmap
+- Encodes numeric and special-alphanumeric text in less space than general text
+- Open source code under the permissive MIT License
+- Significantly shorter code but more documentation compared to competing libraries
+
+Manual parameters:
+- You can specify the minimum and maximum version number allowed, and the library will automatically choose the smallest version in the range that fits the data.
+- You can specify the mask pattern manually, otherwise library will automatically evaluate all 8 masks and select the optimal one.
+- You can specify an error correction level, or optionally allow the library to boost it if it doesn't increase the version number.
+- You can create a list of data segments manually and add ECI segments.
+
+Optional advanced features:
+- Encodes Japanese Unicode text in Kanji mode to save a lot of space compared to UTF-8 bytes
+- Computes optimal segment mode switching for text with mixed numeric/alphanumeric/general/kanji parts</Description>
     <Copyright>Copyright (c) Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
     <RepositoryUrl>https://github.com/manuelbl/QrCodeGenerator</RepositoryUrl>
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
-    <PackageTags>qr code, qrcode</PackageTags>
+    <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
     <PackageReleaseNotes>Initial release for .NET</PackageReleaseNotes>
     <Company>Codecrete</Company>
   </PropertyGroup>
