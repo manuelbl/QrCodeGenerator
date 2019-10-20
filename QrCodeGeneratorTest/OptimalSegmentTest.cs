@@ -34,35 +34,35 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text1 = "2342342340ABC234234jkl~~";
 
         private static readonly string[] Modules1 = {
-            "XXXXXXX XXXX XXXX   X XXXXXXX",
-            "X     X       X    XX X     X",
-            "X XXX X  X XXX  XXX X X XXX X",
-            "X XXX X XXXXX  X  XX  X XXX X",
-            "X XXX X  X XX    XX   X XXX X",
-            "X     X  X     X  X   X     X",
+            "XXXXXXX X  X X        XXXXXXX",
+            "X     X X  XXXX  XX X X     X",
+            "X XXX X X XXXXXX XX   X XXX X",
+            "X XXX X  XX  X X X    X XXX X",
+            "X XXX X   XXX XXXXX X X XXX X",
+            "X     X XX XXX X X X  X     X",
             "XXXXXXX X X X X X X X XXXXXXX",
-            "         X XX XXX            ",
-            "  X XXX XX  XXX X   XX   X  X",
-            "   X    XX   X     XX X XXXXX",
-            "    XXX          X XXXX X    ",
-            "    X     X X     X XX  X XXX",
-            "XX X  XXXXX XXXXXXXXX   XXXX ",
-            "  X X    X   XX  X     X X X ",
-            "  XXXXX  XXX XXX    XX   X  X",
-            "XXXXX   XX  XX  X  XXX X XXX ",
-            "XXX   XXX  XXX     X  XX     ",
-            "        X X    XX  X X  X  X ",
-            "X X XXXX XXXX X  X   X  X X  ",
-            " X X X XX  X   X XXX X XX XXX",
-            "X  X XX  X XXX   XX XXXXXXX X",
-            "        X    X X    X   XXXX ",
-            "XXXXXXX   X  XX X XXX X X X  ",
-            "X     X X X XX X   XX   X XX ",
-            "X XXX X XXXX XX X X XXXXX    ",
-            "X XXX X  X X  X   XX  XX   X ",
-            "X XXX X X    X   XXXXXX X   X",
-            "X     X  XXX  XX X X  XXX X  ",
-            "XXXXXXX  XXXX  X  XX     XX X"
+            "        XX   XXXXXXX         ",
+            "  XXX X X X XX X     XXX  XXX",
+            "XX X X XXX XX    XX X XX  XXX",
+            "  XX XX XXX   XXXX X    X XXX",
+            "XX  XX X  XX X   X XXX X XXXX",
+            "XXX X XX    XX   XXX XX XX  X",
+            "XXX XX X X XX X   XX    X  X ",
+            "     XX X  X X  X     X  XXX ",
+            "  XXXX XXX X    XXX XX  X XX ",
+            "XX XX XX XXXXXXXX  XXX X  XXX",
+            "XX   X XX XXXX XXXX  X X X X ",
+            "X  X XXXX  XX  XXX  X X X  XX",
+            "X  X    X   XX X     X   XXXX",
+            "X X XXX X XXXXXXXXX XXXXXX X ",
+            "        X  XX  X XXXX   X XX ",
+            "XXXXXXX  X   X X  XXX X X  XX",
+            "X     X   XX   X XX X   XXXX ",
+            "X XXX X X  X X X  X XXXXX XXX",
+            "X XXX X XX  XXX  X    X XX X ",
+            "X XXX X XXX  XXXXXXX    X XX ",
+            "X     X  XX XXXX  X   X  XX  ",
+            "XXXXXXX    XX X X XXXXX  X X "
         };
 
         [Fact]
@@ -73,7 +73,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             Assert.Same(QrCode.Ecc.High, qrCode.ErrorCorrectionLevel);
             Assert.Equal(29, qrCode.Size);
-            Assert.Equal(0, qrCode.Mask);
+            Assert.Equal(2, qrCode.Mask);
             Assert.Equal(Modules1, TestHelper.ToStringArray(qrCode));
         }
     }

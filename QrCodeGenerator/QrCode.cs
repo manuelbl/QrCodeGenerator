@@ -793,18 +793,19 @@ namespace Net.Codecrete.QrCodeGenerator
         private int GetPenaltyScore()
         {
             int result = 0;
-            RunHistory runHistory = new RunHistory();
+            FinderPenalty finderPenalty = new FinderPenalty(Size);
 
             // Adjacent modules in row having same color, and finder-like patterns
             int index = 0;
             for (int y = 0; y < Size; y++)
             {
-                runHistory.Reset();
-                bool color = false;
+                bool runColor = false;
                 int runX = 0;
+                finderPenalty.Reset();
+                int padRun = Size; // Add white border to initial run
                 for (int x = 0; x < Size; x++)
                 {
-                    if (_modules[index] == color)
+                    if (_modules[index] == runColor)
                     {
                         runX++;
                         if (runX == 5)
@@ -818,40 +819,33 @@ namespace Net.Codecrete.QrCodeGenerator
                     }
                     else
                     {
-                        runHistory.Add(runX);
-                        if (!color && runHistory.HasFinderLikePattern())
+                        finderPenalty.AddHistory(runX + padRun);
+                        padRun = 0;
+                        if (!runColor)
                         {
-                            result += PenaltyN3;
+                            result += finderPenalty.CountPatterns() * PenaltyN3;
                         }
 
-                        color = _modules[index];
+                        runColor = _modules[index];
                         runX = 1;
                     }
 
                     index++;
                 }
-                runHistory.Add(runX);
-                if (color)
-                {
-                    runHistory.Add(0);  // Dummy run of white
-                }
-
-                if (runHistory.HasFinderLikePattern())
-                {
-                    result += PenaltyN3;
-                }
+                result += finderPenalty.TerminateAndCount(runColor, runX + padRun) * PenaltyN3;
             }
 
             // Adjacent modules in column having same color, and finder-like patterns
             for (int x = 0; x < Size; x++)
             {
                 index = x;
-                runHistory.Reset();
-                bool color = false;
+                bool runColor = false;
                 int runY = 0;
+                finderPenalty.Reset();
+                int padRun = Size; // Add white border to initial row
                 for (int y = 0; y < Size; y++)
                 {
-                    if (_modules[index] == color)
+                    if (_modules[index] == runColor)
                     {
                         runY++;
                         if (runY == 5)
@@ -865,28 +859,20 @@ namespace Net.Codecrete.QrCodeGenerator
                     }
                     else
                     {
-                        runHistory.Add(runY);
-                        if (!color && runHistory.HasFinderLikePattern())
+                        finderPenalty.AddHistory(runY + padRun);
+                        padRun = 0;
+                        if (!runColor)
                         {
-                            result += PenaltyN3;
+                            result += finderPenalty.CountPatterns() * PenaltyN3;
                         }
 
-                        color = _modules[index];
+                        runColor = _modules[index];
                         runY = 1;
                     }
 
                     index += Size;
                 }
-                runHistory.Add(runY);
-                if (color)
-                {
-                    runHistory.Add(0);  // Dummy run of white
-                }
-
-                if (runHistory.HasFinderLikePattern())
-                {
-                    result += PenaltyN3;
-                }
+                result += finderPenalty.TerminateAndCount(runColor, runY + padRun) * PenaltyN3;
             }
 
             // 2*2 blocks of modules having same color
@@ -999,6 +985,7 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 result -= 6 * 3 * 2;  // Subtract version information
             }
+            Debug.Assert(208 <= result && result <= 29648);
             return result;
         }
 
@@ -1013,41 +1000,63 @@ namespace Net.Codecrete.QrCodeGenerator
                 * NumErrorCorrectionBlocks[ecl.Ordinal, ver];
         }
 
-
-        internal struct RunHistory
+        // Helper class for getPenaltyScore().
+        // Internal the run history is organized in reverse order
+        // (compared to Nayuki's code) to avoid the copying when
+        // adding to the history.
+        internal struct FinderPenalty
         {
             private int _length;
             private short[] _runHistory;
+            private int _size;
+
+            internal FinderPenalty(int size)
+            {
+                _length = 0;
+                _runHistory = new short[177];
+                _size = size;
+            }
 
             internal void Reset()
             {
                 _length = 0;
-                if (_runHistory == null)
-                {
-                    _runHistory = new short[177];
-                }
             }
 
-            // Adds the given value to the run history
-            internal void Add(int run)
-            {
-                _runHistory[_length] = (short)run;
-                _length++;
-            }
-
-            // Tests whether this run history has the pattern of ratio 1:1:3:1:1 in the middle, and
-            // surrounded by at least 4 on either or both ends.
-            // Must only be called immediately after a run of white modules has ended.
-            internal bool HasFinderLikePattern()
+	        // Can only be called immediately after a white run is added, and
+	        // returns either 0, 1, or 2.
+            internal int CountPatterns()
             {
                 if (_length < 7)
                 {
-                    return false;
+                    return 0;
                 }
-
                 int n = _runHistory[_length - 6];
-                return n > 0 && _runHistory[_length - 5] == n && _runHistory[_length - 3] == n && _runHistory[_length - 2] == n
-                       && _runHistory[_length - 4] == n * 3 && Math.Max(_runHistory[_length - 1], _runHistory[_length - 7]) >= n * 4;
+                Debug.Assert(n <= _size * 3);
+                bool core = n > 0
+                    && _runHistory[_length - 5] == n
+                    && _runHistory[_length - 4] == n * 3
+                    && _runHistory[_length - 3] == n
+                    && _runHistory[_length - 2] == n;
+                return (core && _runHistory[_length - 7] >= n * 4 && _runHistory[_length - 1] >= n ? 1 : 0)
+                     + (core && _runHistory[_length - 1] >= n * 4 && _runHistory[_length - 7] >= n ? 1 : 0);
+            }
+
+	        // Pushes the given value to the front and drops the last value.
+	        internal int TerminateAndCount(bool currentRunColor, int currentRunLength) {
+		        if (currentRunColor) {  // Terminate black run
+			        AddHistory(currentRunLength);
+			        currentRunLength = 0;
+		        }
+		        currentRunLength += _size;  // Add white border to final run
+		        AddHistory(currentRunLength);
+		        return CountPatterns();
+	        }
+
+            // Adds the given value to the run history
+            internal void AddHistory(int run)
+            {
+                _runHistory[_length] = (short)run;
+                _length++;
             }
         }
 
