@@ -33,6 +33,8 @@ Optional advanced features:
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
     <PackageReleaseNotes>More sophistiacted and accurate algorithm for detecting finder like pattern</PackageReleaseNotes>
     <Company>Codecrete</Company>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
