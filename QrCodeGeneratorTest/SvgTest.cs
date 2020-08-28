@@ -25,6 +25,7 @@
  * IN THE SOFTWARE.
  */
 
+using System.Drawing;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -34,16 +35,30 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class SvgTest
     {
+        private static readonly string CODE_TEXT = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.";
+
         [Fact]
         private void SvgImage()
         {
-            var qrCode = EncodeText("At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.", Ecc.Medium);
+            var qrCode = EncodeText(CODE_TEXT, Ecc.Medium);
             string svg = qrCode.ToSvgString(0);
 
             Assert.StartsWith("<?xml", svg);
             Assert.Contains("\"0 0 69 69\"", svg); // view box
 
             File.WriteAllText("qrcode.svg", svg, Encoding.UTF8);
+        }
+
+        [Fact]
+        private void SvgImageWithColor()
+        {
+            var qrCode = EncodeText(CODE_TEXT, Ecc.Medium);
+            string svg = qrCode.ToSvgString(0, Color.Red, Color.Black);
+
+            Assert.Contains("#000000", svg);
+            Assert.Contains("#FF0000", svg);
+
+            Assert.DoesNotContain("#FFFFFF", svg);
         }
     }
 }
