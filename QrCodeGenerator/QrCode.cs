@@ -802,7 +802,6 @@ namespace Net.Codecrete.QrCodeGenerator
                 bool runColor = false;
                 int runX = 0;
                 finderPenalty.Reset();
-                int padRun = Size; // Add white border to initial run
                 for (int x = 0; x < Size; x++)
                 {
                     if (_modules[index] == runColor)
@@ -819,8 +818,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     }
                     else
                     {
-                        finderPenalty.AddHistory(runX + padRun);
-                        padRun = 0;
+                        finderPenalty.AddHistory(runX);
                         if (!runColor)
                         {
                             result += finderPenalty.CountPatterns() * PenaltyN3;
@@ -832,7 +830,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
                     index++;
                 }
-                result += finderPenalty.TerminateAndCount(runColor, runX + padRun) * PenaltyN3;
+                result += finderPenalty.TerminateAndCount(runColor, runX) * PenaltyN3;
             }
 
             // Adjacent modules in column having same color, and finder-like patterns
@@ -842,7 +840,6 @@ namespace Net.Codecrete.QrCodeGenerator
                 bool runColor = false;
                 int runY = 0;
                 finderPenalty.Reset();
-                int padRun = Size; // Add white border to initial row
                 for (int y = 0; y < Size; y++)
                 {
                     if (_modules[index] == runColor)
@@ -859,8 +856,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     }
                     else
                     {
-                        finderPenalty.AddHistory(runY + padRun);
-                        padRun = 0;
+                        finderPenalty.AddHistory(runY);
                         if (!runColor)
                         {
                             result += finderPenalty.CountPatterns() * PenaltyN3;
@@ -872,7 +868,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
                     index += Size;
                 }
-                result += finderPenalty.TerminateAndCount(runColor, runY + padRun) * PenaltyN3;
+                result += finderPenalty.TerminateAndCount(runColor, runY) * PenaltyN3;
             }
 
             // 2*2 blocks of modules having same color
