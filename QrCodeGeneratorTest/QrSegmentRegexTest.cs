@@ -32,43 +32,43 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     public class QrSegmentRegexTest
     {
         [Fact]
-        void IsNumeric()
+        public void IsNumeric()
         {
             Assert.Matches(QrSegment.NumericRegex, "1234");
         }
 
         [Fact]
-        void EmptyIsNumeric()
+        public void EmptyIsNumeric()
         {
             Assert.Matches(QrSegment.NumericRegex, "");
         }
 
         [Fact]
-        void TextIsNotNumeric()
+        public void TextIsNotNumeric()
         {
             Assert.DoesNotMatch(QrSegment.NumericRegex, "123a");
         }
 
         [Fact]
-        void WhitespaceIsNotNumeric()
+        public void WhitespaceIsNotNumeric()
         {
             Assert.DoesNotMatch(QrSegment.NumericRegex, "123\n345");
         }
 
         [Fact]
-        void ValidAlphanumeric()
+        public void ValidAlphanumeric()
         {
             Assert.Matches(QrSegment.AlphanumericRegex, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./");
         }
 
         [Fact]
-        void EmptyIsAlphanumeric()
+        public void EmptyIsAlphanumeric()
         {
             Assert.Matches(QrSegment.AlphanumericRegex, "");
         }
 
         [Fact]
-        void InvalidAlphanumeric()
+        public void InvalidAlphanumeric()
         {
             Assert.DoesNotMatch(QrSegment.AlphanumericRegex, ",");
             Assert.DoesNotMatch(QrSegment.AlphanumericRegex, "^");

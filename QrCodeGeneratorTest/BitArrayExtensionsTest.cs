@@ -34,7 +34,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     public class BitArrayExtensionsTest
     {
         [Fact]
-        private void AppendInt1()
+        public void AppendInt1()
         {
             var ba = new BitArray(0);
             ba.AppendBits(18, 6);
@@ -50,7 +50,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        private void AppendInt2()
+        public void AppendInt2()
         {
             var ba = new BitArray(0);
             ba.AppendBits(18, 6);
@@ -70,7 +70,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        private void AppendExtraBits()
+        public void AppendExtraBits()
         {
             var ba = new BitArray(0);
 

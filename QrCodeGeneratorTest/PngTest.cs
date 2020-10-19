@@ -34,7 +34,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     public class PngTest
     {
         [Fact]
-        private void PngImage()
+        public void PngImage()
         {
             var qrCode = EncodeText("The quick brown fox jumps over the lazy dog", Ecc.High);
             using (var bitmap = qrCode.ToBitmap(3, 4))

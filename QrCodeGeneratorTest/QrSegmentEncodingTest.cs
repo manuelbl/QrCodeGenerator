@@ -60,7 +60,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private static readonly byte[] BitsUtf8 = { 15, 249, 25, 9, 195, 109, 71, 65, 53 };
 
         [Fact]
-        void NumericEncoding()
+        public void NumericEncoding()
         {
             QrSegment segment = QrSegment.MakeNumeric(TextNumeric);
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Numeric);
@@ -73,13 +73,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        void RejectNonNumeric()
+        public void RejectNonNumeric()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => QrSegment.MakeNumeric("abc"));
         }
 
         [Fact]
-        void AlphanumericEncoding()
+        public void AlphanumericEncoding()
         {
             QrSegment segment = QrSegment.MakeAlphanumeric(TextAlphanumeric);
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Alphanumeric);
@@ -92,13 +92,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        void RejectNonAlphanumeric()
+        public void RejectNonAlphanumeric()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => QrSegment.MakeAlphanumeric("abc,def"));
         }
 
         [Fact]
-        void AutoNumericEncoding()
+        public void AutoNumericEncoding()
         {
             List<QrSegment> segments = QrSegment.MakeSegments(TextNumeric);
             Assert.Single(segments);
@@ -114,7 +114,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        void AutoAlphanumericEncoding()
+        public void AutoAlphanumericEncoding()
         {
             List<QrSegment> segments = QrSegment.MakeSegments(TextAlphanumeric);
             Assert.Single(segments);
@@ -130,7 +130,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        void Utf8Encoding()
+        public void Utf8Encoding()
         {
             List<QrSegment> segments = QrSegment.MakeSegments(TextUtf8);
             Assert.Single(segments);
@@ -145,7 +145,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        void EmptyTest()
+        public void EmptyTest()
         {
             List<QrSegment> segments = QrSegment.MakeSegments("");
             Assert.Empty(segments);

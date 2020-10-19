@@ -45,7 +45,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
               + "世なべるそ名走スレヤ変週トウ残予ハサヌカ払者じのドル分定リば米６１与アエユ来熱成かのら終参しつド日備てな要勤奇そむ磐価ヌ問者チ治本ンむくい限前サトスハ郎禁ヘマ自朝せ主並局行承ね。全キロヲ芸来はてし見９所謙レ撤住ワ約子情農スニ手個いよゆぴ事断ニ遊８３常左県煙８東金締ばねぞ。友府ょ盤養虚ぽ昇球つはー繰申チオ境著ごふょ派広だ戦事すめ無問きこどぱ毎保３７火ヱト韓端侍勃卑ぼン。";
 
         [Fact]
-        private void IsKanjiEncodable()
+        public void IsKanjiEncodable()
         {
             Assert.True(QrSegmentAdvanced.IsEncodableAsKanji(KanjiSample));
         }
@@ -82,7 +82,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         };
 
         [Fact]
-        private void KanjiQrCode()
+        public void KanjiQrCode()
         {
             var segment = QrSegmentAdvanced.MakeKanji(KanjiText);
             var segments = new List<QrSegment> {segment};

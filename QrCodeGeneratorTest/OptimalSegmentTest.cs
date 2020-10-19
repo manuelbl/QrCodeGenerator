@@ -66,7 +66,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         };
 
         [Fact]
-        private void OptimalSegmentCode()
+        public void OptimalSegmentCode()
         {
             var segments = QrSegmentAdvanced.MakeSegmentsOptimally(Text1, QrCode.Ecc.High);
             var qrCode = QrCode.EncodeSegments(segments, QrCode.Ecc.High);

@@ -33,7 +33,7 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling
 {
     internal class Program
     {
-        internal static void Main(string[] args)
+        internal static void Main()
         {
             Stopwatch watch = Stopwatch.StartNew();
             Ecc[] eccLevels = { Ecc.Low, Ecc.Medium, Ecc.Quartile, Ecc.High };

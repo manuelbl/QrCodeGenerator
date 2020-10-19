@@ -61,7 +61,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text0 = "98323";
 
         [Fact]
-        private void TestCode0()
+        public void TestCode0()
         {
             var qrCode = EncodeText(Text0, Ecc.Medium);
             Assert.Same(Ecc.High, qrCode.ErrorCorrectionLevel);
@@ -105,7 +105,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text1 = "The quick brown fox jumps";
 
         [Fact]
-        private void TestCode1()
+        public void TestCode1()
         {
             var qrCode = EncodeText(Text1, Ecc.Quartile);
             Assert.Same(Ecc.Quartile, qrCode.ErrorCorrectionLevel);
@@ -181,7 +181,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text2 = "kVtnmdZMDB wbhQ4Y0L0D 6dxWYgeDO7 6XEq8JBGFD dbA5ruetw0 zIevtZZkJL UnEcrObNuS COOscwe4PD PL2lKGcbqk uXnmfUX00E l4FsUfvkiU O8bje4GTce  C85HiEHDha EoObmX7Hef VEipzaCPV7 XpBy5cgYRZ VzlrmMTRSW f0U7Dt0x5j Mb5uk2JcA6 MFov2hnHQR";
 
         [Fact]
-        private void TestCode2()
+        public void TestCode2()
         {
             var qrCode = EncodeText(Text2, Ecc.Medium);
             Assert.Same(Ecc.Medium, qrCode.ErrorCorrectionLevel);
@@ -221,7 +221,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text3 = "😀 € éñ 💩";
 
         [Fact]
-        private void TestCode3()
+        public void TestCode3()
         {
             var qrCode = EncodeBinary(Encoding.UTF8.GetBytes(Text3), Ecc.Low);
             Assert.Same(Ecc.Quartile, qrCode.ErrorCorrectionLevel);
@@ -293,7 +293,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text4 = "ABCD22340";
 
         [Fact]
-        private void TestCode4()
+        public void TestCode4()
         {
             var segments = QrSegment.MakeSegments(Text4);
             var qrCode = EncodeSegments(segments, Ecc.High, 10, 40, 4, false);
@@ -334,7 +334,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text5 = "314159265358979323846264338327950288419716939937510";
 
         [Fact]
-        private void TestCode5()
+        public void TestCode5()
         {
             var qrCode = EncodeText(Text5, Ecc.Medium);
             Assert.Same(Ecc.Medium, qrCode.ErrorCorrectionLevel);
@@ -386,7 +386,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text6 = "DOLLAR-AMOUNT:$39.87 PERCENTAGE:100.00% OPERATIONS:+-*/";
 
         [Fact]
-        private void TestCode6()
+        public void TestCode6()
         {
             var qrCode = EncodeText(Text6, Ecc.High);
             Assert.Same(Ecc.High, qrCode.ErrorCorrectionLevel);
@@ -434,7 +434,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text7 = "こんにちwa、世界！ αβγδ";
 
         [Fact]
-        private void TestCode7()
+        public void TestCode7()
         {
             var qrCode = EncodeText(Text7, Ecc.Quartile);
             Assert.Same(Ecc.Quartile, qrCode.ErrorCorrectionLevel);
@@ -570,7 +570,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text8 = "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?' So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.";
 
         [Fact]
-        private void TestCode8()
+        public void TestCode8()
         {
             var qrCode = EncodeText(Text8, Ecc.High);
             Assert.Same(Ecc.High, qrCode.ErrorCorrectionLevel);
@@ -614,7 +614,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text9 = "https://www.nayuki.io/";
 
         [Fact]
-        private void TestCode9()
+        public void TestCode9()
         {
             var segments = QrSegment.MakeSegments(Text9);
             var qrCode = EncodeSegments(segments, Ecc.High);
@@ -659,7 +659,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text10 = "https://www.nayuki.io/";
 
         [Fact]
-        private void TestCode10()
+        public void TestCode10()
         {
             var segments = QrSegment.MakeSegments(Text10);
             var qrCode = EncodeSegments(segments, Ecc.High, 1, 40, 3);
@@ -724,7 +724,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text11 = "維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫";
 
         [Fact]
-        private void TestCode11()
+        public void TestCode11()
         {
             var segments = QrSegment.MakeSegments(Text11);
             var qrCode = EncodeSegments(segments, Ecc.Medium, 1, 40, 0);
@@ -789,7 +789,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text12 = "維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫";
 
         [Fact]
-        private void TestCode12()
+        public void TestCode12()
         {
             var segments = QrSegment.MakeSegments(Text12);
             var qrCode = EncodeSegments(segments, Ecc.Medium, 1, 40, 1);
@@ -854,7 +854,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text13 = "維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫";
 
         [Fact]
-        private void TestCode13()
+        public void TestCode13()
         {
             var segments = QrSegment.MakeSegments(Text13);
             var qrCode = EncodeSegments(segments, Ecc.Medium, 1, 40, 5);
@@ -919,7 +919,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string Text14 = "維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫";
 
         [Fact]
-        private void TestCode14()
+        public void TestCode14()
         {
             var segments = QrSegment.MakeSegments(Text14);
             var qrCode = EncodeSegments(segments, Ecc.Medium, 1, 40, 7);
@@ -928,7 +928,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(7, qrCode.Mask);
             Assert.Equal(Modules14, TestHelper.ToStringArray(qrCode));
         }
-
 
     }
 }

@@ -9,7 +9,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     {
 
         [Fact]
-        private void BitmapColorImageTest()
+        public void BitmapColorImageTest()
         {
             var qrCode = QrCode.EncodeText("The quick brown fox jumps over the lazy dog", QrCode.Ecc.High);
             var fg = Color.Red;

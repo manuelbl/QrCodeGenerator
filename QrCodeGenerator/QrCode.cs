@@ -1027,8 +1027,8 @@ namespace Net.Codecrete.QrCodeGenerator
         internal struct FinderPenalty
         {
             private int _length;
-            private short[] _runHistory;
-            private int _size;
+            private readonly short[] _runHistory;
+            private readonly int _size;
 
             internal FinderPenalty(int size)
             {
