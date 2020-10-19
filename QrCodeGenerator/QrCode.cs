@@ -365,29 +365,10 @@ namespace Net.Codecrete.QrCodeGenerator
             return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y * Size + x];
         }
 
-
-        /// <summary>
-        /// Creates a bitmap (raster image) of this QR code.
-        /// <para>
-        /// The <paramref name="scale"/> parameter specifies the scale of the image, which is
-        /// equivalent to the width and height of each QR code module. Additionally, the number
-        /// of modules to add as a border to all four sides can be specified.
-        /// </para>
-        /// <para>
-        /// For example, <c>ToBitmap(scale: 10, border: 4)</c> means to pad the QR code with 4 white
-        /// border modules on all four sides, and use 10&#xD7;10 pixels to represent each module.
-        /// </para>
-        /// <para>
-        /// The resulting bitmap uses the pixel format <see cref="PixelFormat.Format24bppRgb"/> and
-        /// only contains black (0x000000) and white (0xFFFFFF) pixels.
-        /// </para>
-        /// </summary>
-        /// <param name="scale">The width and height, in pixels, of each module.</param>
-        /// <param name="border">The number of border modules to add to each of the four sides.</param>
-        /// <returns>The created bitmap representing this QR code.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is 0 or negative, <paramref name="border"/> is negative
-        /// or the resulting image is wider than 32,768 pixels.</exception>
-        public Bitmap ToBitmap(int scale, int border)
+        /// <inheritdoc cref="ToBitmap(int, int)"/>
+        /// <param name="background">The background color.</param>
+        /// <param name="foreground">The foreground color.</param>
+        public Bitmap ToBitmap(int scale, int border, Color foreground, Color background)
         {
             if (scale <= 0)
             {
@@ -413,13 +394,38 @@ namespace Net.Codecrete.QrCodeGenerator
                 for (int x = 0; x < dim; x++)
                 {
                     bool color = GetModule(x / scale - border, y / scale - border);
-                    bitmap.SetPixel(x, y, color ? Color.Black : Color.White);
+                    bitmap.SetPixel(x, y, color ? foreground : background);
                 }
             }
 
             return bitmap;
         }
 
+        /// <summary>
+        /// Creates a bitmap (raster image) of this QR code.
+        /// <para>
+        /// The <paramref name="scale"/> parameter specifies the scale of the image, which is
+        /// equivalent to the width and height of each QR code module. Additionally, the number
+        /// of modules to add as a border to all four sides can be specified.
+        /// </para>
+        /// <para>
+        /// For example, <c>ToBitmap(scale: 10, border: 4)</c> means to pad the QR code with 4 white
+        /// border modules on all four sides, and use 10&#xD7;10 pixels to represent each module.
+        /// </para>
+        /// <para>
+        /// The resulting bitmap uses the pixel format <see cref="PixelFormat.Format24bppRgb"/>.
+        /// If not specified, the foreground color is always black (0x000000) und the background color always white (0xFFFFFF).
+        /// </para>
+        /// </summary>
+        /// <param name="scale">The width and height, in pixels, of each module.</param>
+        /// <param name="border">The number of border modules to add to each of the four sides.</param>
+        /// <returns>The created bitmap representing this QR code.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is 0 or negative, <paramref name="border"/> is negative
+        /// or the resulting image is wider than 32,768 pixels.</exception>
+        public Bitmap ToBitmap(int scale, int border)
+        {
+            return ToBitmap(scale, border, Color.Black, Color.White);
+        }
 
         /// <summary>
         /// Creates an SVG image of this QR code.
@@ -432,6 +438,24 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="border"/> is negative.</exception>
         public string ToSvgString(int border)
         {
+            return ToSvgString(border, "#000000", "#ffffff");
+        }
+
+        /// <summary>
+        /// <para>
+        /// The images uses Unix newlines (\n), regardless of the platform.
+        /// </para>
+        /// <para>
+        /// Colors are specified using CSS color data type. Examples of valid values are
+        /// "#339966", "fuchsia", "rgba(137, 23, 89, 0.3)".
+        /// </para>
+        /// </summary>
+        /// <inheritdoc cref="ToSvgString(int)"/>
+        /// <param name="foreground">The foreground color.</param>
+        /// <param name="background">The background color.</param>
+        /// <returns></returns>
+        public string ToSvgString(int border, string foreground, string background)
+        {
             if (border < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
@@ -442,7 +466,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 .Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .Append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n")
                 .Append($"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 {dim} {dim}\" stroke=\"none\">\n")
-                .Append("\t<rect width=\"100%\" height=\"100%\" fill=\"#FFFFFF\"/>\n")
+                .Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n")
                 .Append("\t<path d=\"");
 
             for (int y = 0; y < Size; y++)
@@ -464,7 +488,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             return sb
-                .Append("\" fill=\"#000000\"/>\n")
+                .Append($"\" fill=\"{foreground}\"/>\n")
                 .Append("</svg>\n")
                 .ToString();
         }
@@ -1106,7 +1130,6 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static readonly byte[,] EccCodewordsPerBlock = {
 		    // Version: (note that index 0 is for padding, and is set to an illegal value)
-		    //  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40     Error correction level
 		    { 255,  7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },  // Low
 		    { 255, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28 },  // Medium
 		    { 255, 13, 22, 18, 26, 18, 24, 18, 22, 20, 24, 28, 26, 24, 20, 30, 24, 28, 28, 26, 30, 28, 30, 30, 30, 30, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },  // Quartile
