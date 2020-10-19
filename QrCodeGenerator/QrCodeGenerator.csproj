@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>1.6.0</Version>
+    <Version>1.6.1</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
@@ -29,12 +29,18 @@ Optional advanced features:
     <Copyright>Copyright (c) Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
     <RepositoryUrl>https://github.com/manuelbl/QrCodeGenerator</RepositoryUrl>
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
-    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>Strong-named assembly</PackageReleaseNotes>
+    <PackageReleaseNotes>New in releases 1.6.0/1.6.1:
+- Strong-named assembly
+- Color support
+</PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyVersion>1.6.0.0</AssemblyVersion>
+    <FileVersion>1.6.1.0</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
