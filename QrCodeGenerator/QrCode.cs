@@ -1042,8 +1042,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 _length = 0;
             }
 
-	        // Can only be called immediately after a white run is added, and
-	        // returns either 0, 1, or 2.
+            // Can only be called immediately after a white run is added, and
+            // returns either 0, 1, or 2.
             internal int CountPatterns()
             {
                 if (_length < 7)
@@ -1061,16 +1061,19 @@ namespace Net.Codecrete.QrCodeGenerator
                      + (core && _runHistory[_length - 1] >= n * 4 && _runHistory[_length - 7] >= n ? 1 : 0);
             }
 
-	        // Pushes the given value to the front and drops the last value.
-	        internal int TerminateAndCount(bool currentRunColor, int currentRunLength) {
-		        if (currentRunColor) {  // Terminate black run
-			        AddHistory(currentRunLength);
-			        currentRunLength = 0;
-		        }
-		        currentRunLength += _size;  // Add white border to final run
-		        AddHistory(currentRunLength);
-		        return CountPatterns();
-	        }
+            // Pushes the given value to the front and drops the last value.
+            internal int TerminateAndCount(bool currentRunColor, int currentRunLength)
+            {
+                if (currentRunColor)
+                {
+                    // Terminate black run
+                    AddHistory(currentRunLength);
+                    currentRunLength = 0;
+                }
+                currentRunLength += _size;  // Add white border to final run
+                AddHistory(currentRunLength);
+                return CountPatterns();
+            }
 
             // Adds the given value to the run history
             internal void AddHistory(int run)

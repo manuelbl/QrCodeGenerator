@@ -85,7 +85,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void KanjiQrCode()
         {
             var segment = QrSegmentAdvanced.MakeKanji(KanjiText);
-            var segments = new List<QrSegment> {segment};
+            var segments = new List<QrSegment> { segment };
             var qrCode = QrCode.EncodeSegments(segments, QrCode.Ecc.Medium);
 
             Assert.Same(QrCode.Ecc.Medium, qrCode.ErrorCorrectionLevel);

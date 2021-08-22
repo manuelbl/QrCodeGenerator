@@ -1,7 +1,5 @@
 ﻿using System.Drawing;
-using System.Drawing.Imaging;
 using Xunit;
-using static Net.Codecrete.QrCodeGenerator.QrCode;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
