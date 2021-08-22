@@ -37,13 +37,11 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void PngImage()
         {
             var qrCode = EncodeText("The quick brown fox jumps over the lazy dog", Ecc.High);
-            using (var bitmap = qrCode.ToBitmap(3, 4))
-            {
-                Assert.Equal(135, bitmap.Width);
-                Assert.Equal(135, bitmap.Height);
+            using var bitmap = qrCode.ToBitmap(3, 4);
+            Assert.Equal(135, bitmap.Width);
+            Assert.Equal(135, bitmap.Height);
 
-                bitmap.Save("qrcode.png", ImageFormat.Png);
-            }
+            bitmap.Save("qrcode.png", ImageFormat.Png);
         }
     }
 }
