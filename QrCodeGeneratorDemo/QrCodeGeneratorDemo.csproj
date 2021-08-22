@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator.Demo</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator.Demo</PackageId>
     <Version>1.6.1</Version>
