@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31424.327
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QrCodeGenerator", "QrCodeGenerator\QrCodeGenerator.csproj", "{36B0822E-28D7-43C7-BAF7-AF578E31E978}"
 EndProject
@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QrCodeGeneratorTest", "QrCo
 	ProjectSection(ProjectDependencies) = postProject
 		{36B0822E-28D7-43C7-BAF7-AF578E31E978} = {36B0822E-28D7-43C7-BAF7-AF578E31E978}
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QrCodeGeneratorProfiling", "QrCodeGeneratorProfiling\QrCodeGeneratorProfiling.csproj", "{D4678805-3F0A-45FA-AB04-070EA9A42F88}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,10 +24,6 @@ Global
 		{81307EE7-7915-4D2D-8F71-495F239FD266}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81307EE7-7915-4D2D-8F71-495F239FD266}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81307EE7-7915-4D2D-8F71-495F239FD266}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D4678805-3F0A-45FA-AB04-070EA9A42F88}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
