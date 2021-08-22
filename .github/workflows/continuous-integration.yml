@@ -38,3 +38,5 @@ jobs:
         with:
           name: TestResults-${{ matrix.os }}.html
           path: TestResults-${{ matrix.os }}.html
+      - name: Create and validate NuGet package
+        run: dotnet pack --no-build --verbosity normal
