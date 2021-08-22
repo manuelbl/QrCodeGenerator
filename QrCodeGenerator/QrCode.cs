@@ -29,8 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
@@ -365,77 +363,6 @@ namespace Net.Codecrete.QrCodeGenerator
             return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y * Size + x];
         }
 
-        /// <inheritdoc cref="ToBitmap(int, int)"/>
-        /// <param name="background">The background color.</param>
-        /// <param name="foreground">The foreground color.</param>
-        public Bitmap ToBitmap(int scale, int border, Color foreground, Color background)
-        {
-            if (scale <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(scale), "Value out of range");
-            }
-            if (border < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(border), "Value out of range");
-            }
-
-            int dim = (Size + border * 2) * scale;
-
-            if (dim > short.MaxValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(scale), "Scale or border too large");
-            }
-
-            Bitmap bitmap = new Bitmap(dim, dim, PixelFormat.Format24bppRgb);
-
-            // simple and inefficient
-            for (int y = 0; y < dim; y++)
-            {
-                for (int x = 0; x < dim; x++)
-                {
-                    bool color = GetModule(x / scale - border, y / scale - border);
-                    bitmap.SetPixel(x, y, color ? foreground : background);
-                }
-            }
-
-            return bitmap;
-        }
-
-        /// <summary>
-        /// Creates a bitmap (raster image) of this QR code.
-        /// <para>
-        /// The <paramref name="scale"/> parameter specifies the scale of the image, which is
-        /// equivalent to the width and height of each QR code module. Additionally, the number
-        /// of modules to add as a border to all four sides can be specified.
-        /// </para>
-        /// <para>
-        /// For example, <c>ToBitmap(scale: 10, border: 4)</c> means to pad the QR code with 4 white
-        /// border modules on all four sides, and use 10&#xD7;10 pixels to represent each module.
-        /// </para>
-        /// <para>
-        /// The resulting bitmap uses the pixel format <see cref="PixelFormat.Format24bppRgb"/>.
-        /// If not specified, the foreground color is always black (0x000000) und the background color always white (0xFFFFFF).
-        /// </para>
-        /// </summary>
-        /// <param name="scale">The width and height, in pixels, of each module.</param>
-        /// <param name="border">The number of border modules to add to each of the four sides.</param>
-        /// <returns>The created bitmap representing this QR code.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="scale"/> is 0 or negative, <paramref name="border"/> is negative
-        /// or the resulting image is wider than 32,768 pixels.</exception>
-        public Bitmap ToBitmap(int scale, int border)
-        {
-            return ToBitmap(scale, border, Color.Black, Color.White);
-        }
-
-        /// <summary>
-        /// Creates an SVG image of this QR code.
-        /// <para>
-        /// The images uses Unix newlines (\n), regardless of the platform.
-        /// </para>
-        /// </summary>
-        /// <param name="border">The number of border modules to add on all four sides.</param>
-        /// <returns>The created SVG XML document of this QR code as a string.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="border"/> is negative.</exception>
         public string ToSvgString(int border)
         {
             return ToSvgString(border, "#000000", "#ffffff");

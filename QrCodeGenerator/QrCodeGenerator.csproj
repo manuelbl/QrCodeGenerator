@@ -54,7 +54,6 @@ Optional advanced features:
   </PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
 
