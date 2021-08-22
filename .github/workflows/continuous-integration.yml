@@ -1,0 +1,40 @@
+name: Continuous Integration
+
+on: [push, pull_request]
+
+env:
+  Configuration: Release
+  ContinuousIntegrationBuild: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        os: [ macos-latest, ubuntu-latest, windows-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    name: Build and run tests
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Retrieve cached NuGet packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+      - name: Restore NuGet packages
+        run: dotnet restore --verbosity normal
+      - name: Build solution
+        run: dotnet build --verbosity normal
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal --logger:"html;LogFileName=../../TestResults-${{ matrix.os }}.html"
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: TestResults-${{ matrix.os }}.html
+          path: TestResults-${{ matrix.os }}.html
