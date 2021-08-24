@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.0.0-rc.1</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
@@ -38,7 +38,7 @@ Optional advanced features:
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.6.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
