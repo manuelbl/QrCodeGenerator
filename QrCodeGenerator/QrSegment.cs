@@ -98,7 +98,7 @@ namespace Net.Codecrete.QrCodeGenerator
         public static QrSegment MakeNumeric(string digits)
         {
             Objects.RequireNonNull(digits);
-            if (!NumericRegex.IsMatch(digits))
+            if (!IsNumeric(digits))
             {
                 throw new ArgumentOutOfRangeException(nameof(digits), "String contains non-numeric characters");
             }
@@ -130,7 +130,7 @@ namespace Net.Codecrete.QrCodeGenerator
         public static QrSegment MakeAlphanumeric(string text)
         {
             Objects.RequireNonNull(text);
-            if (!AlphanumericRegex.IsMatch(text))
+            if (!IsAlphanumeric(text))
             {
                 throw new ArgumentOutOfRangeException(nameof(text), "String contains unencodable characters in alphanumeric mode");
             }
@@ -178,11 +178,11 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 // Leave result empty
             }
-            else if (NumericRegex.IsMatch(text))
+            else if (IsNumeric(text))
             {
                 result.Add(MakeNumeric(text));
             }
-            else if (AlphanumericRegex.IsMatch(text))
+            else if (IsAlphanumeric(text))
             {
                 result.Add(MakeAlphanumeric(text));
             }
@@ -230,6 +230,37 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             return new QrSegment(Mode.Eci, 0, ba);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string can be encoded as a segment in numeric mode.
+        /// <para>
+        /// A string is encodable iff each character is in the range "0" to "9".
+        /// </para>
+        /// </summary>
+        /// <param name="text">the string to test for encodability (not <c>null</c>)</param>
+        /// <returns><c>true</c> iff each character is in the range "0" to "9".</returns>
+        /// <exception cref="NullReferenceException">if the string is <c>null</c></exception>
+        /// <seealso cref="MakeNumeric(string)"/>
+        public static bool IsNumeric(string text)
+        {
+            return NumericRegex.IsMatch(text);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string can be encoded as a segment in alphanumeric mode.
+        /// <para>
+        /// A string is encodable iff each character is in the range "0" to "9", "A" to "Z" (uppercase only),
+        /// space, dollar, percent, asterisk, plus, hyphen, period, slash, colon.
+        /// </para>
+        /// </summary>
+        /// <param name="text">the string to test for encodability (not <c>null</c>)</param>
+        /// <returns><c>true</c> iff each character is in the alphanumeric mode character set.</returns>
+        /// <exception cref="NullReferenceException">if the string is <c>null</c></exception>
+        /// <seealso cref="MakeAlphanumeric(string)"/>
+        public static bool IsAlphanumeric(string text)
+        {
+            return AlphanumericRegex.IsMatch(text);
         }
 
         #endregion
@@ -332,38 +363,11 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #region Constants
 
-        /// <summary>
-        /// Immutable regular expression describing all strings encodable in <i>numeric mode</i>.
-        /// <para>
-        /// A string is encodable iff each character is in the range 0 to 9.
-        /// </para>
-        /// </summary>
-        /// <remarks>
-        /// To test whether a string <c>s</c> is encodable:
-        /// <code>
-        /// bool ok = NumericRegex.IsMatch(s);
-        /// </code> 
-        /// </remarks>
-        /// <value>Regular exprression describing strings encodable in numeric mode.</value>
-        /// <seealso cref="MakeNumeric(string)"/>
-        public static readonly Regex NumericRegex = new Regex("^[0-9]*$", RegexOptions.Compiled);
+        // Describes precisely all strings that are encodable in numeric mode.
+        private static readonly Regex NumericRegex = new Regex("^[0-9]*$", RegexOptions.Compiled);
 
-        /// <summary>
-        /// Immutable regular expression describing all strings that are encodable in <i>alphanumeric mode</i>.
-        /// <para>
-        /// A string is encodable iff each character is in the following set: 0 to 9, A to Z
-        /// (uppercase only), space, dollar, percent, asterisk, plus, hyphen, period, slash, colon.
-        /// </para>
-        /// </summary>
-        /// <remarks>
-        /// To test whether a string <c>s</c> is encodable:
-        /// <code>
-        /// bool ok = AlphanumericRegex.IsMatch(s);
-        /// </code> 
-        /// </remarks>
-        /// <value>Regular exprression describing strings encodable in alphanumeric mode.</value>
-        /// <seealso cref="MakeAlphanumeric(string)"/>
-        public static readonly Regex AlphanumericRegex = new Regex("^[A-Z0-9 $%*+./:-]*$", RegexOptions.Compiled);
+        // Describes precisely all strings that are encodable in alphanumeric mode.
+        private static readonly Regex AlphanumericRegex = new Regex("^[A-Z0-9 $%*+./:-]*$", RegexOptions.Compiled);
 
 
         // The set of all legal characters in alphanumeric mode, where

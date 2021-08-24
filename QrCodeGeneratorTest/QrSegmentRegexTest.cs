@@ -34,46 +34,46 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void IsNumeric()
         {
-            Assert.Matches(QrSegment.NumericRegex, "1234");
+            Assert.True(QrSegment.IsNumeric("1234"));
         }
 
         [Fact]
         public void EmptyIsNumeric()
         {
-            Assert.Matches(QrSegment.NumericRegex, "");
+            Assert.True(QrSegment.IsNumeric(""));
         }
 
         [Fact]
         public void TextIsNotNumeric()
         {
-            Assert.DoesNotMatch(QrSegment.NumericRegex, "123a");
+            Assert.False(QrSegment.IsNumeric("123a"));
         }
 
         [Fact]
         public void WhitespaceIsNotNumeric()
         {
-            Assert.DoesNotMatch(QrSegment.NumericRegex, "123\n345");
+            Assert.False(QrSegment.IsNumeric("123\n345"));
         }
 
         [Fact]
         public void ValidAlphanumeric()
         {
-            Assert.Matches(QrSegment.AlphanumericRegex, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./");
+            Assert.True(QrSegment.IsAlphanumeric("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./"));
         }
 
         [Fact]
         public void EmptyIsAlphanumeric()
         {
-            Assert.Matches(QrSegment.AlphanumericRegex, "");
+            Assert.True(QrSegment.IsAlphanumeric(""));
         }
 
         [Fact]
         public void InvalidAlphanumeric()
         {
-            Assert.DoesNotMatch(QrSegment.AlphanumericRegex, ",");
-            Assert.DoesNotMatch(QrSegment.AlphanumericRegex, "^");
-            Assert.DoesNotMatch(QrSegment.AlphanumericRegex, "(");
-            Assert.DoesNotMatch(QrSegment.AlphanumericRegex, "a");
+            Assert.False(QrSegment.IsAlphanumeric(","));
+            Assert.False(QrSegment.IsAlphanumeric("^"));
+            Assert.False(QrSegment.IsAlphanumeric("("));
+            Assert.False(QrSegment.IsAlphanumeric("a"));
         }
     }
 }
