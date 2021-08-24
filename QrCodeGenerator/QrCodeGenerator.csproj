@@ -11,7 +11,7 @@
 
 Core features:
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol, SVG XML string, raster bitmap
+- Output formats: Raw modules/pixels of the QR symbol and SVG XML string
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
 - Significantly shorter code but more documentation compared to competing libraries
