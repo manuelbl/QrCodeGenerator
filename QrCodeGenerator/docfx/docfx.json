@@ -11,7 +11,10 @@
       ],
       "dest": "../obj/docfx/api",
       "disableGitFeatures": false,
-      "disableDefaultFilter": false
+      "disableDefaultFilter": false,
+      "properties": {
+        "targetFramework": "netcoreapp3.1"
+      }
     }
   ],
   "build": {
