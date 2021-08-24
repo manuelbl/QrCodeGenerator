@@ -42,5 +42,6 @@ jobs:
         run: dotnet pack --no-build --verbosity normal
       - name: Build documentation
         uses: nikeee/docfx-action@v1.0.0
+        if: runner.os == 'Linux'
         with:
           args: QrCodeGenerator/docfx/docfx.json
