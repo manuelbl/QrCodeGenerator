@@ -36,7 +36,7 @@ namespace Net.Codecrete.QrCodeGenerator
     /// <summary>
     /// Represents a QR code containing text or binary data.
     /// <para>
-    /// Instances of this class represent an immutable square grid of black and white pixels
+    /// Instances of this class represent an immutable square grid of dark and light pixels
     /// (called <i>modules</i> by the QR code specification).
     /// Static factory methods are provided to create QR codes from text or binary data.
     /// Some of the methods provide detailed control about the encoding parameters such a QR
@@ -282,7 +282,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #region Private grids of modules/pixels, with dimensions of size * size
 
-        // The modules of this QR code (false = white, true = black).
+        // The modules of this QR code (false = light, true = dark).
         // Immutable after constructor finishes. Accessed through GetModule().
         private readonly bool[] _modules;
 
@@ -327,7 +327,7 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(ecl);
             ErrorCorrectionLevel = ecl;
             Objects.RequireNonNull(dataCodewords);
-            _modules = new bool[Size * Size];  // Initially all white
+            _modules = new bool[Size * Size];  // Initially all light
             _isFunction = new bool[Size * Size];
 
             // Compute ECC, draw modules, do masking
@@ -351,13 +351,13 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <i>y</i>-coordinates extend from top to bottom.
         /// </para>
         /// <para>
-        /// If coordinates outside the bounds of this QR code are specified, white (<c>false</c>) is returned.
+        /// If coordinates outside the bounds of this QR code are specified, light (<c>false</c>) is returned.
         /// </para>
         /// </summary>
         /// <param name="x">The x coordinate.</param>
         /// <param name="y">The y coordinate.</param>
-        /// <returns>The color of the specified module: <c>true</c> for black modules and <c>false</c>
-        /// for white modules (or if the coordinates are outside the bounds).</returns>
+        /// <returns>The color of the specified module: <c>true</c> for dark modules and <c>false</c>
+        /// for light modules (or if the coordinates are outside the bounds).</returns>
         public bool GetModule(int x, int y)
         {
             return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y * Size + x];
@@ -501,7 +501,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 SetFunctionModule(8, Size - 15 + i, GetBit(bits, i));
             }
 
-            SetFunctionModule(8, Size - 8, true);  // Always black
+            SetFunctionModule(8, Size - 8, true);  // Always dark
         }
 
 
@@ -570,9 +570,9 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // Sets the color of a module and marks it as a function module.
         // Only used by the constructor. Coordinates must be in bounds.
-        private void SetFunctionModule(int x, int y, bool isBlack)
+        private void SetFunctionModule(int x, int y, bool isDark)
         {
-            _modules[y * Size + x] = isBlack;
+            _modules[y * Size + x] = isDark;
             _isFunction[y * Size + x] = true;
         }
 
@@ -665,7 +665,7 @@ namespace Net.Codecrete.QrCodeGenerator
                         _modules[y * Size + x] = GetBit(data[(uint)i >> 3], 7 - (i & 7));
                         i++;
                         // If this QR code has any remainder bits (0 to 7), they were assigned as
-                        // 0/false/white by the constructor and are left unchanged by this method
+                        // 0/false/light by the constructor and are left unchanged by this method
                     }
                 }
             }
@@ -842,8 +842,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 index++;
             }
 
-            // Balance of black and white modules
-            int black = 0;
+            // Balance of dark and light modules
+            int dark = 0;
             index = 0;
             for (int y = 0; y < Size; y++)
             {
@@ -852,15 +852,15 @@ namespace Net.Codecrete.QrCodeGenerator
                 {
                     if (_modules[index])
                     {
-                        black++;
+                        dark++;
                     }
 
                     index++;
                 }
             }
-            int total = Size * Size;  // Note that size is odd, so black/total != 1/2
-                                      // Compute the smallest integer k >= 0 such that (45-5k)% <= black/total <= (55+5k)%
-            int k = (Math.Abs(black * 20 - total * 10) + total - 1) / total - 1;
+            int total = Size * Size;  // Note that size is odd, so dark/total != 1/2
+                                      // Compute the smallest integer k >= 0 such that (45-5k)% <= dark/total <= (55+5k)%
+            int k = (Math.Abs(dark * 20 - total * 10) + total - 1) / total - 1;
             result += k * PenaltyN4;
             return result;
         }
@@ -915,7 +915,7 @@ namespace Net.Codecrete.QrCodeGenerator
             int size = ver * 4 + 17;
             int result = size * size;   // Number of modules in the whole QR code square
             result -= 8 * 8 * 3;        // Subtract the three finders with separators
-            result -= 15 * 2 + 1;       // Subtract the format information and black module
+            result -= 15 * 2 + 1;       // Subtract the format information and dark module
             result -= (size - 16) * 2;  // Subtract the timing patterns (excluding finders)
                                         // The five lines above are equivalent to: int result = (16 * ver + 128) * ver + 64;
 
@@ -969,7 +969,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 _length = 0;
             }
 
-            // Can only be called immediately after a white run is added, and
+            // Can only be called immediately after a light run is added, and
             // returns either 0, 1, or 2.
             internal int CountPatterns()
             {
@@ -993,11 +993,11 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 if (currentRunColor)
                 {
-                    // Terminate black run
+                    // Terminate dark run
                     AddHistory(currentRunLength);
                     currentRunLength = 0;
                 }
-                currentRunLength += _size;  // Add white border to final run
+                currentRunLength += _size;  // Add light border to final run
                 AddHistory(currentRunLength);
                 return CountPatterns();
             }
