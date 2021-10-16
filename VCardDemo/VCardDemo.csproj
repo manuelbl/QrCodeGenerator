@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MixERP.Net.VCards" Version="1.0.7" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="1.6.1" />
+  </ItemGroup>
+
+</Project>
