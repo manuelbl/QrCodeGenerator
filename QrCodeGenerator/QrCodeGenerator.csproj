@@ -4,14 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>2.0.0-rc.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
 
 Core features:
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol and SVG XML string
+- Output formats: Raw modules/pixels of the QR symbol and SVG XML string (for raster bitmap / PNG see project home page)
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
 - Significantly shorter code but more documentation compared to competing libraries
@@ -51,6 +51,7 @@ Optional advanced features:
   <PropertyGroup Label="Packaging">
     <DebugType>embedded</DebugType>
     <EmbedAllSources>true</EmbedAllSources>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 	
   <ItemGroup>

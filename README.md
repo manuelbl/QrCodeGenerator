@@ -2,7 +2,7 @@
 
 Open-source library for generating QR codes from text strings and byte arrays.
 
-The library is built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
+The library is built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.) including .NET 6 on all platforms.
 
 It is mostly a translation of Project Nayuki's Java version of the QR code generator. The project provides implementations for
 many more programming languages, and the [Project Nayuki web site](https://www.nayuki.io/page/qr-code-generator-library) has additional information about the implementation.
@@ -13,7 +13,7 @@ many more programming languages, and the [Project Nayuki web site](https://www.n
 Core features:
 
  * Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
- * Output formats: Raw modules/pixels of the QR symbol, SVG XML string, raster bitmap
+ * Output formats: Raw modules/pixels of the QR symbol, SVG XML string. For raster bitmaps, additional code is provided. See [below](#raster-images--bitmaps).
  * Encodes numeric and special-alphanumeric text in less space than general text
  * Open source code under the permissive *MIT License*
  * Significantly shorter code but more documentation compared to competing libraries
@@ -53,7 +53,7 @@ Install-Package Net.Codecrete.QrCodeGenerator -Version 2.0.0
 
 ## API Documention
 
-See DocFX [API Documentation](https://codecrete.net/QrCodeGenerator/api/index.html)
+See [API Documentation](https://codecrete.net/QrCodeGenerator/api/index.html)
 
 
 ## Examples
@@ -115,15 +115,15 @@ QR Code Generator for .NET requires a .NET implementation compatible with .NET S
 
 ### Raster Images / Bitmaps
 
-The previous version of this library depended on *System.Drawing*, which - starting with .NET 6 - will only be supported on Windows operation system. Therefore, `ToBitmap()` has been removed and three options are now offered in the form of method extensions.
+Starting with .NET 6, *System.Drawing* is only supported on Windows operating system and thus cannot be used for multi-platform libraries like this one. Therefore, `ToBitmap()` has been removed and three options are now offered in the form of method extensions.
 
-In order to use it:
+To use it:
 
-- Select one of the libraries
+- Select one of the imaging libraries below
 - Add the NuGet dependencies to your project
 - Copy the appropriate `QrCodeBitmapExtensions.cs` file to your project
 
-| Library | Recommendation | NuGet dependencies | Extension file |
+| Imaging library | Recommendation | NuGet dependencies | Extension file |
 | ------- | -------------- | ------------------ | -------------- |
 | **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](Demo-System-Drawing/QrCodeBitmapExtensions.cs) |
 | **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
