@@ -4,7 +4,7 @@
  * Copyright (c) Manuel Bleichenbacher (MIT License)
  * https://github.com/manuelbl/QrCodeGenerator
  * 
- * Deom creating a QR code containing a vCard.
+ * Demo creating a QR code containing a vCard.
  *
  */
 using MixERP.Net.VCards;
