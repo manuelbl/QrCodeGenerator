@@ -9,7 +9,7 @@
 
     <PackageId>Net.Codecrete.QrCodeGenerator.Test</PackageId>
 
-    <Version>1.6.1</Version>
+    <Version>2.0.0</Version>
 
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
 
@@ -36,7 +36,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
-    <PackageReference Include="runtime.osx.10.10-x64.CoreCompat.System.Drawing" Version="5.8.64" />
   </ItemGroup>
 
   <ItemGroup>

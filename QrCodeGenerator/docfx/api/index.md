@@ -21,11 +21,11 @@ Additional information on [GitHub project page](https://github.com/manuelbl/QrCo
 Core features:
 
  * Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
- * Output formats: Raw modules/pixels of the QR symbol, SVG XML string, raster bitmap
- * Encodes numeric and special-alphanumeric text in less space than general text
+ * Output formats: Raw modules/pixels of the QR symbol and SVG XML string
+ * Encodes numeric and special alphanumeric text in less space than general text
  * Open source code under the permissive *MIT License*
  * Significantly shorter code but more documentation compared to competing libraries
- * available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
+ * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
 
 Manual parameters:
 
@@ -51,13 +51,11 @@ namespace Examples
 {
     class SimpleOperation
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var qr = QrCode.EncodeText("Hello, world!", QrCode.Ecc.Medium);
-            using (var bitmap = qr.ToBitmap(4, 10))
-            {
-                bitmap.Save("qr-code.png", ImageFormat.Png);
-            }
+            string svg = qr.ToSvgString(4);
+            File.WriteAllText("hello-world-qr.svg", svg, Encoding.UTF8);
         }
     }
 }
@@ -72,7 +70,7 @@ namespace Examples
 {
     class ManualOperation
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var segments = QrCode.MakeSegments("3141592653589793238462643383");
             var qr = QrCode.EncodeSegments(segments, QrCode.Ecc.High, 5, 5, 2, false);
@@ -99,20 +97,36 @@ QR Code Generator for .NET requires a .NET implementation compatible with .NET S
 - Universal Windows Platform 10.0.16299 or higher
 - Xamarin
 
-### Raster Images
+### Raster Images / Bitmaps
 
-For generating raster images, the *System.Drawing* library is used. On Linux and macOS, it depends on the native shared library *GDIPlus*, which must be separatley installed.
+The previous version of this library depended on *System.Drawing*, which - starting with .NET 6 - will only be supported on Windows operation system. Therefore, `ToBitmap()` has been removed and three options are now offered in the form of method extensions.
 
-**macOS**:
+In order to use it:
 
+- Select one of the libraries
+- Add the NuGet dependencies to your project
+- Copy the appropriate `QrCodeBitmapExtensions.cs` file to your project
+
+| Library | Recommendation | NuGet dependencies | Extension file |
+| ------- | -------------- | ------------------ | -------------- |
+| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **ImageSharp** | Currently in beta state | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/Demo-ImageSharp/QrCodeBitmapExtensions.cs) |
+
+Using these extension methods, generating PNG images is straight-forward:
+
+```cslang
+using Net.Codecrete.QrCodeGenerator;
+
+namespace Examples
+{
+    class PngImage
+    {
+        static void Main()
+        {
+            var qr = QrCode.EncodeText("Hello, world!", QrCode.Ecc.Medium);
+            qr.SaveAsPng("hello-world-qr.png", 10, 3);
+        }
+    }
+}
 ```
-brew install mono-libgdiplus
-```
-
-**Linux**
-
-```
-sudo apt-get install libgdiplus
-```
-
-For troubleshooting, check [Mono's GDIPlusInit page](https://www.mono-project.com/docs/gui/problemgdiplusinit/).

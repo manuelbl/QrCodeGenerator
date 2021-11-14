@@ -4,14 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>1.6.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
 
 Core features:
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol, SVG XML string, raster bitmap
+- Output formats: Raw modules/pixels of the QR symbol and SVG XML string (for raster bitmap / PNG see project home page)
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
 - Significantly shorter code but more documentation compared to competing libraries
@@ -31,15 +31,15 @@ Optional advanced features:
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>New in releases 1.6.0/1.6.1:
-- Strong-named assembly
-- Color support
+    <PackageReleaseNotes>New in releases 2.0:
+- Fully compatible with .NET 6 (no longer depends on System.Drawing)
+- Separate ToBitmap() implementations for System.Drawing, SkiaSharp and ImageSharp
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
-    <FileVersion>1.6.1.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -51,10 +51,10 @@ Optional advanced features:
   <PropertyGroup Label="Packaging">
     <DebugType>embedded</DebugType>
     <EmbedAllSources>true</EmbedAllSources>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
 
