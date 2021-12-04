@@ -151,12 +151,14 @@ namespace Examples
 
 Several example projects are provided:
 
-- [Demo-VCard](Demo-VCard): Demonstrates how contact data (similar to business cards) can be saved in a QR Code using the VCard standard.
+- [Demo-QRCode-Variety](Demo-QRCode-Variety): Demonstrates how QR codes with different encodings, error correction and masks can be generated. All QR codes are saved as SVG files.
 
 - [Demo-WinForms](Demo-WinForms): Demonstrates how QR codes can be used in Windows Forms applications (incl. copying to the clipboard).
 
-- [Demo-System-Drawing](Demo-System-Drawing): Demonstrates how a variety of QR codes are generated and saved a PNG files, using the *System.Drawing* classes, which have become a Windows only technology starting with .NET 6.
+- [Demo-VCard](Demo-VCard): Demonstrates how contact data (similar to business cards) can be saved in a QR Code using the VCard standard.
 
-- [Demo-SkiaSharp](Demo-SkiaSharp): Demonstrates how a variety of QR codes are generated and saved a PNG files, using the SkiaSharp multi-platform raster image library.
+- [Demo-System-Drawing](Demo-System-Drawing): Demonstrates how a QR code can be saved a PNG file, using the *System.Drawing* classes, which have become a Windows only technology starting with .NET 6.
 
-- [Demo-ImageSharp](Demo-ImageSharp): Demonstrates how a variety of QR codes are generated and saved a PNG files, using the ImageSharp raster image library.
+- [Demo-SkiaSharp](Demo-SkiaSharp): Demonstrates how a QR code can be saved a PNG file, using the SkiaSharp multi-platform raster image library.
+
+- [Demo-ImageSharp](Demo-ImageSharp): Demonstrates how a QR code can be saved a PNG file, using the ImageSharp raster image library.

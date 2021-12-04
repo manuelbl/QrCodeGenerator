@@ -1,10 +1,11 @@
-﻿/* 
- * QR code generator library (.NET)
- *
- * Copyright (c) Manuel Bleichenbacher (MIT License)
- * https://github.com/manuelbl/QrCodeGenerator
- *
- */
+﻿//
+// QR code generator library (.NET)
+// https://github.com/manuelbl/QrCodeGenerator
+//
+// Copyright (c) 2021 Manuel Bleichenbacher
+// Licensed under MIT License
+// https://opensource.org/licenses/MIT
+//
 
 using SkiaSharp;
 using System;
