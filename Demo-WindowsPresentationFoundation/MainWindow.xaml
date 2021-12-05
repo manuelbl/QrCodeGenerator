@@ -1,0 +1,36 @@
+﻿<Window x:Class="Net.Codecrete.QrCodeGenerator.Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Net.Codecrete.QrCodeGenerator.Demo"
+        mc:Ignorable="d"
+        Title="QR Code" Height="400" Width="600"
+        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <Grid Margin="20,16,20,16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Image x:Name="QrCodeImage" Grid.Row="0" Margin="0,0,0,16"
+               RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased"/>
+        <TextBox x:Name="QrCodeTextBox" Text="{Binding Path=Text, UpdateSourceTrigger=PropertyChanged}"
+                 Grid.Row="1" Padding="5,3" Margin="0,6"/>
+        <WrapPanel Grid.Row="2">
+            <Label Content="Error Correction:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
+            <ComboBox x:Name="ErrorCorrectionCombo" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="0,6,24,6"
+                  ItemsSource="{Binding Path=ErrorCorrectionLevels}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=ErrorCorrection}"/>
+            <Label Content="Border Width:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
+            <TextBox x:Name="BorderWidthTextBox" Text="{Binding Path=BorderWidth, UpdateSourceTrigger=PropertyChanged}"
+                 HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Margin="0,6" Padding="5,3"/>
+        </WrapPanel>
+        <Button x:Name="CopyButton" Content="Copy QR Code" Grid.Row="3" Margin="0,6,0,0"
+                VerticalAlignment="Center" HorizontalAlignment="Right" Padding="10,3" Click="CopyButton_Click" Grid.ColumnSpan="4"/>
+    </Grid>
+</Window>
