@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
@@ -31,19 +31,22 @@ Optional advanced features:
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>New in releases 2.0:
+    <PackageReleaseNotes>New in releases 2.0 / 2.0.1:
 - Fully compatible with .NET 6 (no longer depends on System.Drawing)
 - Separate ToBitmap() implementations for System.Drawing, SkiaSharp and ImageSharp
+- Documentation included into NuGet package
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <FileVersion>2.0.1.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Label="Restoring">
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
 	  <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	  <RestoreLockedMode Condition="$(ContinuousIntegrationBuild) == 'true'">true</RestoreLockedMode>
   </PropertyGroup>
@@ -55,7 +58,7 @@ Optional advanced features:
   </PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.*" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="ValidateNuGetPackage" AfterTargets="Pack">

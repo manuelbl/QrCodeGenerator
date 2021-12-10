@@ -363,12 +363,21 @@ namespace Net.Codecrete.QrCodeGenerator
             return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y * Size + x];
         }
 
+        /// <summary>
+        /// Creates an SVG image of this QR code.
+        /// <para>
+        /// The images uses Unix newlines (\n), regardless of the platform.
+        /// </para>
+        /// </summary>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
+        /// <returns>The SVG image as a string.</returns>
         public string ToSvgString(int border)
         {
             return ToSvgString(border, "#000000", "#ffffff");
         }
 
         /// <summary>
+        /// Creates an SVG image of this QR code.
         /// <para>
         /// The images uses Unix newlines (\n), regardless of the platform.
         /// </para>
@@ -377,10 +386,9 @@ namespace Net.Codecrete.QrCodeGenerator
         /// "#339966", "fuchsia", "rgba(137, 23, 89, 0.3)".
         /// </para>
         /// </summary>
-        /// <inheritdoc cref="ToSvgString(int)"/>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
         /// <param name="foreground">The foreground color.</param>
         /// <param name="background">The background color.</param>
-        /// <returns></returns>
         public string ToSvgString(int border, string foreground, string background)
         {
             if (border < 0)
