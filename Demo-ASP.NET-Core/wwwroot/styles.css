@@ -1,0 +1,29 @@
+﻿.content {
+    max-width: 768px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1em;
+    padding-right: 1em;
+    background: #eee;
+}
+#qrcode {
+    width: 80%;
+    max-width: 400px;
+    margin-top: 1em;
+    margin-bottom: 2em;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+#text {
+    width: 90%;
+}
+.more-space {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+h1 {
+    letter-spacing: 0;
+    text-align: center;
+    width: 100%;
+}

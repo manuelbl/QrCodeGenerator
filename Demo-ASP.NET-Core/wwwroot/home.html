@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>QR Code</title>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css" integrity="sha384-Uu6IeWbM+gzNVXJcM9XV3SohHtmWE+3VGi496jvgX1jyvDTXfdK+rfZc8C1Aehk5" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div class="content">
+        <div class="pure-g">
+            <h1>QR Code</h1>
+            <form class="pure-form">
+                <fieldset>
+                    <div class="pure-u-1"><img id="qrcode" src="qrcode/svg?text=Hello%20world!&ecc=1&border=3" /></div>
+                    <div class="pure-u-1 more-space"><input id="text" type="text" placeholder="QR code text" value="Hello world!" /></div>
+                    <div class="pure-u-1 pure-u-lg-1-2 more-space">
+                        <label for="ecc">
+                            Error correction:
+                            <select id="ecc">
+                                <option value="0">Low</option>
+                                <option value="1" selected>Medium</option>
+                                <option value="2">Quartile</option>
+                                <option value="3">High</option>
+                            </select>
+
+                        </label>
+                    </div>
+                    <div class="pure-u-1 pure-u-lg-1-2 more-space">
+                        <label for="border">
+                            Border width: <input type="number" id="border" value="3" min="0" max="99999" />
+                        </label>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <script src="ui.js"></script>
+</body>
+</html>

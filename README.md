@@ -157,6 +157,8 @@ Several example projects are provided:
 
 - [Demo-WinForms](Demo-WinForms): Demonstrates how QR codes can be used in Windows Forms applications (incl. copying to the clipboard).
 
+- [Demo-ASP.NET-Core](Demo-ASP.NET-Core): Demonstrates how to create QR codes in a web application implemented using ASP.NET Core.
+
 - [Demo-VCard](Demo-VCard): Demonstrates how contact data (similar to business cards) can be saved in a QR Code using the VCard standard.
 
 - [Demo-System-Drawing](Demo-System-Drawing): Demonstrates how a QR code can be saved a PNG file, using the *System.Drawing* classes, which have become a Windows only technology starting with .NET 6.
