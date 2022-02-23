@@ -88,7 +88,7 @@ namespace Examples
     {
         static void Main()
         {
-            var segments = QrCode.MakeSegments("3141592653589793238462643383");
+            var segments = QrSegment.MakeSegments("3141592653589793238462643383");
             var qr = QrCode.EncodeSegments(segments, QrCode.Ecc.High, 5, 5, 2, false);
             for (int y = 0; y < qr.Size; y++)
             {
