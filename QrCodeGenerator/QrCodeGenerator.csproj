@@ -54,7 +54,7 @@ Optional advanced features:
   <PropertyGroup Label="Packaging">
     <DebugType>embedded</DebugType>
     <EmbedAllSources>true</EmbedAllSources>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <ContinuousIntegrationBuild Condition="$(Configuration) == 'Release'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 	
   <ItemGroup>

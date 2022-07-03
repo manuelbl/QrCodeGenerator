@@ -59,5 +59,15 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             Assert.DoesNotContain("#FFFFFF", svg);
         }
+
+        [Fact]
+        public void SvgPath()
+        {
+            var qrCode = EncodeText(CODE_TEXT, Ecc.Medium);
+            var path = qrCode.ToGraphicsPath(3);
+            
+            Assert.StartsWith("M3,3h", path);
+            Assert.EndsWith("h1v1h-1z", path);
+        }
     }
 }

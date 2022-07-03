@@ -404,28 +404,138 @@ namespace Net.Codecrete.QrCodeGenerator
                 .Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n")
                 .Append("\t<path d=\"");
 
-            for (int y = 0; y < Size; y++)
-            {
-                for (int x = 0; x < Size; x++)
-                {
-                    if (!GetModule(x, y))
-                    {
-                        continue;
-                    }
-
-                    if (x != 0 || y != 0)
-                    {
-                        sb.Append(" ");
-                    }
-
-                    sb.Append($"M{x + border},{y + border}h1v1h-1z");
-                }
-            }
+            // Work on copy as it is destructive
+            var modules = CopyModules();
+            CreatePath(sb, modules, border);
 
             return sb
                 .Append($"\" fill=\"{foreground}\"/>\n")
                 .Append("</svg>\n")
                 .ToString();
+        }
+
+        /// <summary>
+        /// Creates a graphics of this QR code valid in SVG or XAML.
+        /// <para>
+        /// The graphics path uses a coordinate system where each module is 1 unit wide and tall,
+        /// and the top left module is offset vertically and horizontally by <i>border</i> units.
+        /// </para>
+        /// <para>
+        /// Note that a border width other than 0 only make sense if the bounding box of the QR code
+        /// is explicitly set by the graphics using this path. If the bounding box of this path is
+        /// automatically derived, at least the right and bottom border will be missing.
+        /// </para>
+        /// <para>
+        /// The path will look like this: <c>M3,3h7v1h-7z M12,3h1v4h-1z ... M70,71h1v1h-1z</c>
+        /// </para>
+        /// </summary>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
+        /// <returns>The graphics path</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if border is negative</exception>
+        public string ToGraphicsPath(int border = 0)
+        {
+            if (border < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
+            }
+
+            // Work on copy as it is destructive
+            var modules = CopyModules();
+            var path = new StringBuilder();
+            CreatePath(path, modules, border);
+            return path.ToString();
+        }
+        
+        #endregion
+        
+        
+        #region Graphics path
+        
+        
+        // Append a SVG/XAML path for the QR code to the provided string builder
+        private static void CreatePath(StringBuilder path, bool[,] modules, int border)
+        {
+            // Simple algorithms to reduce the number of rectangles for drawing the QR code
+            // and reduce SVG/XAML size.
+            var size = modules.GetLength(0);
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    if (modules[y, x])
+                    {
+                        DrawLargestRectangle(path, modules, x, y, border);
+                    }
+                }
+            }
+        }
+        
+        // Find, draw and clear largest rectangle with (x, y) as the top left corner
+        private static void DrawLargestRectangle(StringBuilder path, bool[,] modules, int x, int y, int border)
+        {
+            var size = modules.GetLength(0);
+
+            var bestW = 1;
+            var bestH = 1;
+            var maxArea = 1;
+
+            var xLimit = size;
+            var iy = y;
+            while (iy < size && modules[iy, x])
+            {
+                var w = 0;
+                while (x + w < xLimit && modules[iy, x + w])
+                {
+                    w++;
+                }
+
+                var area = w * (iy - y + 1);
+                if (area > maxArea)
+                {
+                    maxArea = area;
+                    bestW = w;
+                    bestH = iy - y + 1;
+                }
+                xLimit = x + w;
+                iy++;
+            }
+
+            // append path command
+            if (x != 0 || y != 0)
+            {
+                path.Append(" ");
+            }
+            path.Append($"M{x + border},{y + border}h{bestW}v{bestH}h{-bestW}z");
+            
+            // clear processed modules
+            ClearRectangle(modules, x, y, bestW, bestH);
+        }
+        
+        // Clear a rectangle of modules
+        private static void ClearRectangle(bool[,] modules, int x, int y, int width, int height)
+        {
+            for (var iy = y; iy < y + height; iy++)
+            {
+                for (var ix = x; ix < x + width; ix++)
+                {
+                    modules[iy, ix] = false;
+                }
+            }
+        }
+
+        // Create a copy of the modules
+        private bool[,] CopyModules()
+        {
+            var modules = new bool[Size, Size];
+            for (var y = 0; y < Size; y++)
+            {
+                for (var x = 0; x < Size; x++)
+                {
+                    modules[y, x] = GetModule(x, y);
+                }
+            }
+
+            return modules;
         }
 
         #endregion
