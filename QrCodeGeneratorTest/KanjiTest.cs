@@ -28,6 +28,8 @@
 using System.Collections.Generic;
 using Xunit;
 
+// ReSharper disable StringLiteralTypo
+
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class KanjiTest

@@ -73,10 +73,10 @@ namespace Net.Codecrete.QrCodeGenerator
             // drop the highest term, and store the rest of the coefficients in order of descending powers.
             // Note that r = 0x02, which is a generator element of this field GF(2^8/0x11D).
             uint root = 1;
-            for (int i = 0; i < degree; i++)
+            for (var i = 0; i < degree; i++)
             {
                 // Multiply the current product by (x - r^i)
-                for (int j = 0; j < _coefficients.Length; j++)
+                for (var j = 0; j < _coefficients.Length; j++)
                 {
                     _coefficients[j] = Multiply(_coefficients[j], root);
                     if (j + 1 < _coefficients.Length)
@@ -108,13 +108,13 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(data);
 
             // Compute the remainder by performing polynomial division
-            byte[] result = new byte[_coefficients.Length];
-            foreach (byte b in data)
+            var result = new byte[_coefficients.Length];
+            foreach (var b in data)
             {
-                uint factor = (uint)(b ^ result[0]);
+                var factor = (uint)(b ^ result[0]);
                 Array.Copy(result, 1, result, 0, result.Length - 1);
                 result[result.Length - 1] = 0;
-                for (int i = 0; i < result.Length; i++)
+                for (var i = 0; i < result.Length; i++)
                 {
                     result[i] ^= Multiply(_coefficients[i], factor);
                 }
@@ -134,7 +134,7 @@ namespace Net.Codecrete.QrCodeGenerator
             Debug.Assert(x >> 8 == 0 && y >> 8 == 0);
             // Russian peasant multiplication
             uint z = 0;
-            for (int i = 7; i >= 0; i--)
+            for (var i = 7; i >= 0; i--)
             {
                 z = (z << 1) ^ ((z >> 7) * 0x11D);
                 z ^= ((y >> i) & 1) * x;

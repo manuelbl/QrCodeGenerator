@@ -32,7 +32,7 @@ namespace Net.Codecrete.QrCodeGenerator
     /// <summary>
     /// Helper functions to check for valid arguments.
     /// </summary>
-    internal class Objects
+    internal static class Objects
     {
         /// <summary>
         /// Ensures that the specified argument is <i>not null</i>.

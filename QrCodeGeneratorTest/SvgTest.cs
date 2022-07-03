@@ -34,13 +34,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class SvgTest
     {
-        private static readonly string CODE_TEXT = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.";
+        private const string CodeText = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.";
 
         [Fact]
         public void SvgImage()
         {
-            var qrCode = EncodeText(CODE_TEXT, Ecc.Medium);
-            string svg = qrCode.ToSvgString(0);
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
+            var svg = qrCode.ToSvgString(0);
 
             Assert.StartsWith("<?xml", svg);
             Assert.Contains("\"0 0 69 69\"", svg); // view box
@@ -51,8 +51,8 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void SvgImageWithColor()
         {
-            var qrCode = EncodeText(CODE_TEXT, Ecc.Medium);
-            string svg = qrCode.ToSvgString(0, "#FF0000", "#000000");
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
+            var svg = qrCode.ToSvgString(0, "#FF0000", "#000000");
 
             Assert.Contains("#000000", svg);
             Assert.Contains("#FF0000", svg);
@@ -63,7 +63,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void SvgPath()
         {
-            var qrCode = EncodeText(CODE_TEXT, Ecc.Medium);
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
             var path = qrCode.ToGraphicsPath(3);
             
             Assert.StartsWith("M3,3h", path);

@@ -77,8 +77,8 @@ namespace Net.Codecrete.QrCodeGenerator
         public static QrSegment MakeBytes(byte[] data)
         {
             Objects.RequireNonNull(data);
-            BitArray ba = new BitArray(0);
-            foreach (byte b in data)
+            var ba = new BitArray(0);
+            foreach (var b in data)
             {
                 ba.AppendBits(b, 8);
             }
@@ -103,11 +103,11 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(digits), "String contains non-numeric characters");
             }
 
-            BitArray ba = new BitArray(0);
-            for (int i = 0; i < digits.Length;)
+            var ba = new BitArray(0);
+            for (var i = 0; i < digits.Length;)
             {
                 // Consume up to 3 digits per iteration
-                int n = Math.Min(digits.Length - i, 3);
+                var n = Math.Min(digits.Length - i, 3);
                 ba.AppendBits(uint.Parse(digits.Substring(i, n)), n * 3 + 1);
                 i += n;
             }
@@ -135,12 +135,12 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(text), "String contains unencodable characters in alphanumeric mode");
             }
 
-            BitArray ba = new BitArray(0);
+            var ba = new BitArray(0);
             int i;
             for (i = 0; i <= text.Length - 2; i += 2)
             {
                 // Process groups of 2
-                uint temp = (uint)AlphanumericCharset.IndexOf(text[i]) * 45;
+                var temp = (uint)AlphanumericCharset.IndexOf(text[i]) * 45;
                 temp += (uint)AlphanumericCharset.IndexOf(text[i + 1]);
                 ba.AppendBits(temp, 11);
             }
@@ -204,7 +204,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentOutOfRangeException"><c>assignVal</c>is outside the range [0, 10<sup>6</sup>).</exception>
         public static QrSegment MakeEci(int assignVal)
         {
-            BitArray ba = new BitArray(0);
+            var ba = new BitArray(0);
             if (assignVal < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(assignVal), "ECI assignment value out of range");
@@ -336,20 +336,20 @@ namespace Net.Codecrete.QrCodeGenerator
         // Calculates the number of bits needed to encode the given segments at the given version.
         // Returns a non-negative number if successful. Otherwise returns -1 if a segment has too
         // many characters to fit its length field, or the total bits exceeds int.MaxValue.
-        internal static int GetTotalBits(List<QrSegment> segs, int version)
+        internal static int GetTotalBits(List<QrSegment> segments, int version)
         {
-            Objects.RequireNonNull(segs);
+            Objects.RequireNonNull(segments);
             long result = 0;
-            foreach (QrSegment seg in segs)
+            foreach (var seg in segments)
             {
                 Objects.RequireNonNull(seg);
-                int ccbits = seg.EncodingMode.NumCharCountBits(version);
-                if (seg.NumChars >= 1 << ccbits)
+                var ccBits = seg.EncodingMode.NumCharCountBits(version);
+                if (seg.NumChars >= 1 << ccBits)
                 {
                     return -1;  // The segment's length doesn't fit the field's bit width
                 }
 
-                result += 4L + ccbits + seg._data.Length;
+                result += 4L + ccBits + seg._data.Length;
                 if (result > int.MaxValue)
                 {
                     return -1;  // The sum will overflow an int type
@@ -372,7 +372,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // The set of all legal characters in alphanumeric mode, where
         // each character value maps to the index in the string.
-        internal static readonly string AlphanumericCharset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+        internal const string AlphanumericCharset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
         #endregion
 
@@ -437,11 +437,11 @@ namespace Net.Codecrete.QrCodeGenerator
             /// </para>
             /// </summary>
             /// <value>Array of character count bit length</value>
-            internal int[] NumBitsCharCount { get; }
+            private int[] NumBitsCharCount { get; }
 
 
             /// <summary>
-            /// Returns the bith length of the character count in the QR segment header
+            /// Returns the bit length of the character count in the QR segment header
             /// for the specified QR code version. The result is in the range [0, 16].
             /// </summary>
             /// <param name="ver">the QR code version (between 1 and 40)</param>

@@ -27,17 +27,17 @@
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
-    internal class TestHelper
+    internal static class TestHelper
     {
         internal static string[] ToStringArray(QrCode qrCode)
         {
-            int size = qrCode.Size;
-            string[] result = new string[size];
+            var size = qrCode.Size;
+            var result = new string[size];
 
-            for (int y = 0; y < size; y++)
+            for (var y = 0; y < size; y++)
             {
-                char[] row = new char[size];
-                for (int x = 0; x < size; x++)
+                var row = new char[size];
+                for (var x = 0; x < size; x++)
                 {
                     row[x] = qrCode.GetModule(x, y) ? 'X' : ' ';
                 }

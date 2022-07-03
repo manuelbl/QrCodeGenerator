@@ -27,6 +27,8 @@
 
 using Xunit;
 
+// ReSharper disable StringLiteralTypo
+
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class OptimalSegmentTest

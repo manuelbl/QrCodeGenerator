@@ -29,6 +29,8 @@ using System.Text;
 using Xunit;
 using static Net.Codecrete.QrCodeGenerator.QrCode;
 
+// ReSharper disable StringLiteralTypo
+
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class QrCodeTest

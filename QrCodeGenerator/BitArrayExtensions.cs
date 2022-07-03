@@ -53,20 +53,20 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentOutOfRangeException">Value or number of bits is out of range.</exception>
         public static void AppendBits(this BitArray bitArray, uint val, int len)
         {
-            if (len < 0 || len > 31 || val >> len != 0)
+            if (len < 0 || len > 31)
             {
                 throw new ArgumentOutOfRangeException(nameof(len), "'len' out of range");
             }
 
-            if (len < 0 || len > 31 || val >> len != 0)
+            if (val >> len != 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(val), "'val' out of range");
             }
 
-            int bitLength = bitArray.Length;
+            var bitLength = bitArray.Length;
             bitArray.Length = bitLength + len;
-            uint mask = 1U << (len - 1);
-            for (int i = bitLength; i < bitLength + len; i++) // Append bit by bit
+            var mask = 1U << (len - 1);
+            for (var i = bitLength; i < bitLength + len; i++) // Append bit by bit
             {
                 if ((val & mask) != 0)
                 {
@@ -87,9 +87,9 @@ namespace Net.Codecrete.QrCodeGenerator
         public static void AppendData(this BitArray bitArray, BitArray otherArray)
         {
             Objects.RequireNonNull(otherArray);
-            int bitLength = bitArray.Length;
+            var bitLength = bitArray.Length;
             bitArray.Length = bitLength + otherArray.Length;
-            for (int i = 0; i < otherArray.Length; i++, bitLength++)  // Append bit by bit
+            for (var i = 0; i < otherArray.Length; i++, bitLength++)  // Append bit by bit
             {
                 if (otherArray[i])
                 {

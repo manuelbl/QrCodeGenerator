@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using Xunit;
 
@@ -35,16 +34,15 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class QrSegmentEncodingTest
     {
+        private const string TextNumeric = "83930";
 
-        private static readonly string TextNumeric = "83930";
-
-        private static readonly int BitLengthNumeric = 17;
+        private const int BitLengthNumeric = 17;
 
         private static readonly byte[] BitsNumeric = { 139, 243, 0 };
 
-        private static readonly string TextAlphanumeric = "$%*+-./ 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        private const string TextAlphanumeric = "$%*+-./ 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-        private static readonly int BitLengthAlphanumeric = 242;
+        private const int BitLengthAlphanumeric = 242;
 
         private static readonly byte[] BitsAlphanumeric = {
             43, 63,240, 245, 223, 12, 64, 232,
@@ -53,20 +51,20 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             109, 33, 107, 218, 193, 225, 2
         };
 
-        private static readonly string TextUtf8 = "😐ö€";
+        private const string TextUtf8 = "😐ö€";
 
-        private static readonly int BitLengthUtf8 = 72;
+        private const int BitLengthUtf8 = 72;
 
         private static readonly byte[] BitsUtf8 = { 15, 249, 25, 9, 195, 109, 71, 65, 53 };
 
         [Fact]
         public void NumericEncoding()
         {
-            QrSegment segment = QrSegment.MakeNumeric(TextNumeric);
+            var segment = QrSegment.MakeNumeric(TextNumeric);
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Numeric);
             Assert.Equal(TextNumeric.Length, segment.NumChars);
 
-            BitArray data = segment.GetData();
+            var data = segment.GetData();
             Assert.Equal(BitLengthNumeric, data.Length);
 
             Assert.Equal(BitsNumeric, BitArrayToByteArray(data));
@@ -81,11 +79,11 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void AlphanumericEncoding()
         {
-            QrSegment segment = QrSegment.MakeAlphanumeric(TextAlphanumeric);
+            var segment = QrSegment.MakeAlphanumeric(TextAlphanumeric);
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Alphanumeric);
             Assert.Equal(TextAlphanumeric.Length, segment.NumChars);
 
-            BitArray data = segment.GetData();
+            var data = segment.GetData();
             Assert.Equal(BitLengthAlphanumeric, data.Length);
 
             Assert.Equal(BitsAlphanumeric, BitArrayToByteArray(data));
@@ -100,14 +98,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void AutoNumericEncoding()
         {
-            List<QrSegment> segments = QrSegment.MakeSegments(TextNumeric);
+            var segments = QrSegment.MakeSegments(TextNumeric);
             Assert.Single(segments);
 
-            QrSegment segment = segments[0];
+            var segment = segments[0];
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Numeric);
             Assert.Equal(TextNumeric.Length, segment.NumChars);
 
-            BitArray data = segment.GetData();
+            var data = segment.GetData();
             Assert.Equal(BitLengthNumeric, data.Length);
 
             Assert.Equal(BitsNumeric, BitArrayToByteArray(data));
@@ -116,14 +114,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void AutoAlphanumericEncoding()
         {
-            List<QrSegment> segments = QrSegment.MakeSegments(TextAlphanumeric);
+            var segments = QrSegment.MakeSegments(TextAlphanumeric);
             Assert.Single(segments);
 
-            QrSegment segment = segments[0];
+            var segment = segments[0];
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Alphanumeric);
             Assert.Equal(TextAlphanumeric.Length, segment.NumChars);
 
-            BitArray data = segment.GetData();
+            var data = segment.GetData();
             Assert.Equal(BitLengthAlphanumeric, data.Length);
 
             Assert.Equal(BitsAlphanumeric, BitArrayToByteArray(data));
@@ -132,13 +130,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void Utf8Encoding()
         {
-            List<QrSegment> segments = QrSegment.MakeSegments(TextUtf8);
+            var segments = QrSegment.MakeSegments(TextUtf8);
             Assert.Single(segments);
-            QrSegment segment = segments[0];
+            var segment = segments[0];
             Assert.Equal(segment.EncodingMode, QrSegment.Mode.Byte);
             Assert.Equal(Encoding.UTF8.GetBytes(TextUtf8).Length, segment.NumChars);
 
-            BitArray data = segment.GetData();
+            var data = segment.GetData();
             Assert.Equal(BitLengthUtf8, data.Length);
 
             Assert.Equal(BitsUtf8, BitArrayToByteArray(data));
@@ -147,14 +145,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void EmptyTest()
         {
-            List<QrSegment> segments = QrSegment.MakeSegments("");
+            var segments = QrSegment.MakeSegments("");
             Assert.Empty(segments);
         }
 
         private static byte[] BitArrayToByteArray(BitArray buffer)
         {
-            int len = buffer.Length;
-            byte[] result = new byte[(len + 7) / 8];
+            var len = buffer.Length;
+            var result = new byte[(len + 7) / 8];
             buffer.CopyTo(result, 0);
             return result;
         }

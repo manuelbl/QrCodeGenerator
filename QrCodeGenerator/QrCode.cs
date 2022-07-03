@@ -88,8 +88,8 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             Objects.RequireNonNull(text);
             Objects.RequireNonNull(ecl);
-            List<QrSegment> segs = QrSegment.MakeSegments(text);
-            return EncodeSegments(segs, ecl);
+            var segments = QrSegment.MakeSegments(text);
+            return EncodeSegments(segments, ecl);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             Objects.RequireNonNull(data);
             Objects.RequireNonNull(ecl);
-            QrSegment seg = QrSegment.MakeBytes(data);
+            var seg = QrSegment.MakeBytes(data);
             return EncodeSegments(new List<QrSegment> { seg }, ecl);
         }
 
@@ -136,7 +136,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <para>
         /// This function allows the user to create a custom sequence of segments that switches
         /// between modes (such as alphanumeric and byte) to encode text in less space and gives full control over all
-        /// encoding paramters.
+        /// encoding parameters.
         /// </para>
         /// </summary>
         /// <remarks>
@@ -176,28 +176,30 @@ namespace Net.Codecrete.QrCodeGenerator
             int version, dataUsedBits;
             for (version = minVersion; ; version++)
             {
-                int numDataBits = GetNumDataCodewords(version, ecl) * 8;  // Number of data bits available
+                var numDataBits = GetNumDataCodewords(version, ecl) * 8;  // Number of data bits available
                 dataUsedBits = QrSegment.GetTotalBits(segments, version);
                 if (dataUsedBits != -1 && dataUsedBits <= numDataBits)
                 {
                     break;  // This version number is found to be suitable
                 }
 
-                if (version >= maxVersion)
-                {  // All versions in the range could not fit the given data
-                    string msg = "Segment too long";
-                    if (dataUsedBits != -1)
-                    {
-                        msg = $"Data length = {dataUsedBits} bits, Max capacity = {numDataBits} bits";
-                    }
-
-                    throw new DataTooLongException(msg);
+                if (version < maxVersion)
+                {
+                    continue;
                 }
+                
+                // All versions in the range could not fit the given data
+                var msg = "Segment too long";
+                if (dataUsedBits != -1)
+                {
+                    msg = $"Data length = {dataUsedBits} bits, Max capacity = {numDataBits} bits";
+                }
+
+                throw new DataTooLongException(msg);
             }
-            Debug.Assert(dataUsedBits != -1);
 
             // Increase the error correction level while the data still fits in the current version number
-            foreach (Ecc newEcl in Ecc.AllValues)
+            foreach (var newEcl in Ecc.AllValues)
             {  // From low to high
                 if (boostEcl && dataUsedBits <= GetNumDataCodewords(version, newEcl) * 8)
                 {
@@ -206,8 +208,8 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Concatenate all segments to create the data bit string
-            BitArray ba = new BitArray(0);
-            foreach (QrSegment seg in segments)
+            var ba = new BitArray(0);
+            foreach (var seg in segments)
             {
                 ba.AppendBits(seg.EncodingMode.ModeBits, 4);
                 ba.AppendBits((uint)seg.NumChars, seg.EncodingMode.NumCharCountBits(version));
@@ -216,7 +218,7 @@ namespace Net.Codecrete.QrCodeGenerator
             Debug.Assert(ba.Length == dataUsedBits);
 
             // Add terminator and pad up to a byte if applicable
-            int dataCapacityBits = GetNumDataCodewords(version, ecl) * 8;
+            var dataCapacityBits = GetNumDataCodewords(version, ecl) * 8;
             Debug.Assert(ba.Length <= dataCapacityBits);
             ba.AppendBits(0, Math.Min(4, dataCapacityBits - ba.Length));
             ba.AppendBits(0, (8 - ba.Length % 8) % 8);
@@ -229,8 +231,8 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Pack bits into bytes in big endian
-            byte[] dataCodewords = new byte[ba.Length / 8];
-            for (int i = 0; i < ba.Length; i++)
+            var dataCodewords = new byte[ba.Length / 8];
+            for (var i = 0; i < ba.Length; i++)
             {
                 if (ba.Get(i))
                 {
@@ -332,7 +334,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
             // Compute ECC, draw modules, do masking
             DrawFunctionPatterns();
-            byte[] allCodewords = AddEccAndInterleave(dataCodewords);
+            var allCodewords = AddEccAndInterleave(dataCodewords);
             DrawCodewords(allCodewords);
             Mask = HandleConstructorMasking(mask);
             _isFunction = null;
@@ -396,8 +398,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
             }
 
-            int dim = Size + border * 2;
-            StringBuilder sb = new StringBuilder()
+            var dim = Size + border * 2;
+            var sb = new StringBuilder()
                 .Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .Append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n")
                 .Append($"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 {dim} {dim}\" stroke=\"none\">\n")
@@ -547,7 +549,7 @@ namespace Net.Codecrete.QrCodeGenerator
         private void DrawFunctionPatterns()
         {
             // Draw horizontal and vertical timing patterns
-            for (int i = 0; i < Size; i++)
+            for (var i = 0; i < Size; i++)
             {
                 SetFunctionModule(6, i, i % 2 == 0);
                 SetFunctionModule(i, 6, i % 2 == 0);
@@ -559,11 +561,11 @@ namespace Net.Codecrete.QrCodeGenerator
             DrawFinderPattern(3, Size - 4);
 
             // Draw numerous alignment patterns
-            int[] alignPatPos = GetAlignmentPatternPositions();
-            int numAlign = alignPatPos.Length;
-            for (int i = 0; i < numAlign; i++)
+            var alignPatPos = GetAlignmentPatternPositions();
+            var numAlign = alignPatPos.Length;
+            for (var i = 0; i < numAlign; i++)
             {
-                for (int j = 0; j < numAlign; j++)
+                for (var j = 0; j < numAlign; j++)
                 {
                     // Don't draw on the three finder corners
                     if (!(i == 0 && j == 0 || i == 0 && j == numAlign - 1 || i == numAlign - 1 && j == 0))
@@ -584,18 +586,18 @@ namespace Net.Codecrete.QrCodeGenerator
         private void DrawFormatBits(uint mask)
         {
             // Calculate error correction code and pack bits
-            uint data = (ErrorCorrectionLevel.FormatBits << 3) | mask;  // errCorrLvl is uint2, mask is uint3
-            uint rem = data;
-            for (int i = 0; i < 10; i++)
+            var data = (ErrorCorrectionLevel.FormatBits << 3) | mask;  // errCorrLvl is uint2, mask is uint3
+            var rem = data;
+            for (var i = 0; i < 10; i++)
             {
                 rem = (rem << 1) ^ ((rem >> 9) * 0x537);
             }
 
-            uint bits = ((data << 10) | rem) ^ 0x5412;  // uint15
+            var bits = ((data << 10) | rem) ^ 0x5412;  // uint15
             Debug.Assert(bits >> 15 == 0);
 
             // Draw first copy
-            for (int i = 0; i <= 5; i++)
+            for (var i = 0; i <= 5; i++)
             {
                 SetFunctionModule(8, i, GetBit(bits, i));
             }
@@ -603,18 +605,18 @@ namespace Net.Codecrete.QrCodeGenerator
             SetFunctionModule(8, 7, GetBit(bits, 6));
             SetFunctionModule(8, 8, GetBit(bits, 7));
             SetFunctionModule(7, 8, GetBit(bits, 8));
-            for (int i = 9; i < 15; i++)
+            for (var i = 9; i < 15; i++)
             {
                 SetFunctionModule(14 - i, 8, GetBit(bits, i));
             }
 
             // Draw second copy
-            for (int i = 0; i < 8; i++)
+            for (var i = 0; i < 8; i++)
             {
                 SetFunctionModule(Size - 1 - i, 8, GetBit(bits, i));
             }
 
-            for (int i = 8; i < 15; i++)
+            for (var i = 8; i < 15; i++)
             {
                 SetFunctionModule(8, Size - 15 + i, GetBit(bits, i));
             }
@@ -633,21 +635,21 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Calculate error correction code and pack bits
-            uint rem = (uint)Version;  // version is uint6, in the range [7, 40]
-            for (int i = 0; i < 12; i++)
+            var rem = (uint)Version;  // version is uint6, in the range [7, 40]
+            for (var i = 0; i < 12; i++)
             {
                 rem = (rem << 1) ^ ((rem >> 11) * 0x1F25);
             }
 
-            uint bits = ((uint)Version << 12) | rem;  // uint18
+            var bits = ((uint)Version << 12) | rem;  // uint18
             Debug.Assert(bits >> 18 == 0);
 
             // Draw two copies
-            for (int i = 0; i < 18; i++)
+            for (var i = 0; i < 18; i++)
             {
-                bool bit = GetBit(bits, i);
-                int a = Size - 11 + i % 3;
-                int b = i / 3;
+                var bit = GetBit(bits, i);
+                var a = Size - 11 + i % 3;
+                var b = i / 3;
                 SetFunctionModule(a, b, bit);
                 SetFunctionModule(b, a, bit);
             }
@@ -657,11 +659,11 @@ namespace Net.Codecrete.QrCodeGenerator
         // with the center module at (x, y). Modules can be out of bounds.
         private void DrawFinderPattern(int x, int y)
         {
-            for (int dy = -4; dy <= 4; dy++)
+            for (var dy = -4; dy <= 4; dy++)
             {
-                for (int dx = -4; dx <= 4; dx++)
+                for (var dx = -4; dx <= 4; dx++)
                 {
-                    int dist = Math.Max(Math.Abs(dx), Math.Abs(dy));  // Chebyshev/infinity norm
+                    var dist = Math.Max(Math.Abs(dx), Math.Abs(dy));  // Chebyshev/infinity norm
                     int xx = x + dx, yy = y + dy;
                     if (0 <= xx && xx < Size && 0 <= yy && yy < Size)
                     {
@@ -676,9 +678,9 @@ namespace Net.Codecrete.QrCodeGenerator
         // at (x, y). All modules must be in bounds.
         private void DrawAlignmentPattern(int x, int y)
         {
-            for (int dy = -2; dy <= 2; dy++)
+            for (var dy = -2; dy <= 2; dy++)
             {
-                for (int dx = -2; dx <= 2; dx++)
+                for (var dx = -2; dx <= 2; dx++)
                 {
                     SetFunctionModule(x + dx, y + dy, Math.Max(Math.Abs(dx), Math.Abs(dy)) != 1);
                 }
@@ -712,35 +714,37 @@ namespace Net.Codecrete.QrCodeGenerator
             // Calculate parameter numbers
             int numBlocks = NumErrorCorrectionBlocks[ErrorCorrectionLevel.Ordinal, Version];
             int blockEccLen = EccCodewordsPerBlock[ErrorCorrectionLevel.Ordinal, Version];
-            int rawCodewords = GetNumRawDataModules(Version) / 8;
-            int numShortBlocks = numBlocks - rawCodewords % numBlocks;
-            int shortBlockLen = rawCodewords / numBlocks;
+            var rawCodewords = GetNumRawDataModules(Version) / 8;
+            var numShortBlocks = numBlocks - rawCodewords % numBlocks;
+            var shortBlockLen = rawCodewords / numBlocks;
 
             // Split data into blocks and append ECC to each block
-            byte[][] blocks = new byte[numBlocks][];
-            ReedSolomonGenerator rs = new ReedSolomonGenerator(blockEccLen);
+            var blocks = new byte[numBlocks][];
+            var rs = new ReedSolomonGenerator(blockEccLen);
             for (int i = 0, k = 0; i < numBlocks; i++)
             {
-                byte[] dat = CopyOfRange(data, k, k + shortBlockLen - blockEccLen + (i < numShortBlocks ? 0 : 1));
+                var dat = CopyOfRange(data, k, k + shortBlockLen - blockEccLen + (i < numShortBlocks ? 0 : 1));
                 k += dat.Length;
-                byte[] block = CopyOf(dat, shortBlockLen + 1);
-                byte[] ecc = rs.GetRemainder(dat);
+                var block = CopyOf(dat, shortBlockLen + 1);
+                var ecc = rs.GetRemainder(dat);
                 Array.Copy(ecc, 0, block, block.Length - blockEccLen, ecc.Length);
                 blocks[i] = block;
             }
 
             // Interleave (not concatenate) the bytes from every block into a single sequence
-            byte[] result = new byte[rawCodewords];
+            var result = new byte[rawCodewords];
             for (int i = 0, k = 0; i < blocks[0].Length; i++)
             {
-                for (int j = 0; j < blocks.Length; j++)
+                for (var j = 0; j < blocks.Length; j++)
                 {
                     // Skip the padding byte in short blocks
-                    if (i != shortBlockLen - blockEccLen || j >= numShortBlocks)
+                    if (i == shortBlockLen - blockEccLen && j < numShortBlocks)
                     {
-                        result[k] = blocks[j][i];
-                        k++;
+                        continue;
                     }
+                    
+                    result[k] = blocks[j][i];
+                    k++;
                 }
             }
             return result;
@@ -757,9 +761,9 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException();
             }
 
-            int i = 0;  // Bit index into the data
+            var i = 0;  // Bit index into the data
                         // Do the funny zigzag scan
-            for (int right = Size - 1; right >= 1; right -= 2)
+            for (var right = Size - 1; right >= 1; right -= 2)
             {
                 // Index of right column in each column pair
                 if (right == 6)
@@ -767,14 +771,14 @@ namespace Net.Codecrete.QrCodeGenerator
                     right = 5;
                 }
 
-                for (int vert = 0; vert < Size; vert++)
+                for (var vert = 0; vert < Size; vert++)
                 {
                     // Vertical counter
-                    for (int j = 0; j < 2; j++)
+                    for (var j = 0; j < 2; j++)
                     {
-                        int x = right - j;  // Actual x coordinate
-                        bool upward = ((right + 1) & 2) == 0;
-                        int y = upward ? Size - 1 - vert : vert;  // Actual y coordinate
+                        var x = right - j;  // Actual x coordinate
+                        var upward = ((right + 1) & 2) == 0;
+                        var y = upward ? Size - 1 - vert : vert;  // Actual y coordinate
                         if (_isFunction[y * Size + x] || i >= data.Length * 8)
                         {
                             continue;
@@ -803,12 +807,12 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(mask), "Mask value out of range");
             }
 
-            int index = 0;
-            for (int y = 0; y < Size; y++)
+            var index = 0;
+            for (var y = 0; y < Size; y++)
             {
-                for (int x = 0; x < Size; x++)
+                for (var x = 0; x < Size; x++)
                 {
-                    bool invert;
+                    var invert = false;
                     switch (mask)
                     {
                         case 0: invert = (x + y) % 2 == 0; break;
@@ -819,7 +823,6 @@ namespace Net.Codecrete.QrCodeGenerator
                         case 5: invert = x * y % 2 + x * y % 3 == 0; break;
                         case 6: invert = (x * y % 2 + x * y % 3) % 2 == 0; break;
                         case 7: invert = ((x + y) % 2 + x * y % 3) % 2 == 0; break;
-                        default: Debug.Assert(false); return;
                     }
                     _modules[index] ^= invert & !_isFunction[index];
                     index++;
@@ -836,12 +839,12 @@ namespace Net.Codecrete.QrCodeGenerator
             if (mask == -1)
             {
                 // Automatically choose best mask
-                int minPenalty = int.MaxValue;
+                var minPenalty = int.MaxValue;
                 for (uint i = 0; i < 8; i++)
                 {
                     ApplyMask(i);
                     DrawFormatBits(i);
-                    int penalty = GetPenaltyScore();
+                    var penalty = GetPenaltyScore();
                     if (penalty < minPenalty)
                     {
                         mask = (int)i;
@@ -861,17 +864,17 @@ namespace Net.Codecrete.QrCodeGenerator
         // This is used by the automatic mask choice algorithm to find the mask pattern that yields the lowest score.
         private int GetPenaltyScore()
         {
-            int result = 0;
-            FinderPenalty finderPenalty = new FinderPenalty(Size);
+            var result = 0;
+            var finderPenalty = new FinderPenalty(Size);
 
             // Adjacent modules in row having same color, and finder-like patterns
-            int index = 0;
-            for (int y = 0; y < Size; y++)
+            var index = 0;
+            for (var y = 0; y < Size; y++)
             {
-                bool runColor = false;
-                int runX = 0;
+                var runColor = false;
+                var runX = 0;
                 finderPenalty.Reset();
-                for (int x = 0; x < Size; x++)
+                for (var x = 0; x < Size; x++)
                 {
                     if (_modules[index] == runColor)
                     {
@@ -903,13 +906,13 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Adjacent modules in column having same color, and finder-like patterns
-            for (int x = 0; x < Size; x++)
+            for (var x = 0; x < Size; x++)
             {
                 index = x;
-                bool runColor = false;
-                int runY = 0;
+                var runColor = false;
+                var runY = 0;
                 finderPenalty.Reset();
-                for (int y = 0; y < Size; y++)
+                for (var y = 0; y < Size; y++)
                 {
                     if (_modules[index] == runColor)
                     {
@@ -942,11 +945,11 @@ namespace Net.Codecrete.QrCodeGenerator
 
             // 2*2 blocks of modules having same color
             index = 0;
-            for (int y = 0; y < Size - 1; y++)
+            for (var y = 0; y < Size - 1; y++)
             {
-                for (int x = 0; x < Size - 1; x++)
+                for (var x = 0; x < Size - 1; x++)
                 {
-                    bool color = _modules[index];
+                    var color = _modules[index];
                     if (color == _modules[index + 1] &&
                           color == _modules[index + Size] &&
                           color == _modules[index + Size + 1])
@@ -961,12 +964,11 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Balance of dark and light modules
-            int dark = 0;
+            var dark = 0;
             index = 0;
-            for (int y = 0; y < Size; y++)
+            for (var y = 0; y < Size; y++)
             {
-                for (int x = 0; x < Size; x++)
-
+                for (var x = 0; x < Size; x++)
                 {
                     if (_modules[index])
                     {
@@ -976,9 +978,9 @@ namespace Net.Codecrete.QrCodeGenerator
                     index++;
                 }
             }
-            int total = Size * Size;  // Note that size is odd, so dark/total != 1/2
+            var total = Size * Size;  // Note that size is odd, so dark/total != 1/2
                                       // Compute the smallest integer k >= 0 such that (45-5k)% <= dark/total <= (55+5k)%
-            int k = (Math.Abs(dark * 20 - total * 10) + total - 1) / total - 1;
+            var k = (Math.Abs(dark * 20 - total * 10) + total - 1) / total - 1;
             result += k * PenaltyN4;
             return result;
         }
@@ -999,7 +1001,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return new int[] { };
             }
 
-            int numAlign = Version / 7 + 2;
+            var numAlign = Version / 7 + 2;
             int step;
             if (Version == 32)  // Special snowflake
             {
@@ -1010,7 +1012,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 step = (Version * 4 + numAlign * 2 + 1) / (numAlign * 2 - 2) * 2;
             }
 
-            int[] result = new int[numAlign];
+            var result = new int[numAlign];
             result[0] = 6;
             for (int i = result.Length - 1, pos = Size - 7; i >= 1; i--, pos -= step)
             {
@@ -1030,8 +1032,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(ver), "Version number out of range");
             }
 
-            int size = ver * 4 + 17;
-            int result = size * size;   // Number of modules in the whole QR code square
+            var size = ver * 4 + 17;
+            var result = size * size;   // Number of modules in the whole QR code square
             result -= 8 * 8 * 3;        // Subtract the three finders with separators
             result -= 15 * 2 + 1;       // Subtract the format information and dark module
             result -= (size - 16) * 2;  // Subtract the timing patterns (excluding finders)
@@ -1042,7 +1044,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return result;
             }
 
-            int numAlign = ver / 7 + 2;
+            var numAlign = ver / 7 + 2;
             result -= (numAlign - 1) * (numAlign - 1) * 25;  // Subtract alignment patterns not overlapping with timing patterns
             result -= (numAlign - 2) * 2 * 20;  // Subtract alignment patterns that overlap with timing patterns
             // The two lines above are equivalent to: result -= (25 * numAlign - 10) * numAlign - 55;
@@ -1069,7 +1071,7 @@ namespace Net.Codecrete.QrCodeGenerator
         // Internal the run history is organized in reverse order
         // (compared to Nayuki's code) to avoid the copying when
         // adding to the history.
-        internal struct FinderPenalty
+        private struct FinderPenalty
         {
             private int _length;
             private readonly short[] _runHistory;
@@ -1097,11 +1099,11 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
                 int n = _runHistory[_length - 6];
                 Debug.Assert(n <= _size * 3);
-                bool core = n > 0
-                    && _runHistory[_length - 5] == n
-                    && _runHistory[_length - 4] == n * 3
-                    && _runHistory[_length - 3] == n
-                    && _runHistory[_length - 2] == n;
+                var core = n > 0
+                           && _runHistory[_length - 5] == n
+                           && _runHistory[_length - 4] == n * 3
+                           && _runHistory[_length - 3] == n
+                           && _runHistory[_length - 2] == n;
                 return (core && _runHistory[_length - 7] >= n * 4 && _runHistory[_length - 1] >= n ? 1 : 0)
                      + (core && _runHistory[_length - 1] >= n * 4 && _runHistory[_length - 7] >= n ? 1 : 0);
             }
@@ -1131,7 +1133,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static byte[] CopyOfRange(byte[] original, int from, int to)
         {
-            byte[] result = new byte[to - from];
+            var result = new byte[to - from];
             Array.Copy(original, from, result, 0, to - from);
             return result;
         }
@@ -1139,7 +1141,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static byte[] CopyOf(byte[] original, int newLength)
         {
-            byte[] result = new byte[newLength];
+            var result = new byte[newLength];
             Array.Copy(original, result, Math.Min(original.Length, newLength));
             return result;
         }
@@ -1182,7 +1184,7 @@ namespace Net.Codecrete.QrCodeGenerator
             { 255,  7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },  // Low
 		    { 255, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28 },  // Medium
 		    { 255, 13, 22, 18, 26, 18, 24, 18, 22, 20, 24, 28, 26, 24, 20, 30, 24, 28, 28, 26, 30, 28, 30, 30, 30, 30, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },  // Quartile
-		    { 255, 17, 28, 22, 16, 22, 28, 26, 26, 24, 28, 24, 28, 22, 24, 24, 30, 28, 28, 26, 28, 30, 24, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },  // High
+		    { 255, 17, 28, 22, 16, 22, 28, 26, 26, 24, 28, 24, 28, 22, 24, 24, 30, 28, 28, 26, 28, 30, 24, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 }   // High
 	    };
 
         private static readonly byte[,] NumErrorCorrectionBlocks = {
@@ -1191,7 +1193,7 @@ namespace Net.Codecrete.QrCodeGenerator
 		    { 255, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4,  4,  4,  4,  4,  6,  6,  6,  6,  7,  8,  8,  9,  9, 10, 12, 12, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 21, 22, 24, 25 },  // Low
 		    { 255, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5,  5,  8,  9,  9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49 },  // Medium
 		    { 255, 1, 1, 2, 2, 4, 4, 6, 6, 8, 8,  8, 10, 12, 16, 12, 17, 16, 18, 21, 20, 23, 23, 25, 27, 29, 34, 34, 35, 38, 40, 43, 45, 48, 51, 53, 56, 59, 62, 65, 68 },  // Quartile
-		    { 255, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8, 11, 11, 16, 16, 18, 16, 19, 21, 25, 25, 25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81 },  // High
+		    { 255, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8, 11, 11, 16, 16, 18, 16, 19, 21, 25, 25, 25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81 }   // High
 	    };
 
         #endregion
@@ -1229,7 +1231,7 @@ namespace Net.Codecrete.QrCodeGenerator
             public static readonly Ecc High = new Ecc(3, 2);
 
 
-            internal static Ecc[] AllValues = { Low, Medium, Quartile, High };
+            internal static readonly Ecc[] AllValues = { Low, Medium, Quartile, High };
 
             /// <summary>
             /// Ordinal number of error correction level (in the range 0 to 3).

@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using static Net.Codecrete.QrCodeGenerator.QrSegment;
 
@@ -79,19 +80,19 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Iterate through version numbers, and make tentative segments
-            List<QrSegment> segs = null;
+            List<QrSegment> segments = null;
             var codePoints = ToCodePoints(text);
-            for (int version = minVersion; ; version++)
+            for (var version = minVersion; ; version++)
             {
                 if (version == minVersion || version == 10 || version == 27)
-                    segs = MakeSegmentsOptimally(codePoints, version);
-                Debug.Assert(segs != null);
+                    segments = MakeSegmentsOptimally(codePoints, version);
+                Debug.Assert(segments != null);
 
                 // Check if the segments fit
-                int dataCapacityBits = QrCode.GetNumDataCodewords(version, ecl) * 8;
-                int dataUsedBits = GetTotalBits(segs, version);
+                var dataCapacityBits = QrCode.GetNumDataCodewords(version, ecl) * 8;
+                var dataUsedBits = GetTotalBits(segments, version);
                 if (dataUsedBits != -1 && dataUsedBits <= dataCapacityBits)
-                    return segs; // This version number is found to be suitable
+                    return segments; // This version number is found to be suitable
 
                 if (version < maxVersion) continue;
 
@@ -123,7 +124,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             Mode[] modeTypes = { Mode.Byte, Mode.Alphanumeric, Mode.Numeric, Mode.Kanji }; // Do not modify
-            int numModes = modeTypes.Length;
+            var numModes = modeTypes.Length;
 
             // Segment header sizes, measured in 1/6 bits
             var headCosts = new int[numModes];
@@ -145,7 +146,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // Calculate costs using dynamic programming
             for (var i = 0; i < codePoints.Length; i++)
             {
-                int c = codePoints[i];
+                var c = codePoints[i];
                 var curCosts = new int[numModes];
                 {
                     // Always extend a byte mode segment
@@ -180,7 +181,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     for (var k = 0; k < numModes; k++)
                     {
                         // From mode
-                        int newCost = (curCosts[k] + 5) / 6 * 6 + headCosts[j];
+                        var newCost = (curCosts[k] + 5) / 6 * 6 + headCosts[j];
                         if (charModes[i, k] == null || charModes[i, j] != null && newCost >= curCosts[j])
                             continue;
                         curCosts[j] = newCost;
@@ -202,7 +203,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
             // Get optimal mode for each code point by tracing backwards
             var result = new Mode[codePoints.Length];
-            for (int i = result.Length - 1; i >= 0; i--)
+            for (var i = result.Length - 1; i >= 0; i--)
             {
                 for (var j = 0; j < numModes; j++)
                 {
@@ -219,7 +220,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // Returns a new list of segments based on the given text and modes, such that
         // consecutive code points in the same mode are put into the same segment.
-        private static List<QrSegment> SplitIntoSegments(int[] codePoints, Mode[] charModes)
+        private static List<QrSegment> SplitIntoSegments(int[] codePoints, IReadOnlyList<Mode> charModes)
         {
             if (codePoints.Length == 0)
                 throw new ArgumentOutOfRangeException(nameof(codePoints));
@@ -233,7 +234,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 if (i < codePoints.Length && charModes[i] == curMode)
                     continue;
 
-                string s = FromCodePoints(codePoints, start, i - start);
+                var s = FromCodePoints(codePoints, start, i - start);
                 if (curMode == Mode.Byte)
                 {
                     result.Add(MakeBytes(Encoding.UTF8.GetBytes(s)));
@@ -266,9 +267,9 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
 
-        private static string FromCodePoints(int[] codepoints, int startIndex, int count)
+        private static string FromCodePoints(IReadOnlyList<int> codepoints, int startIndex, int count)
         {
-            bool useBigEndian = !BitConverter.IsLittleEndian;
+            var useBigEndian = !BitConverter.IsLittleEndian;
             Encoding utf32 = new UTF32Encoding(useBigEndian, false, true);
 
             var octets = new byte[count * 4];
@@ -289,7 +290,7 @@ namespace Net.Codecrete.QrCodeGenerator
         // UTF-32 / UCS-4) representing the given UTF-16 string.
         private static int[] ToCodePoints(string s)
         {
-            bool useBigEndian = !BitConverter.IsLittleEndian;
+            var useBigEndian = !BitConverter.IsLittleEndian;
             Encoding utf32 = new UTF32Encoding(useBigEndian, false, true);
             var octets = utf32.GetBytes(s);
 
@@ -330,7 +331,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// </para>
         /// </summary>
         /// <param name="text">The text to encoding, containing only characters allowed by the Kanji encoding.</param>
-        /// <returns>The created segment respresenting the specified text.</returns>
+        /// <returns>The created segment representing the specified text.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="text"/> contains non-encodable characters.</exception>
         /// <seealso cref="IsEncodableAsKanji"/>
@@ -339,9 +340,8 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(text);
             var ba = new BitArray(0);
 
-            foreach (char t in text)
+            foreach (var val in text.Select(t => UnicodeToQrKanji[t]))
             {
-                ushort val = UnicodeToQrKanji[t];
                 if (val == 0xffff)
                 {
                     throw new ArgumentOutOfRangeException(nameof(text), "String contains non-kanji-mode characters");
@@ -369,11 +369,7 @@ namespace Net.Codecrete.QrCodeGenerator
 	    public static bool IsEncodableAsKanji(string text)
         {
             Objects.RequireNonNull(text);
-            foreach (char t in text)
-                if (!IsKanji(t))
-                    return false;
-
-            return true;
+            return text.All(t => IsKanji(t));
         }
 
 
@@ -505,10 +501,10 @@ namespace Net.Codecrete.QrCodeGenerator
             for (var i = 0; i < UnicodeToQrKanji.Length; i++)
                 UnicodeToQrKanji[i] = 0xffff;
 
-            byte[] bytes = Convert.FromBase64String(PackedQrKanjiToUnicode);
+            var bytes = Convert.FromBase64String(PackedQrKanjiToUnicode);
             for (var i = 0; i < bytes.Length; i += 2)
             {
-                int c = (bytes[i] << 8) | bytes[i + 1];
+                var c = (bytes[i] << 8) | bytes[i + 1];
                 if (c == 0xFFFF)
                     continue;
                 Debug.Assert(UnicodeToQrKanji[c] == 0xffff);
