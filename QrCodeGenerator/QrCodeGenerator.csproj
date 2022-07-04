@@ -9,15 +9,16 @@
     <Version>2.0.2</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
-    <Description>QR Code Generator for .NET – simple, compact and well. Derived from tried and tested implementation by project Nayuki.
+    <Description>QR Code Generator for .NET – simple, compact and with many examples.
 
 Core features:
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol and SVG XML string (for raster bitmap / PNG see project home page)
+- Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path (for raster bitmap / PNG see project home page)
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
 - Significantly shorter code but more documentation compared to competing libraries
 - Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
+- Derived from tried and tested implementation by project Nayuki
 
 Manual parameters:
 - You can specify the minimum and maximum version number allowed, and the library will automatically choose the smallest version in the range that fits the data.
@@ -49,6 +50,7 @@ Optional advanced features:
     <EnablePackageValidation>true</EnablePackageValidation>
     <PackageVersion>2.0.2</PackageVersion>
     <PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>
+    <Deterministic>True</Deterministic>
   </PropertyGroup>
 
   <PropertyGroup Label="Restoring">
@@ -65,6 +67,11 @@ Optional advanced features:
     <ContinuousIntegrationBuild Condition="$(Configuration) == 'Release'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 	
+  <ItemGroup>
+    <None Include="docs\logo.png" Pack="true" PackagePath="\" />
+    <None Include="docs\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.*" PrivateAssets="all" />
   </ItemGroup>
