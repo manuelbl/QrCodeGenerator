@@ -417,7 +417,7 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
-        /// Creates a graphics of this QR code valid in SVG or XAML.
+        /// Creates a graphics path of this QR code valid in SVG or XAML.
         /// <para>
         /// The graphics path uses a coordinate system where each module is 1 unit wide and tall,
         /// and the top left module is offset vertically and horizontally by <i>border</i> units.
@@ -428,7 +428,10 @@ namespace Net.Codecrete.QrCodeGenerator
         /// automatically derived, at least the right and bottom border will be missing.
         /// </para>
         /// <para>
-        /// The path will look like this: <c>M3,3h7v1h-7z M12,3h1v4h-1z ... M70,71h1v1h-1z</c>
+        /// The path will look like this: <c>M3,3h7v1h-7z M12,3h1v4h-1z ... M70,71h1v1h-1z</c>. It
+        /// is valid for SVG (<c>&lt;path d="M3,3h..." /&gt;</c>) and for XAML
+        /// (<c>&lt;Path Data="M3,3h..." /&gt;</c>). For programmatic geometry creation in WPF see
+        /// <a href="https://docs.microsoft.com/en-us/dotnet/api/system.windows.media.geometry.parse?view=windowsdesktop-6.0">Geometry.Parse(String)</a>.
         /// </para>
         /// </summary>
         /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
@@ -525,15 +528,17 @@ namespace Net.Codecrete.QrCodeGenerator
             }
         }
 
-        // Create a copy of the modules
+        // Create a copy of the modules (in row-major order)
         private bool[,] CopyModules()
         {
             var modules = new bool[Size, Size];
+            var index = 0;
             for (var y = 0; y < Size; y++)
             {
                 for (var x = 0; x < Size; x++)
                 {
-                    modules[y, x] = GetModule(x, y);
+                    modules[y, x] = _modules[index];
+                    index += 1;
                 }
             }
 
