@@ -187,7 +187,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 {
                     continue;
                 }
-                
+
                 // All versions in the range could not fit the given data
                 var msg = "Segment too long";
                 if (dataUsedBits != -1)
@@ -447,13 +447,13 @@ namespace Net.Codecrete.QrCodeGenerator
             CreatePath(path, modules, border);
             return path.ToString();
         }
-        
+
         #endregion
-        
-        
+
+
         #region Graphics path
-        
-        
+
+
         // Append a SVG/XAML path for the QR code to the provided string builder
         private static void CreatePath(StringBuilder path, bool[,] modules, int border)
         {
@@ -471,7 +471,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
         }
-        
+
         // Find, draw and clear largest rectangle with (x, y) as the top left corner
         private static void DrawLargestRectangle(StringBuilder path, bool[,] modules, int x, int y, int border)
         {
@@ -508,11 +508,11 @@ namespace Net.Codecrete.QrCodeGenerator
                 path.Append(" ");
             }
             path.Append($"M{x + border},{y + border}h{bestW}v{bestH}h{-bestW}z");
-            
+
             // clear processed modules
             ClearRectangle(modules, x, y, bestW, bestH);
         }
-        
+
         // Clear a rectangle of modules
         private static void ClearRectangle(bool[,] modules, int x, int y, int width, int height)
         {
@@ -742,7 +742,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     {
                         continue;
                     }
-                    
+
                     result[k] = blocks[j][i];
                     k++;
                 }

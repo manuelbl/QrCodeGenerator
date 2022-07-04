@@ -44,7 +44,7 @@ Optional advanced features:
    Or by running a command in the Package Manager Console
 
 ```
-Install-Package Net.Codecrete.QrCodeGenerator -Version 2.0.1
+Install-Package Net.Codecrete.QrCodeGenerator -Version 2.0.2
 ```
 3. Add the code from the example below
 

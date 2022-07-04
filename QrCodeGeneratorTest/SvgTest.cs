@@ -65,7 +65,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             var qrCode = EncodeText(CodeText, Ecc.Medium);
             var path = qrCode.ToGraphicsPath(3);
-            
+
             Assert.StartsWith("M3,3h", path);
             Assert.EndsWith("h1v1h-1z", path);
         }
