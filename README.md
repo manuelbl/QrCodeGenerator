@@ -166,3 +166,5 @@ Several example projects are provided:
 - [Demo-SkiaSharp](Demo-SkiaSharp): Demonstrates how a QR code can be saved a PNG file, using the SkiaSharp multi-platform raster image library.
 
 - [Demo-ImageSharp](Demo-ImageSharp): Demonstrates how a QR code can be saved a PNG file, using the ImageSharp raster image library. Additionally, a QR code with an image in the center is created.
+
+- [Demo-SkiaSharp](Demo-ImageMagick): Demonstrates how a QR code can be saved a PNG file, using the Magick.NET image manipulation library (based on ImageMagick).

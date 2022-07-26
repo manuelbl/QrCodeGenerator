@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo-ImageMagick", "Demo-ImageMagick.csproj", "{E4F86D1E-F08C-4BFE-BC37-9BED8A411E88}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E4F86D1E-F08C-4BFE-BC37-9BED8A411E88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4F86D1E-F08C-4BFE-BC37-9BED8A411E88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4F86D1E-F08C-4BFE-BC37-9BED8A411E88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4F86D1E-F08C-4BFE-BC37-9BED8A411E88}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BC2EF2FB-30F7-431B-B92C-05E9C7B7B07B}
+	EndGlobalSection
+EndGlobal
