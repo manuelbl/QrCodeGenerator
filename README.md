@@ -153,6 +153,8 @@ Several example projects are provided:
 
 - [Demo-QRCode-Variety](Demo-QRCode-Variety): Demonstrates how QR codes with different encodings, error correction and masks can be generated. All QR codes are saved as SVG files.
 
+- [Demo-WinUI](Demo-WinUI): Demonstrates how QR codes can be used in WinUI 3 applications and/or using [Win2D](https://github.com/microsoft/Win2D) (incl. copying to the clipboard).
+
 - [Demo-WindowsPresentationFoundation](Demo-WindowsPresentationFoundation): Demonstrates how QR codes can be used in WPF applications (incl. copying to the clipboard).
 
 - [Demo-WinForms](Demo-WinForms): Demonstrates how QR codes can be used in Windows Forms applications (incl. copying to the clipboard).

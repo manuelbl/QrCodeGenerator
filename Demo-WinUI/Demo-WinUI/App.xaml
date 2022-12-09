@@ -1,0 +1,20 @@
+<!-- Swiss QR Bill Generator for .NET -->
+<!-- Copyright (c) 2022 Manuel Bleichenbacher -->
+<!-- Licensed under MIT License -->
+<!-- https://opensource.org/licenses/MIT -->
+
+<Application
+    x:Class="Net.Codecrete.QrCodeGenerator.Demo.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Net.Codecrete.QrCodeGenerator.Demo">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Other merged dictionaries here -->
+            </ResourceDictionary.MergedDictionaries>
+            <!-- Other app resources here -->
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
