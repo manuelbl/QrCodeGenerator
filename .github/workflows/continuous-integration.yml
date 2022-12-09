@@ -13,30 +13,31 @@ jobs:
     strategy:
       matrix:
         os: [ macos-latest, ubuntu-latest, windows-latest ]
+        dotnet-version: ['3.1.x', '5.0.x',  '6.0.x', '7.0.x']
+
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: Build and run tests
     steps:
       - name: Checkout git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Retrieve cached NuGet packages
-        uses: actions/cache@v2
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v3
         with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          dotnet-version: ${{ matrix.dotnet-version }}
       - name: Restore NuGet packages
         run: dotnet restore --verbosity normal
       - name: Build solution
-        run: dotnet build --verbosity normal
+        run: dotnet build --configuration Release --no-restore --verbosity normal
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal --logger:"html;LogFileName=../../TestResults-${{ matrix.os }}.html"
+        run: dotnet test --no-build --verbosity normal --logger:"html;LogFileName=../../TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html"
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestResults-${{ matrix.os }}.html
-          path: TestResults-${{ matrix.os }}.html
+          name: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
+          path: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
       - name: Create and validate NuGet package
         run: dotnet pack --no-build --verbosity normal
