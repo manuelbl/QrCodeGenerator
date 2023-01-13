@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
@@ -449,6 +450,87 @@ namespace Net.Codecrete.QrCodeGenerator
             var path = new StringBuilder();
             CreatePath(path, modules, border);
             return path.ToString();
+        }
+
+        /// <summary>
+        /// Crates a monochrome (1 bpp) bitmap.
+        /// </summary>
+        /// <returns>Bitmap data</returns>
+        public byte[] ToMonochromeBitmap()
+        {
+            // NOTE: Works for Size > 0
+            // Modules to bytes
+            var bytesToWrite = (Size - 1) / 8 + 1;
+
+            // NOTE: Align to 4 bytes
+            // This is a Bitmap requirement
+            // (size + (align - 1)) & ~(align - 1)
+            var aligned = (bytesToWrite + 3) & ~3;
+            var fileSize = 62 + Size * aligned;
+
+            var buf = new byte[fileSize];
+
+            using (var mem = new MemoryStream(buf))
+            {
+                using (var writer = new BinaryWriter(mem, Encoding.ASCII))
+                {
+                    // BMP file header - 14 bytes
+                    writer.Write('B');
+                    writer.Write('M');
+                    // File size
+                    writer.Write(62 + Size * aligned);
+                    writer.Write((short)0);
+                    writer.Write((short)0);
+                    // Color data start offset
+                    // 14 file header + 40 info header + 8 color table
+                    writer.Write(62);
+
+                    // BMP info header - 40 bytes
+                    writer.Write(40);
+                    writer.Write(Size);
+                    writer.Write(Size);
+                    writer.Write((short)1);
+                    // Monochrome - 1bpp
+                    writer.Write((short)1);
+                    writer.Write(0);
+                    writer.Write(0);
+                    writer.Write(0);
+                    writer.Write(0);
+                    writer.Write(0);
+                    writer.Write(0);
+
+                    // Color table - 8 bytes
+                    writer.Write(0);
+                    writer.Write(ushort.MaxValue);
+                    writer.Write(byte.MaxValue);
+                    writer.Write(byte.MinValue);
+                    // NOTE: 62 bytes before data
+
+                    // NOTE: Bottom-up writing is a Bitmap requirement
+                    for (var y = Size - 1; y >= 0; --y)
+                    {
+                        for (var j = 0; j < aligned; ++j)
+                        {
+                            byte px = 0;
+
+                            for (var k = 0; k < 8; ++k)
+                            {
+                                var x = j * 8 + k;
+                                if (x >= Size)
+                                {
+                                    continue;
+                                }
+
+                                px |= (byte)(GetModule(x, y) ? 0 : 1 << (7 - k));
+                            }
+
+                            writer.Write(px);
+                        }
+                    }
+                }
+            }
+
+            return buf;
         }
 
         #endregion
