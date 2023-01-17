@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
@@ -453,80 +452,119 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
-        /// Crates a monochrome (1 bpp) bitmap.
+        /// Crates a monochrome (1 bpp) bitmap with an optional light border.
         /// </summary>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
         /// <returns>Bitmap data</returns>
-        public byte[] ToMonochromeBitmap()
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if border is negative</exception>
+        public byte[] ToMonochromeBitmap(int border = 0)
         {
+            if (border < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
+            }
+
+            var finalSize = Size + 2 * border;
+            
             // NOTE: Works for Size > 0
             // Modules to bytes
-            var bytesToWrite = (Size - 1) / 8 + 1;
+            var bytesToWrite = (finalSize - 1) / 8 + 1;
 
             // NOTE: Align to 4 bytes
             // This is a Bitmap requirement
             // (size + (align - 1)) & ~(align - 1)
             var aligned = (bytesToWrite + 3) & ~3;
-            var fileSize = 62 + Size * aligned;
+            var fileSize = 62 + finalSize * aligned;
 
             var buf = new byte[fileSize];
 
-            using (var mem = new MemoryStream(buf))
+            // NOTE: BMP file header
+            buf[0] = (byte)'B';
+            buf[1] = (byte)'M';
+
+            buf[2] = (byte)fileSize;
+            buf[3] = (byte)(fileSize >> 8);
+            buf[4] = (byte)(fileSize >> 16);
+            buf[5] = (byte)(fileSize >> 24);
+
+            // NOTE: Offset to bitmap data
+            buf[10] = 62;
+
+            // NOTE: BMP info header
+            buf[14] = 40;
+
+            // NOTE: Image width
+            buf[18] = (byte)finalSize;
+            buf[19] = (byte)(finalSize >> 8);
+            buf[20] = (byte)(finalSize >> 16);
+            buf[21] = (byte)(finalSize >> 24);
+
+            // NOTE: Image height
+            buf[22] = buf[18];
+            buf[23] = buf[19];
+            buf[24] = buf[20];
+            buf[25] = buf[21];
+
+            // NOTE: Number of color planes (usually 1)
+            // Must be non-zero
+            buf[26] = 1;
+
+            // NOTE: Number of bits per pixel (1 bpp - monochrome)
+            buf[28] = 1;
+
+            // NOTE: Horizontal resolution (pixels/meter)
+            // 3780 ppm (96 dpi)
+            buf[38] = 196;
+            buf[39] = 14;
+
+            // NOTE: Vertical resolution (pixels/meter)
+            // 3780 ppm (96 dpi)
+            buf[42] = buf[38];
+            buf[43] = buf[39];
+
+            // NOTE: Color table
+            buf[58] = 255;
+            buf[59] = 255;
+            buf[60] = 255;
+
+            for (var y = finalSize - 1; y >= 0; --y)
             {
-                using (var writer = new BinaryWriter(mem, Encoding.ASCII))
+                for (var i = 0; i < aligned; ++i)
                 {
-                    // BMP file header - 14 bytes
-                    writer.Write('B');
-                    writer.Write('M');
-                    // File size
-                    writer.Write(62 + Size * aligned);
-                    writer.Write((short)0);
-                    writer.Write((short)0);
-                    // Color data start offset
-                    // 14 file header + 40 info header + 8 color table
-                    writer.Write(62);
+                    byte px = 0;
 
-                    // BMP info header - 40 bytes
-                    writer.Write(40);
-                    writer.Write(Size);
-                    writer.Write(Size);
-                    writer.Write((short)1);
-                    // Monochrome - 1bpp
-                    writer.Write((short)1);
-                    writer.Write(0);
-                    writer.Write(0);
-                    writer.Write(0);
-                    writer.Write(0);
-                    writer.Write(0);
-                    writer.Write(0);
-
-                    // Color table - 8 bytes
-                    writer.Write(0);
-                    writer.Write(ushort.MaxValue);
-                    writer.Write(byte.MaxValue);
-                    writer.Write(byte.MinValue);
-                    // NOTE: 62 bytes before data
-
-                    // NOTE: Bottom-up writing is a Bitmap requirement
-                    for (var y = Size - 1; y >= 0; --y)
+                    if (y >= border && y <= finalSize - border)
                     {
-                        for (var j = 0; j < aligned; ++j)
+                        for (var j = 0; j < 8; ++j)
                         {
-                            byte px = 0;
-
-                            for (var k = 0; k < 8; ++k)
+                            var x = i * 8 + j;
+                            if (x >= finalSize)
                             {
-                                var x = j * 8 + k;
-                                if (x >= Size)
-                                {
-                                    continue;
-                                }
-
-                                px |= (byte)(GetModule(x, y) ? 0 : 1 << (7 - k));
+                                continue;
                             }
 
-                            writer.Write(px);
+                            if (x < border || x > Size + border)
+                            {
+                                px |= (byte)(1 << (7 - j));
+                                continue;
+                            }
+
+                            px |= (byte)(GetModule(x - border, y - border) ? 0 : 1 << (7 - j));
                         }
                     }
+                    else
+                    {
+                        if (i == bytesToWrite - 1)
+                        {
+                            px = (byte)(255 << (bytesToWrite * 8 - finalSize));
+                        }
+                        else if (i < bytesToWrite)
+                        {
+                            px = 255;
+                        }
+                    }
+
+                    buf[62 + i + (finalSize - 1 - y) * aligned] = px;
                 }
             }
 
