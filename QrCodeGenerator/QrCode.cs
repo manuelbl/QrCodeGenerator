@@ -465,7 +465,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             var finalSize = Size + 2 * border;
-            
+
             // NOTE: Works for Size > 0
             // Modules to bytes
             var bytesToWrite = (finalSize - 1) / 8 + 1;
@@ -527,44 +527,53 @@ namespace Net.Codecrete.QrCodeGenerator
             buf[59] = 255;
             buf[60] = 255;
 
-            for (var y = finalSize - 1; y >= 0; --y)
+            if (border > 0)
+            {
+                for (var i = 0; i < aligned; ++i)
+                {
+                    byte px = 255;
+
+                    if (i == bytesToWrite - 1)
+                    {
+                        px = (byte)(255 << (bytesToWrite * 8 - finalSize));
+                    }
+                    else if (i >= bytesToWrite)
+                    {
+                        px = 0;
+                    }
+
+                    for (var y = 0; y < border; ++y)
+                    {
+                        buf[62 + i + y * aligned] = px;
+                        buf[62 + i + (y + Size + border) * aligned] = px;
+                    }
+                }
+            }
+
+            for (var y = 0; y < Size; ++y)
             {
                 for (var i = 0; i < aligned; ++i)
                 {
                     byte px = 0;
 
-                    if (y >= border && y <= finalSize - border)
+                    for (var j = 0; j < 8; ++j)
                     {
-                        for (var j = 0; j < 8; ++j)
+                        var x = i * 8 + j;
+                        if (x >= finalSize)
                         {
-                            var x = i * 8 + j;
-                            if (x >= finalSize)
-                            {
-                                continue;
-                            }
+                            continue;
+                        }
 
-                            if (x < border || x > Size + border)
-                            {
-                                px |= (byte)(1 << (7 - j));
-                                continue;
-                            }
+                        if (x < border || x >= Size + border)
+                        {
+                            px |= (byte)(1 << (7 - j));
+                            continue;
+                        }
 
-                            px |= (byte)(GetModule(x - border, y - border) ? 0 : 1 << (7 - j));
-                        }
-                    }
-                    else
-                    {
-                        if (i == bytesToWrite - 1)
-                        {
-                            px = (byte)(255 << (bytesToWrite * 8 - finalSize));
-                        }
-                        else if (i < bytesToWrite)
-                        {
-                            px = 255;
-                        }
+                        px |= (byte)(_modules[x - border + Size * (Size - y - 1)] ? 0 : 1 << (7 - j));
                     }
 
-                    buf[62 + i + (finalSize - 1 - y) * aligned] = px;
+                    buf[62 + i + (y + border) * aligned] = px;
                 }
             }
 
