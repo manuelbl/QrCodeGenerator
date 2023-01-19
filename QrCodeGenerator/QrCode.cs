@@ -451,6 +451,135 @@ namespace Net.Codecrete.QrCodeGenerator
             return path.ToString();
         }
 
+        /// <summary>
+        /// Crates a monochrome (1 bpp) bitmap with an optional light border.
+        /// </summary>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
+        /// <returns>Bitmap data</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if border is negative</exception>
+        public byte[] ToMonochromeBitmap(int border = 0)
+        {
+            if (border < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
+            }
+
+            var finalSize = Size + 2 * border;
+
+            // NOTE: Works for Size > 0
+            // Modules to bytes
+            var bytesToWrite = (finalSize - 1) / 8 + 1;
+
+            // NOTE: Align to 4 bytes
+            // This is a Bitmap requirement
+            // (size + (align - 1)) & ~(align - 1)
+            var aligned = (bytesToWrite + 3) & ~3;
+            var fileSize = 62 + finalSize * aligned;
+
+            var buf = new byte[fileSize];
+
+            // NOTE: BMP file header
+            buf[0] = (byte)'B';
+            buf[1] = (byte)'M';
+
+            buf[2] = (byte)fileSize;
+            buf[3] = (byte)(fileSize >> 8);
+            buf[4] = (byte)(fileSize >> 16);
+            buf[5] = (byte)(fileSize >> 24);
+
+            // NOTE: Offset to bitmap data
+            buf[10] = 62;
+
+            // NOTE: BMP info header
+            buf[14] = 40;
+
+            // NOTE: Image width
+            buf[18] = (byte)finalSize;
+            buf[19] = (byte)(finalSize >> 8);
+            buf[20] = (byte)(finalSize >> 16);
+            buf[21] = (byte)(finalSize >> 24);
+
+            // NOTE: Image height
+            buf[22] = buf[18];
+            buf[23] = buf[19];
+            buf[24] = buf[20];
+            buf[25] = buf[21];
+
+            // NOTE: Number of color planes (usually 1)
+            // Must be non-zero
+            buf[26] = 1;
+
+            // NOTE: Number of bits per pixel (1 bpp - monochrome)
+            buf[28] = 1;
+
+            // NOTE: Horizontal resolution (pixels/meter)
+            // 3780 ppm (96 dpi)
+            buf[38] = 196;
+            buf[39] = 14;
+
+            // NOTE: Vertical resolution (pixels/meter)
+            // 3780 ppm (96 dpi)
+            buf[42] = buf[38];
+            buf[43] = buf[39];
+
+            // NOTE: Color table
+            buf[58] = 255;
+            buf[59] = 255;
+            buf[60] = 255;
+
+            if (border > 0)
+            {
+                for (var i = 0; i < aligned; ++i)
+                {
+                    byte px = 255;
+
+                    if (i == bytesToWrite - 1)
+                    {
+                        px = (byte)(255 << (bytesToWrite * 8 - finalSize));
+                    }
+                    else if (i >= bytesToWrite)
+                    {
+                        px = 0;
+                    }
+
+                    for (var y = 0; y < border; ++y)
+                    {
+                        buf[62 + i + y * aligned] = px;
+                        buf[62 + i + (y + Size + border) * aligned] = px;
+                    }
+                }
+            }
+
+            for (var y = 0; y < Size; ++y)
+            {
+                for (var i = 0; i < aligned; ++i)
+                {
+                    byte px = 0;
+
+                    for (var j = 0; j < 8; ++j)
+                    {
+                        var x = i * 8 + j;
+                        if (x >= finalSize)
+                        {
+                            continue;
+                        }
+
+                        if (x < border || x >= Size + border)
+                        {
+                            px |= (byte)(1 << (7 - j));
+                            continue;
+                        }
+
+                        px |= (byte)(_modules[x - border + Size * (Size - y - 1)] ? 0 : 1 << (7 - j));
+                    }
+
+                    buf[62 + i + (y + border) * aligned] = px;
+                }
+            }
+
+            return buf;
+        }
+
         #endregion
 
 
