@@ -451,30 +451,43 @@ namespace Net.Codecrete.QrCodeGenerator
             return path.ToString();
         }
 
+        /// <inheritdoc cref="ToBitmap(int, int)"/>
         /// <summary>
-        /// Crates a monochrome (1 bpp) bitmap with an optional light border.
+        /// Creates 1 bpp bitmap (BMP) data.
         /// </summary>
-        /// <param name="border">The border width, as a factor of the module (QR code pixel) size</param>
-        /// <returns>Bitmap data</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if border is negative</exception>
-        public byte[] ToMonochromeBitmap(int border = 0)
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size.</param>
+        /// <param name="scale">The width and height, in pixels, of each module.</param>
+        /// <param name="foreground">The foreground (dark modules) color.</param>
+        /// <param name="background">The background (light modules) color.</param>
+        public byte[] ToBitmap(int border, int scale, Color foreground, Color background)
         {
-            if (border < 0)
+            if (scale < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
+                throw new ArgumentOutOfRangeException(nameof(scale), scale, "Scale must be greater than 0.");
             }
 
-            var finalSize = Size + 2 * border;
+            if (border < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(border), border, "Border must be non-negative.");
+            }
+
+            var dim = (Size + 2 * border) * scale;
+
+            if (dim > short.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(scale), "Scale or border too large.");
+            }
 
             // NOTE: Works for Size > 0
             // Modules to bytes
-            var bytesToWrite = (finalSize - 1) / 8 + 1;
+            // x >> 3 == x / 8
+            var bytesToWrite = ((dim - 1) >> 3) + 1;
 
             // NOTE: Align to 4 bytes
             // This is a Bitmap requirement
             // (size + (align - 1)) & ~(align - 1)
             var aligned = (bytesToWrite + 3) & ~3;
-            var fileSize = 62 + finalSize * aligned;
+            var fileSize = 62 + dim * aligned;
 
             var buf = new byte[fileSize];
 
@@ -494,10 +507,10 @@ namespace Net.Codecrete.QrCodeGenerator
             buf[14] = 40;
 
             // NOTE: Image width
-            buf[18] = (byte)finalSize;
-            buf[19] = (byte)(finalSize >> 8);
-            buf[20] = (byte)(finalSize >> 16);
-            buf[21] = (byte)(finalSize >> 24);
+            buf[18] = (byte)dim;
+            buf[19] = (byte)(dim >> 8);
+            buf[20] = (byte)(dim >> 16);
+            buf[21] = (byte)(dim >> 24);
 
             // NOTE: Image height
             buf[22] = buf[18];
@@ -509,7 +522,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // Must be non-zero
             buf[26] = 1;
 
-            // NOTE: Number of bits per pixel (1 bpp - monochrome)
+            // NOTE: Number of bits per pixel (1 bpp)
             buf[28] = 1;
 
             // NOTE: Horizontal resolution (pixels/meter)
@@ -523,43 +536,62 @@ namespace Net.Codecrete.QrCodeGenerator
             buf[43] = buf[39];
 
             // NOTE: Color table
-            buf[58] = 255;
-            buf[59] = 255;
-            buf[60] = 255;
+            // Alpha isn't useful here
+            // Foreground - Dark
+            buf[54] = foreground.Blue;
+            buf[55] = foreground.Green;
+            buf[56] = foreground.Red;
+
+            // Background - Light
+            buf[58] = background.Blue;
+            buf[59] = background.Green;
+            buf[60] = background.Red;
+
+            var scaledBorder = border * scale;
+
+            int i;
+            int y;
+            byte px;
 
             if (border > 0)
             {
-                for (var i = 0; i < aligned; ++i)
+                var scaledSize = Size * scale;
+            
+                for (i = 0; i < aligned; ++i)
                 {
-                    byte px = 255;
+                    px = 255;
 
                     if (i == bytesToWrite - 1)
                     {
-                        px = (byte)(255 << (bytesToWrite * 8 - finalSize));
+                        px = (byte)(255 << ((bytesToWrite << 3) - dim));
                     }
                     else if (i >= bytesToWrite)
                     {
                         px = 0;
                     }
 
-                    for (var y = 0; y < border; ++y)
+                    for (y = 0; y < scaledBorder; ++y)
                     {
                         buf[62 + i + y * aligned] = px;
-                        buf[62 + i + (y + Size + border) * aligned] = px;
+                        buf[62 + i + (y + scaledSize + scaledBorder) * aligned] = px;
                     }
                 }
             }
 
-            for (var y = 0; y < Size; ++y)
+            for (y = 0; y < Size; ++y)
             {
-                for (var i = 0; i < aligned; ++i)
-                {
-                    byte px = 0;
+                int j;
+                var yOffset = y * scale + scaledBorder;
 
-                    for (var j = 0; j < 8; ++j)
+                for (i = 0; i < aligned; ++i)
+                {
+                    px = 0;
+
+                    for (j = 0; j < 8; ++j)
                     {
-                        var x = i * 8 + j;
-                        if (x >= finalSize)
+                        var x = ((i << 3) + j) / scale;
+
+                        if (x >= dim)
                         {
                             continue;
                         }
@@ -573,11 +605,33 @@ namespace Net.Codecrete.QrCodeGenerator
                         px |= (byte)(_modules[x - border + Size * (Size - y - 1)] ? 0 : 1 << (7 - j));
                     }
 
-                    buf[62 + i + (y + border) * aligned] = px;
+                    buf[62 + i + yOffset * aligned] = px;
+                }
+
+                // NOTE: Copy rows when scaling
+                for (i = 1; i <= scale - 1; ++i)
+                {
+                    for (j = 0; j < aligned; ++j)
+                    {
+                        buf[62 + j + (yOffset + i) * aligned] = buf[62 + j + yOffset * aligned];
+                    }
                 }
             }
 
             return buf;
+        }
+
+        /// <summary>
+        /// Creates 1 bpp bitmap (BMP) data using black for dark modules and white for light modules.
+        /// </summary>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size.</param>
+        /// <param name="scale">The width and height, in pixels, of each module.</param>
+        /// <returns>Bitmap data</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="border"/> is negative,
+        /// <paramref name="scale"/> is less than 1 or the resulting image is wider than 32,768 pixels.</exception>
+        public byte[] ToBitmap(int border = 0, int scale = 1)
+        {
+            return ToBitmap(border, scale, Color.Black, Color.White);
         }
 
         #endregion
