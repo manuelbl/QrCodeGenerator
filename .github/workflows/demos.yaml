@@ -21,9 +21,19 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.0.x
-      - name: Debug
-        run: dotnet nuget list source
+      - name: Create local NuGet source
+        run: |
+          $pkgdir = Resolve-Path ${GITHUB_WORKSPACE}\..\LocalPackages
+          mkdir $pkgdir
+          run: dotnet nuget add source $pkgdir --name Local
       - name: Restore NuGet packages
         run: dotnet restore --verbosity normal
       - name: Build library package
         run: dotnet pack --configuration Release --no-restore --verbosity normal
+      - name: Install library package
+        run: |
+          $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
+          nuget add QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg -Source Local
+      - name: Build Demo-ImageSharp
+        run: dotnet build
+        working-directory: Demo-ImageSharp
