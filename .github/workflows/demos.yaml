@@ -33,7 +33,7 @@ jobs:
       - name: Install library package
         run: |
           $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
-          nuget add QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg -Source Local
+          nuget add $pkg -Source Local
       - name: Build Demo-ImageSharp
         run: dotnet build
         working-directory: Demo-ImageSharp
