@@ -42,7 +42,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // create bitmap
-            Image<Rgb24> image = new Image<Rgb24>(dim, dim);
+            var image = new Image<Rgb24>(dim, dim);
 
             image.Mutate(img =>
             {
@@ -96,8 +96,8 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="foreground">The foreground color.</param>
         public static byte[] ToPng(this QrCode qrCode, int scale, int border, Color foreground, Color background)
         {
-            using Image image = qrCode.ToBitmap(scale, border, foreground, background);
-            using MemoryStream ms = new MemoryStream();
+            using var image = qrCode.ToBitmap(scale, border, foreground, background);
+            using var ms = new MemoryStream();
             image.SaveAsPng(ms);
             return ms.ToArray();
         }

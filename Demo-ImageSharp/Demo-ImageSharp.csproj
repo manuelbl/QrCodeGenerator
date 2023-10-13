@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator.Demo</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator.Demo</PackageId>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>Demo application for QR Code Generation</Description>
@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.*" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

@@ -13,7 +13,7 @@ many more programming languages, and the [Project Nayuki web site](https://www.n
 Core features:
 
  * Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
- * Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path. For raster bitmaps, additional code is provided. See [below](#raster-images--bitmaps).
+ * Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path, BMP bitmap. For raster bitmap output, additional code is provided. See [below](#raster-images--bitmaps).
  * Encodes numeric and special-alphanumeric text in less space than general text
  * Open source code under the permissive *MIT License*
  * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
@@ -44,7 +44,7 @@ Optional advanced features:
    Or by running a command in the Package Manager Console
 
 ```
-Install-Package Net.Codecrete.QrCodeGenerator -Version 2.0.3
+Install-Package Net.Codecrete.QrCodeGenerator -Version 2.0.4
 ```
 3. Add the code from the example below
 

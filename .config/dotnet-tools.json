@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "dotnet-validate": {
-      "version": "0.0.1-preview.280",
+      "version": "0.0.1-preview.304",
       "commands": [
         "dotnet-validate"
       ]

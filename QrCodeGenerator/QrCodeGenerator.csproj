@@ -1,19 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Microsoft.DotNet.PackageValidation" Version="1.0.0-preview.7.21379.12" />
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and with many examples.
 
 Core features:
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path (for raster bitmap / PNG see project home page)
+- Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path (for raster bitmap / PNG see project home page), BMP bitmap
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
 - Significantly shorter code but more documentation compared to competing libraries
@@ -36,22 +34,24 @@ Optional advanced features:
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>logo.png</PackageIcon>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>New in releases 2.0 / 2.0.1 / 2.0.2 / 2.0.3:
+    <PackageReleaseNotes>New in releases 2.0 / 2.0.1 / 2.0.2 / 2.0.3 / 2.0.4:
 - Fully compatible with .NET 6 (no longer depends on System.Drawing)
 - Separate ToBitmap() implementations for System.Drawing, SkiaSharp and ImageSharp
 - Documentation included into NuGet package
 - QR code as geometric path suitable for SVG and XAML
-- Smaller SVGs
+- Very compact SVGs
+- BMP bitmap generation
+- Fix for SVG generation with Norwegian locale
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
-    <FileVersion>2.0.3.0</FileVersion>
+    <FileVersion>2.0.4.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageVersion>2.0.3</PackageVersion>
+    <PackageVersion>2.0.4</PackageVersion>
     <PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>
     <Deterministic>True</Deterministic>
   </PropertyGroup>
