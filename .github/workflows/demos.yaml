@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir ..\LocalPackages
           $pkgdir = Resolve-Path ..\LocalPackages
-          run: dotnet nuget add source $pkgdir --name Local
+          dotnet nuget add source $pkgdir --name Local
       - name: Restore NuGet packages
         run: dotnet restore --verbosity normal
       - name: Build library package
