@@ -25,6 +25,8 @@
  * IN THE SOFTWARE.
  */
 
+using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -68,6 +70,37 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             Assert.StartsWith("M3,3h", path);
             Assert.EndsWith("h1v1h-1z", path);
+        }
+
+        [Theory]
+        [InlineData("en-US")]
+        [InlineData("en-GB")]
+        [InlineData("de-DE")]
+        [InlineData("fr-FR")]
+        [InlineData("nb-NO")]
+        [InlineData("tr-TR")]
+        [InlineData("zh-CN")]
+        public void SvgLocale(string locale)
+        {
+            CultureInfo savedCurrentCulture = CultureInfo.CurrentCulture;
+            CultureInfo savedCurrentUiCulture = CultureInfo.CurrentUICulture;
+
+            CultureInfo culture = CultureInfo.CreateSpecificCulture(locale);
+
+            try
+            {
+                CultureInfo.CurrentCulture = culture;
+                CultureInfo.CurrentUICulture = culture;
+
+                var qrCode = EncodeText("A", Ecc.Medium);
+                var svg = qrCode.ToSvgString(0);
+                Assert.Contains("d=\"M0,0h7v1h-7z", svg);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = savedCurrentCulture;
+                CultureInfo.CurrentUICulture = savedCurrentUiCulture;
+            }
         }
     }
 }
