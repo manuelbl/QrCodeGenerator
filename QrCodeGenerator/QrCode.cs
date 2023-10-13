@@ -422,30 +422,54 @@ namespace Net.Codecrete.QrCodeGenerator
             return AsGraphics().ToGraphicsPath(border);
         }
 
-        /// <inheritdoc cref="ToBitmap(int, int)"/>
         /// <summary>
-        /// Creates 1 bpp bitmap (BMP) data.
+        /// Creates a bitmap in the BMP format.
+        /// <para>
+        /// The bitmap uses 1 bit per pixel and a color table with 2 entries.
+        /// </para>
+        /// <para>
+        /// Color values can be created with <see cref="RgbColor(byte, byte, byte)"/>.
+        /// </para>
         /// </summary>
         /// <param name="border">The border width, as a factor of the module (QR code pixel) size.</param>
         /// <param name="scale">The width and height, in pixels, of each module.</param>
-        /// <param name="foreground">The foreground (dark modules) color.</param>
-        /// <param name="background">The background (light modules) color.</param>
-        public byte[] ToBitmap(int border, int scale, Color foreground, Color background)
+        /// <param name="foreground">The foreground color (dark modules), in RGB value (little endian).</param>
+        /// <param name="background">The background color (light modules), in RGB value (little endian).</param>
+        /// <returns>Bitmap data</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="border"/> is negative,
+        /// <paramref name="scale"/> is less than 1 or the resulting image is wider than 32,768 pixels.</exception>
+        public byte[] ToBmpBitmap(int border, int scale, int foreground, int background)
         {
-            return AsGraphics().ToBitmap(border, scale, foreground, background);
+            return AsGraphics().ToBmpBitmap(border, scale, foreground, background);
         }
 
         /// <summary>
-        /// Creates 1 bpp bitmap (BMP) data using black for dark modules and white for light modules.
+        /// Creates bitmap in the BMP format data using black for dark modules and white for light modules.
+        /// <para>
+        /// The bitmap uses 1 bit per pixel and a color table with 2 entries.
+        /// </para>
         /// </summary>
         /// <param name="border">The border width, as a factor of the module (QR code pixel) size.</param>
         /// <param name="scale">The width and height, in pixels, of each module.</param>
         /// <returns>Bitmap data</returns>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="border"/> is negative,
         /// <paramref name="scale"/> is less than 1 or the resulting image is wider than 32,768 pixels.</exception>
-        public byte[] ToBitmap(int border = 0, int scale = 1)
+        public byte[] ToBmpBitmap(int border = 0, int scale = 1)
         {
-            return ToBitmap(border, scale, Color.Black, Color.White);
+            return ToBmpBitmap(border, scale, 0x000000, 0xffffff);
+        }
+
+        /// <summary>
+        /// Creates an RGB color value in little endian format.
+        /// </summary>
+        /// <param name="red">Red component.</param>
+        /// <param name="green">Green component.</param>
+        /// <param name="blue">Blue component.</param>
+        /// <returns>RGB color value</returns>
+        public int RgbColor(byte red, byte green, byte blue)
+        {
+
+            return (red << 16) | (green << 8) | blue;
         }
 
         #endregion

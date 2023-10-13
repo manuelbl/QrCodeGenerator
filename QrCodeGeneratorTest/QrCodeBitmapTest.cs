@@ -39,7 +39,7 @@ public class QrCodeBitmapTest
 
         var qrCode = QrCode.EncodeText(stubText, stubEcc);
 
-        var actualBitmap = qrCode.ToBitmap(stubBorder, stubScale);
+        var actualBitmap = qrCode.ToBmpBitmap(stubBorder, stubScale);
         var actualBase64 = Convert.ToBase64String(actualBitmap);
 
         Assert.Equal(expectedBitmapBase64, actualBase64);

@@ -84,7 +84,7 @@ namespace Net.Codecrete.QrCodeGenerator
             return path.ToString();
         }
 
-        internal byte[] ToBitmap(int border, int scale, Color foreground, Color background)
+        internal byte[] ToBmpBitmap(int border, int scale, int foreground, int background)
         {
             if (scale < 1)
             {
@@ -163,14 +163,14 @@ namespace Net.Codecrete.QrCodeGenerator
             // NOTE: Color table
             // Alpha isn't useful here
             // Foreground - Dark
-            buf[54] = foreground.Blue;
-            buf[55] = foreground.Green;
-            buf[56] = foreground.Red;
+            buf[54] = (byte)foreground; // blue
+            buf[55] = (byte)(foreground >> 8); // green
+            buf[56] = (byte)(foreground >> 16); // red
 
             // Background - Light
-            buf[58] = background.Blue;
-            buf[59] = background.Green;
-            buf[60] = background.Red;
+            buf[58] = (byte)background; // blue
+            buf[59] = (byte)(background >> 8); // green
+            buf[60] = (byte)(background >> 16); // red;
 
             var scaledBorder = border * scale;
 
@@ -245,12 +245,6 @@ namespace Net.Codecrete.QrCodeGenerator
 
             return buf;
         }
-
-        internal byte[] ToBitmap(int border, int scale)
-        {
-            return ToBitmap(border, scale, Color.Black, Color.White);
-        }
-
 
         // Append a SVG/XAML path for the QR code to the provided string builder
         private  void CreatePath(StringBuilder path, bool[,] modules, int border)
