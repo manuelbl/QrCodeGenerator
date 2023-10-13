@@ -32,13 +32,14 @@ jobs:
         run: dotnet pack --configuration Release --no-restore --verbosity normal
       - name: Install library package
         run: |
-          $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
-          nuget add $pkg -Source Local
+          Copy-Item QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg -Destination ..\LocalPackages
       - name: Build Demo-ImageSharp
         run: dotnet build
         working-directory: Demo-ImageSharp
       - name: Build Demo-ASP.NET-Core
-        run: dotnet build
+        run: |
+          nuget list -Source Local
+          dotnet build
         working-directory: Demo-ASP.NET-Core
       - name: Build Demo-ImageMagick
         run: dotnet build
