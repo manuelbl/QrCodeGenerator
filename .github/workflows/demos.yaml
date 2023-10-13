@@ -37,3 +37,30 @@ jobs:
       - name: Build Demo-ImageSharp
         run: dotnet build
         working-directory: Demo-ImageSharp
+      - name: Build Demo-ASP.NET-Core
+        run: dotnet build
+        working-directory: Demo-ASP.NET-Core
+      - name: Build Demo-ImageMagick
+        run: dotnet build
+        working-directory: Demo-ImageMagick
+      - name: Build Demo-QRCode-Variety
+        run: dotnet build
+        working-directory: Demo-QRCode-Variety
+      - name: Build Demo-SkiaSharp
+        run: dotnet build
+        working-directory: Demo-SkiaSharp
+      - name: Build Demo-System-Drawing
+        run: dotnet build
+        working-directory: Demo-System-Drawing
+      - name: Build Demo-VCard
+        run: dotnet build
+        working-directory: Demo-VCard
+      - name: Build Demo-WindowsPresentationFoundation
+        run: dotnet build
+        working-directory: Demo-WindowsPresentationFoundation
+      - name: Build Demo-WinForms
+        run: dotnet build
+        working-directory: Demo-WinForms
+      - name: Build Demo-WinUI
+        run: dotnet build
+        working-directory: Demo-WinUI
