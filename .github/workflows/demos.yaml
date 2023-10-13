@@ -23,8 +23,8 @@ jobs:
           dotnet-version: 6.0.x
       - name: Create local NuGet source
         run: |
+          mkdir ..\LocalPackages
           $pkgdir = Resolve-Path ..\LocalPackages
-          mkdir $pkgdir
           run: dotnet nuget add source $pkgdir --name Local
       - name: Restore NuGet packages
         run: dotnet restore --verbosity normal
