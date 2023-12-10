@@ -9,6 +9,7 @@
 
 using System;
 using System.IO;
+using SkiaSharp;
 
 namespace Net.Codecrete.QrCodeGenerator.Demo
 {
@@ -21,9 +22,13 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             var filename = "hello-world-QR.png";
 
             var qr = QrCode.EncodeText(text, QrCode.Ecc.Medium); // Create the QR code symbol
-            qr.SaveAsPng(filename, scale: 10, border: 4);
 
-            Console.WriteLine($"The QR code has been saved as {Path.GetFullPath(filename)}");
+            qr.SaveAsPng(filename, scale: 10, border: 4);
+            Console.WriteLine($"QR code has been saved as {Path.GetFullPath(filename)}");
+
+            filename = "transparent-QR.png";
+            qr.SaveAsPng(filename, 10, 4, SKColors.DarkBlue, SKColors.Transparent);
+            Console.WriteLine($"QR code has been saved as {Path.GetFullPath(filename)}");
         }
     }
 }
