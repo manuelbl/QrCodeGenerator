@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>2.0.4</Version>
+    <Version>2.0.5</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and with many examples.
@@ -34,7 +34,7 @@ Optional advanced features:
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>logo.png</PackageIcon>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>New in releases 2.0 / 2.0.1 / 2.0.2 / 2.0.3 / 2.0.4:
+    <PackageReleaseNotes>New in releases 2.0 / 2.0.1 / 2.0.2 / 2.0.3 / 2.0.4 / 2.0.5:
 - Fully compatible with .NET 6 (no longer depends on System.Drawing)
 - Separate ToBitmap() implementations for System.Drawing, SkiaSharp and ImageSharp
 - Documentation included into NuGet package
@@ -42,16 +42,17 @@ Optional advanced features:
 - Very compact SVGs
 - BMP bitmap generation
 - Fix for SVG generation with Norwegian locale
+- Enable trimming for .NET 6
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
-    <FileVersion>2.0.4.0</FileVersion>
+    <FileVersion>2.0.5.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageVersion>2.0.4</PackageVersion>
+    <PackageVersion>2.0.5</PackageVersion>
     <PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>
     <Deterministic>True</Deterministic>
   </PropertyGroup>
