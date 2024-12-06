@@ -14,9 +14,18 @@ jobs:
       matrix:
         os: [ macos-latest, ubuntu-latest, windows-latest ]
         dotnet-version: ['5.0',  '6.0', '7.0', '8.0']
+        framework-version: ['netstandard2.0', 'net6.0']
         exclude:
           - os: macos-latest
             dotnet-version: 5.0
+          - dotnet-version: 5.0
+            framework-version: net6.0
+          - dotnet-version: 6.0
+            framework-version: netstandard2.0
+          - dotnet-version: 7.0
+            framework-version: netstandard2.0
+          - dotnet-version: 8.0
+            framework-version: netstandard2.0
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: Build and run tests
@@ -32,9 +41,9 @@ jobs:
       - name: Restore test project
         run: dotnet restore --no-dependencies -p:TargetFramework=net${{ matrix.dotnet-version }} --verbosity normal QrCodeGeneratorTest
       - name: Restore library
-        run: dotnet restore --verbosity normal QrCodeGenerator
+        run: dotnet restore -p:TargetFramework=${{ matrix.framework-version }} --verbosity normal QrCodeGenerator
       - name: Build library
-        run: dotnet build --configuration Release --no-restore -p:TargetFramework=netstandard2.0 --verbosity normal QrCodeGenerator
+        run: dotnet build --configuration Release  -p:TargetFramework=${{ matrix.framework-version }} --no-restore --verbosity normal QrCodeGenerator
       - name: Build test project
         run: dotnet build --configuration Release --no-restore -p:TargetFramework=net${{ matrix.dotnet-version }} --verbosity normal QrCodeGeneratorTest
       - name: Run tests
@@ -47,4 +56,4 @@ jobs:
           path: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
       - name: Create and validate NuGet package
         run: dotnet pack --no-build --verbosity normal
-        if: ${{ matrix.os != 'macos-latest' }}
+        if: ${{ (matrix.os != 'macos-latest') && (matrix.dotnet-version != '5.0') }}
