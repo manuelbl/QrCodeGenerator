@@ -46,4 +46,5 @@ jobs:
           name: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
           path: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
       - name: Create and validate NuGet package
-        run: dotnet pack --no-build -p:TargetFramework=netstandard2.0 --verbosity normal
+        run: dotnet pack --no-build --verbosity normal
+        if: ${{ matrix.os != 'macos-latest' }}
