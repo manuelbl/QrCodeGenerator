@@ -41,9 +41,9 @@ jobs:
       - name: Restore test project
         run: dotnet restore --no-dependencies -p:TargetFramework=net${{ matrix.dotnet-version }} --verbosity normal QrCodeGeneratorTest
       - name: Restore library
-        run: dotnet restore -p:TargetFramework=${{ matrix.framework-version }} --verbosity normal QrCodeGenerator
+        run: dotnet restore --verbosity normal QrCodeGenerator
       - name: Build library
-        run: dotnet build --configuration Release  -p:TargetFramework=${{ matrix.framework-version }} --no-restore --verbosity normal QrCodeGenerator
+        run: dotnet build --configuration Release --no-restore --verbosity normal QrCodeGenerator
       - name: Build test project
         run: dotnet build --configuration Release --no-restore -p:TargetFramework=net${{ matrix.dotnet-version }} --verbosity normal QrCodeGeneratorTest
       - name: Run tests
