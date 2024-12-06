@@ -931,5 +931,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(Modules14, TestHelper.ToStringArray(qrCode));
         }
 
+        [Fact]
+        public void TestCode15()
+        {
+            var segments = QrSegment.MakeSegments("testing");
+            var qrCode = EncodeSegments(segments, Ecc.Medium, 40, 40, -1, true);
+            Assert.Equal(40, qrCode.Version);
+        }
+
     }
 }

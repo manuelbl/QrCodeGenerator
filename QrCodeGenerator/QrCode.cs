@@ -1017,7 +1017,7 @@ namespace Net.Codecrete.QrCodeGenerator
             internal FinderPenalty(int size)
             {
                 _length = 0;
-                _runHistory = new short[177];
+                _runHistory = new short[179];
                 _size = size;
             }
 
