@@ -13,10 +13,8 @@ jobs:
     strategy:
       matrix:
         os: [ macos-latest, ubuntu-latest, windows-latest ]
-        dotnet-version: ['3.1', '5.0',  '6.0', '7.0', '8.0']
+        dotnet-version: ['5.0',  '6.0', '7.0', '8.0']
         exclude:
-          - os: macos-latest
-            dotnet-version: 3.1
           - os: macos-latest
             dotnet-version: 5.0
       fail-fast: false
@@ -48,4 +46,4 @@ jobs:
           name: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
           path: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
       - name: Create and validate NuGet package
-        run: dotnet pack --no-build --verbosity normal
+        run: dotnet pack --no-build -p:TargetFramework=netstandard2.0 --verbosity normal
