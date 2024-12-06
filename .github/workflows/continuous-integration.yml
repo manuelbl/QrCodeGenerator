@@ -32,9 +32,9 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
       - name: Restore test project
-        run: dotnet restore -p:TargetFramework=net${{ matrix.dotnet-version }} --verbosity normal QrCodeGeneratorTest
+        run: dotnet restore --no-dependencies -p:TargetFramework=net${{ matrix.dotnet-version }} --verbosity normal QrCodeGeneratorTest
       - name: Restore library
-        run: dotnet restore --no-dependencies -p:TargetFramework=netstandard2.0 --verbosity normal QrCodeGenerator
+        run: dotnet restore -p:TargetFramework=netstandard2.0 --verbosity normal QrCodeGenerator
       - name: Build library
         run: dotnet build --configuration Release --no-restore -p:TargetFramework=netstandard2.0 --verbosity normal QrCodeGenerator
       - name: Build test project
