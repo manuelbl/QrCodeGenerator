@@ -12,6 +12,8 @@ using System;
 using System.Runtime.InteropServices;
 using Windows.Graphics;
 using WinRT.Interop;
+using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace Net.Codecrete.QrCodeGenerator.Demo;
 
@@ -63,7 +65,8 @@ public partial class App : Application
 
     private double GetDpiScalingFactor()
     {
-        var dpi = PInvoke.User32.GetDpiForWindow(WindowNative.GetWindowHandle(m_window));
+        IntPtr hWnd = WindowNative.GetWindowHandle(m_window);
+        var dpi = PInvoke.GetDpiForWindow((HWND)hWnd);
         return (float)dpi / 96;
     }
 }

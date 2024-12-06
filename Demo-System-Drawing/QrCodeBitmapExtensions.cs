@@ -121,7 +121,7 @@ namespace Net.Codecrete.QrCodeGenerator
             float dim = (size + border * 2) * scale;
 
             // draw background
-            if (background != null)
+            if (background != Color.Transparent)
             {
                 using SolidBrush brush = new SolidBrush(background);
                 graphics.FillRectangle(brush, 0, 0, dim, dim);
