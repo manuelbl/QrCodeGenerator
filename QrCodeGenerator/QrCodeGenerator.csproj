@@ -61,8 +61,6 @@ Optional advanced features:
 
   <PropertyGroup Label="Restoring">
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-	  <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-	  <RestoreLockedMode Condition="$(ContinuousIntegrationBuild) == 'true'">true</RestoreLockedMode>
   </PropertyGroup>
 
   <PropertyGroup Label="Packaging">
