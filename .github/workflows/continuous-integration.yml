@@ -13,8 +13,12 @@ jobs:
     strategy:
       matrix:
         os: [ macos-latest, ubuntu-latest, windows-latest ]
-        dotnet-version: ['3.1.x', '5.0.x',  '6.0.x', '7.0.x']
-
+        dotnet-version: ['3.1', '5.0',  '6.0', '7.0', '8.0']
+        exclude:
+          - os: macos-latest
+            dotnet-version: 3.1
+          - os: macos-latest
+            dotnet-version: 5.0
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: Build and run tests
@@ -24,17 +28,21 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-      - name: Restore NuGet packages
-        run: dotnet restore --verbosity normal
-      - name: Build solution
-        run: dotnet build --configuration Release --no-restore --verbosity normal
+      - name: Restore test project
+        run: dotnet restore --verbosity normal -p:TargetFramework=net${{ matrix.dotnet-version }} QrCodeGeneratorTest
+      - name: Restore library
+        run: dotnet restore --verbosity normal -p:TargetFramework=netstandard2.0 QrCodeGenerator
+      - name: Build library
+        run: dotnet build --configuration Release --no-restore --verbosity normal -p:TargetFramework=netstandard2.0 QrCodeGenerator
+      - name: Build test project
+        run: dotnet build --configuration Release --no-restore --verbosity normal -p:TargetFramework=net${{ matrix.dotnet-version }} QrCodeGeneratorTest
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal --logger:"html;LogFileName=../../TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html"
+        run: dotnet test --no-build --verbosity normal --logger:"html;LogFileName=../../TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html" -P:TargetFramework=netnet${{ matrix.dotnet-version }} QrCodeGeneratorTest
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: TestResults-${{ matrix.os }}-dotnet_${{ matrix.dotnet-version }}.html
