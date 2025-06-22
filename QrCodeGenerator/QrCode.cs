@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -197,6 +196,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
                 throw new DataTooLongException(msg);
             }
+            Debug.Assert(dataUsedBits != -1);
 
             // Increase the error correction level while the data still fits in the current version number
             foreach (var newEcl in Ecc.AllValues)
@@ -286,10 +286,10 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // The modules of this QR code (false = light, true = dark).
         // Immutable after constructor finishes. Accessed through GetModule().
-        private readonly bool[] _modules;
+        private readonly bool[,] _modules;
 
         // Indicates function modules that are not subjected to masking. Discarded when constructor finishes.
-        private readonly bool[] _isFunction;
+        private readonly bool[,] _isFunction;
 
         #endregion
 
@@ -329,14 +329,37 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(ecl);
             ErrorCorrectionLevel = ecl;
             Objects.RequireNonNull(dataCodewords);
-            _modules = new bool[Size * Size];  // Initially all light
-            _isFunction = new bool[Size * Size];
+            _modules = new bool[Size, Size];  // Initially all light
+            _isFunction = new bool[Size, Size];
 
             // Compute ECC, draw modules, do masking
             DrawFunctionPatterns();
             var allCodewords = AddEccAndInterleave(dataCodewords);
             DrawCodewords(allCodewords);
-            Mask = HandleConstructorMasking(mask);
+
+            // Do masking
+            if (mask == -1)
+            {
+                // Automatically choose best mask
+                var minPenalty = int.MaxValue;
+                for (uint i = 0; i < 8; i++)
+                {
+                    ApplyMask(i);
+                    DrawFormatBits(i);
+                    var penalty = GetPenaltyScore();
+                    if (penalty < minPenalty)
+                    {
+                        mask = (int)i;
+                        minPenalty = penalty;
+                    }
+                    ApplyMask(i);  // Undoes the mask due to XOR
+                }
+            }
+            Debug.Assert(0 <= mask && mask <= 7);
+            Mask = mask;
+            ApplyMask((uint)mask);  // Apply the final choice of mask
+            DrawFormatBits((uint)mask);  // Overwrite old format bits
+
             _isFunction = null;
         }
 
@@ -362,7 +385,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// for light modules (or if the coordinates are outside the bounds).</returns>
         public bool GetModule(int x, int y)
         {
-            return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y * Size + x];
+            return 0 <= x && x < Size && 0 <= y && y < Size && _modules[y, x];
         }
 
         /// <summary>
@@ -624,8 +647,8 @@ namespace Net.Codecrete.QrCodeGenerator
         // Only used by the constructor. Coordinates must be in bounds.
         private void SetFunctionModule(int x, int y, bool isDark)
         {
-            _modules[y * Size + x] = isDark;
-            _isFunction[y * Size + x] = true;
+            _modules[y, x] = isDark;
+            _isFunction[y, x] = true;
         }
 
         private Graphics AsGraphics()
@@ -657,13 +680,13 @@ namespace Net.Codecrete.QrCodeGenerator
 
             // Split data into blocks and append ECC to each block
             var blocks = new byte[numBlocks][];
-            var rs = new ReedSolomonGenerator(blockEccLen);
+            var rsDiv = new ReedSolomonGenerator(blockEccLen);
             for (int i = 0, k = 0; i < numBlocks; i++)
             {
                 var dat = CopyOfRange(data, k, k + shortBlockLen - blockEccLen + (i < numShortBlocks ? 0 : 1));
                 k += dat.Length;
                 var block = CopyOf(dat, shortBlockLen + 1);
-                var ecc = rs.GetRemainder(dat);
+                var ecc = rsDiv.GetRemainder(dat);
                 Array.Copy(ecc, 0, block, block.Length - blockEccLen, ecc.Length);
                 blocks[i] = block;
             }
@@ -675,13 +698,11 @@ namespace Net.Codecrete.QrCodeGenerator
                 for (var j = 0; j < blocks.Length; j++)
                 {
                     // Skip the padding byte in short blocks
-                    if (i == shortBlockLen - blockEccLen && j < numShortBlocks)
+                    if (i != shortBlockLen - blockEccLen || j >= numShortBlocks)
                     {
-                        continue;
+                        result[k] = blocks[j][i];
+                        k++;
                     }
-
-                    result[k] = blocks[j][i];
-                    k++;
                 }
             }
             return result;
@@ -699,7 +720,8 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             var i = 0;  // Bit index into the data
-                        // Do the funny zigzag scan
+
+            // Do the funny zigzag scan
             for (var right = Size - 1; right >= 1; right -= 2)
             {
                 // Index of right column in each column pair
@@ -716,13 +738,11 @@ namespace Net.Codecrete.QrCodeGenerator
                         var x = right - j;  // Actual x coordinate
                         var upward = ((right + 1) & 2) == 0;
                         var y = upward ? Size - 1 - vert : vert;  // Actual y coordinate
-                        if (_isFunction[y * Size + x] || i >= data.Length * 8)
+                        if (!_isFunction[y, + x] && i < data.Length * 8)
                         {
-                            continue;
+                            _modules[y, x] = GetBit(data[(uint)i >> 3], 7 - (i & 7));
+                            i++;
                         }
-
-                        _modules[y * Size + x] = GetBit(data[(uint)i >> 3], 7 - (i & 7));
-                        i++;
                         // If this QR code has any remainder bits (0 to 7), they were assigned as
                         // 0/false/light by the constructor and are left unchanged by this method
                     }
@@ -739,12 +759,11 @@ namespace Net.Codecrete.QrCodeGenerator
         // QR code needs exactly one (not zero, two, etc.) mask applied.
         private void ApplyMask(uint mask)
         {
-            if (mask > 7)
+            if (mask < 0 || mask > 7)
             {
                 throw new ArgumentOutOfRangeException(nameof(mask), "Mask value out of range");
             }
 
-            var index = 0;
             for (var y = 0; y < Size; y++)
             {
                 for (var x = 0; x < Size; x++)
@@ -761,39 +780,9 @@ namespace Net.Codecrete.QrCodeGenerator
                         case 6: invert = (x * y % 2 + x * y % 3) % 2 == 0; break;
                         case 7: invert = ((x + y) % 2 + x * y % 3) % 2 == 0; break;
                     }
-                    _modules[index] ^= invert & !_isFunction[index];
-                    index++;
+                    _modules[y, x] ^= invert & !_isFunction[y, x];
                 }
             }
-        }
-
-
-        // A messy helper function for the constructor. This QR code must be in an unmasked state when this
-        // method is called. The given argument is the requested mask, which is -1 for auto or 0 to 7 for fixed.
-        // This method applies and returns the actual mask chosen, from 0 to 7.
-        private int HandleConstructorMasking(int mask)
-        {
-            if (mask == -1)
-            {
-                // Automatically choose best mask
-                var minPenalty = int.MaxValue;
-                for (uint i = 0; i < 8; i++)
-                {
-                    ApplyMask(i);
-                    DrawFormatBits(i);
-                    var penalty = GetPenaltyScore();
-                    if (penalty < minPenalty)
-                    {
-                        mask = (int)i;
-                        minPenalty = penalty;
-                    }
-                    ApplyMask(i);  // Undoes the mask due to XOR
-                }
-            }
-            Debug.Assert(0 <= mask && mask <= 7);
-            ApplyMask((uint)mask);  // Apply the final choice of mask
-            DrawFormatBits((uint)mask);  // Overwrite old format bits
-            return mask;  // The caller shall assign this value to the final-declared field
         }
 
 
@@ -802,18 +791,16 @@ namespace Net.Codecrete.QrCodeGenerator
         private int GetPenaltyScore()
         {
             var result = 0;
-            var finderPenalty = new FinderPenalty(Size);
 
             // Adjacent modules in row having same color, and finder-like patterns
-            var index = 0;
             for (var y = 0; y < Size; y++)
             {
                 var runColor = false;
                 var runX = 0;
-                finderPenalty.Reset();
+                var finderPenalty = new FinderPenalty(Size);
                 for (var x = 0; x < Size; x++)
                 {
-                    if (_modules[index] == runColor)
+                    if (_modules[y, x] == runColor)
                     {
                         runX++;
                         if (runX == 5)
@@ -833,11 +820,10 @@ namespace Net.Codecrete.QrCodeGenerator
                             result += finderPenalty.CountPatterns() * PenaltyN3;
                         }
 
-                        runColor = _modules[index];
+                        runColor = _modules[y, x];
                         runX = 1;
                     }
 
-                    index++;
                 }
                 result += finderPenalty.TerminateAndCount(runColor, runX) * PenaltyN3;
             }
@@ -845,13 +831,12 @@ namespace Net.Codecrete.QrCodeGenerator
             // Adjacent modules in column having same color, and finder-like patterns
             for (var x = 0; x < Size; x++)
             {
-                index = x;
                 var runColor = false;
                 var runY = 0;
-                finderPenalty.Reset();
+                var finderPenalty = new FinderPenalty(Size);
                 for (var y = 0; y < Size; y++)
                 {
-                    if (_modules[index] == runColor)
+                    if (_modules[y, x] == runColor)
                     {
                         runY++;
                         if (runY == 5)
@@ -871,54 +856,46 @@ namespace Net.Codecrete.QrCodeGenerator
                             result += finderPenalty.CountPatterns() * PenaltyN3;
                         }
 
-                        runColor = _modules[index];
+                        runColor = _modules[y, x];
                         runY = 1;
                     }
-
-                    index += Size;
                 }
                 result += finderPenalty.TerminateAndCount(runColor, runY) * PenaltyN3;
             }
 
             // 2*2 blocks of modules having same color
-            index = 0;
             for (var y = 0; y < Size - 1; y++)
             {
                 for (var x = 0; x < Size - 1; x++)
                 {
-                    var color = _modules[index];
-                    if (color == _modules[index + 1] &&
-                          color == _modules[index + Size] &&
-                          color == _modules[index + Size + 1])
+                    var color = _modules[y, x];
+                    if (color == _modules[y, x + 1] &&
+                          color == _modules[y + 1, x] &&
+                          color == _modules[y + 1, x + 1])
                     {
                         result += PenaltyN2;
                     }
 
-                    index++;
                 }
-
-                index++;
             }
 
             // Balance of dark and light modules
             var dark = 0;
-            index = 0;
             for (var y = 0; y < Size; y++)
             {
                 for (var x = 0; x < Size; x++)
                 {
-                    if (_modules[index])
+                    if (_modules[y, x])
                     {
                         dark++;
                     }
-
-                    index++;
                 }
             }
             var total = Size * Size;  // Note that size is odd, so dark/total != 1/2
                                       // Compute the smallest integer k >= 0 such that (45-5k)% <= dark/total <= (55+5k)%
             var k = (Math.Abs(dark * 20 - total * 10) + total - 1) / total - 1;
             result += k * PenaltyN4;
+            Debug.Assert(0 <= result && result <= 2568888);  // Non-tight upper bound based on default values of PENALTY_N1, ..., N4
             return result;
         }
 
@@ -937,26 +914,18 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 return new int[] { };
             }
-
-            var numAlign = Version / 7 + 2;
-            int step;
-            if (Version == 32)  // Special snowflake
+            else
             {
-                step = 26;
+                var numAlign = Version / 7 + 2;
+                var step = (Version * 8 + numAlign * 3 + 5) / (numAlign * 4 - 4) * 2;
+                var result = new int[numAlign];
+                result[0] = 6;
+                for (int i = result.Length - 1, pos = Size - 7; i >= 1; i--, pos -= step)
+                {
+                    result[i] = pos;
+                }
+                return result;
             }
-            else  // step = ceil[(size - 13) / (numAlign*2 - 2)] * 2
-            {
-                step = (Version * 4 + numAlign * 2 + 1) / (numAlign * 2 - 2) * 2;
-            }
-
-            var result = new int[numAlign];
-            result[0] = 6;
-            for (int i = result.Length - 1, pos = Size - 7; i >= 1; i--, pos -= step)
-            {
-                result[i] = pos;
-            }
-
-            return result;
         }
 
         // Returns the number of data bits that can be stored in a QR code of the given version number, after
@@ -976,19 +945,18 @@ namespace Net.Codecrete.QrCodeGenerator
             result -= (size - 16) * 2;  // Subtract the timing patterns (excluding finders)
                                         // The five lines above are equivalent to: int result = (16 * ver + 128) * ver + 64;
 
-            if (ver < 2)
+            if (ver >= 2)
             {
-                return result;
+                var numAlign = ver / 7 + 2;
+                result -= (numAlign - 1) * (numAlign - 1) * 25;  // Subtract alignment patterns not overlapping with timing patterns
+                result -= (numAlign - 2) * 2 * 20;  // Subtract alignment patterns that overlap with timing patterns
+                                                    // The two lines above are equivalent to: result -= (25 * numAlign - 10) * numAlign - 55;
+                if (ver >= 7)
+                {
+                    result -= 6 * 3 * 2;  // Subtract version information
+                }
             }
 
-            var numAlign = ver / 7 + 2;
-            result -= (numAlign - 1) * (numAlign - 1) * 25;  // Subtract alignment patterns not overlapping with timing patterns
-            result -= (numAlign - 2) * 2 * 20;  // Subtract alignment patterns that overlap with timing patterns
-            // The two lines above are equivalent to: result -= (25 * numAlign - 10) * numAlign - 55;
-            if (ver >= 7)
-            {
-                result -= 6 * 3 * 2;  // Subtract version information
-            }
             Debug.Assert(208 <= result && result <= 29648);
             return result;
         }
@@ -1010,42 +978,27 @@ namespace Net.Codecrete.QrCodeGenerator
         // adding to the history.
         private struct FinderPenalty
         {
-            private int _length;
             private readonly short[] _runHistory;
             private readonly int _size;
 
-            internal FinderPenalty(int size)
+            public FinderPenalty(int size)
             {
-                _length = 0;
-                _runHistory = new short[179];
                 _size = size;
-            }
-
-            internal void Reset()
-            {
-                _length = 0;
+                _runHistory = new short[7];
             }
 
             // Can only be called immediately after a light run is added, and
-            // returns either 0, 1, or 2.
+            // returns either 0, 1, or 2. A helper function for getPenaltyScore().
             internal int CountPatterns()
             {
-                if (_length < 7)
-                {
-                    return 0;
-                }
-                int n = _runHistory[_length - 6];
+                int n = _runHistory[1];
                 Debug.Assert(n <= _size * 3);
-                var core = n > 0
-                           && _runHistory[_length - 5] == n
-                           && _runHistory[_length - 4] == n * 3
-                           && _runHistory[_length - 3] == n
-                           && _runHistory[_length - 2] == n;
-                return (core && _runHistory[_length - 7] >= n * 4 && _runHistory[_length - 1] >= n ? 1 : 0)
-                     + (core && _runHistory[_length - 1] >= n * 4 && _runHistory[_length - 7] >= n ? 1 : 0);
+                var core = n > 0 && _runHistory[2] == n && _runHistory[3] == n * 3 && _runHistory[4] == n && _runHistory[5] == n;
+                return (core && _runHistory[0] >= n * 4 && _runHistory[6] >= n ? 1 : 0)
+                     + (core && _runHistory[6] >= n * 4 && _runHistory[0] >= n ? 1 : 0);
             }
 
-            // Pushes the given value to the front and drops the last value.
+            // Must be called at the end of a line (row or column) of modules. A helper function for getPenaltyScore().
             internal int TerminateAndCount(bool currentRunColor, int currentRunLength)
             {
                 if (currentRunColor)
@@ -1059,11 +1012,13 @@ namespace Net.Codecrete.QrCodeGenerator
                 return CountPatterns();
             }
 
-            // Adds the given value to the run history
-            internal void AddHistory(int run)
+            // Pushes the given value to the front and drops the last value. A helper function for getPenaltyScore().
+            internal void AddHistory(int currentRunLength)
             {
-                _runHistory[_length] = (short)run;
-                _length++;
+                if (_runHistory[0] == 0)
+                    currentRunLength += _size;  // Add light border to initial run
+                Array.Copy(_runHistory, 0, _runHistory, 1, 6);
+                _runHistory[0] = (short) currentRunLength;
             }
         }
 

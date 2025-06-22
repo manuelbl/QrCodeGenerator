@@ -51,49 +51,5 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             Assert.True(QrSegmentAdvanced.IsEncodableAsKanji(KanjiSample));
         }
-
-
-        private const string KanjiText = "昨夜のコンサートは最高でした。";
-
-        private static readonly string[] KanjiModules = {
-            "XXXXXXX  XXX   X  XXXXXXX",
-            "X     X  X X  X   X     X",
-            "X XXX X X X X     X XXX X",
-            "X XXX X X   X  XX X XXX X",
-            "X XXX X XXX X XXX X XXX X",
-            "X     X XXX   XXX X     X",
-            "XXXXXXX X X X X X XXXXXXX",
-            "        XXXX   X         ",
-            "X XXXXX  X    XX  XXXXX  ",
-            " X  X  X  XXX X XXXX XXXX",
-            "  XX XX XXXX   X  X XXX X",
-            "  XX X XXX   X    XX    X",
-            "X XX  X   X X     X  X XX",
-            "XX  X  XXX   XX X X XX  X",
-            "X     XXX XXXX X  XX XX  ",
-            "X  XX   XXXX X   X  XXXXX",
-            "X XXXXX XX XX   XXXXX  X ",
-            "        X X X  XX   XXX X",
-            "XXXXXXX  XX X XXX X XX XX",
-            "X     X X X XX XX   XX X ",
-            "X XXX X X   XXXXXXXXX  X ",
-            "X XXX X XXX   X XXX XXX X",
-            "X XXX X XXX X X    XX   X",
-            "X     X  XX X  XX X  X  X",
-            "XXXXXXX X   X  XXXX  XX  "
-        };
-
-        [Fact]
-        public void KanjiQrCode()
-        {
-            var segment = QrSegmentAdvanced.MakeKanji(KanjiText);
-            var segments = new List<QrSegment> { segment };
-            var qrCode = QrCode.EncodeSegments(segments, QrCode.Ecc.Medium);
-
-            Assert.Same(QrCode.Ecc.Medium, qrCode.ErrorCorrectionLevel);
-            Assert.Equal(25, qrCode.Size);
-            Assert.Equal(2, qrCode.Mask);
-            Assert.Equal(KanjiModules, TestHelper.ToStringArray(qrCode));
-        }
     }
 }

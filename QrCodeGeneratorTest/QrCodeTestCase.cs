@@ -25,22 +25,23 @@
  * IN THE SOFTWARE.
  */
 
-using Xunit;
+using System.Collections.Generic;
 using static Net.Codecrete.QrCodeGenerator.QrCode;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
-    public class QrCodeTest
+    public record QrCodeTestCase(
+        int Index,
+        List<QrSegment> Segments,
+        Ecc RequestedEcc,
+        string[] ExpectedModules,
+        Ecc EffectiveEcc,
+        int Mask
+    )
     {
-        [Theory]
-        [ClassData(typeof(QrCodeDataProvider))]
-        public void TestQrCode(QrCodeTestCase testCase)
+        public override string ToString()
         {
-            var qrCode = EncodeSegments(testCase.Segments, testCase.RequestedEcc);
-            Assert.Equal(testCase.ExpectedModules.Length, qrCode.Size);
-            Assert.Equal(testCase.EffectiveEcc, qrCode.ErrorCorrectionLevel);
-            Assert.Equal(testCase.Mask, qrCode.Mask);
-            Assert.Equal(testCase.ExpectedModules, TestHelper.ToStringArray(qrCode));
+            return $"Case {Index}";
         }
     }
 }

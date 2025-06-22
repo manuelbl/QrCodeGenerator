@@ -33,7 +33,7 @@ namespace Net.Codecrete.QrCodeGenerator
 {
     internal class Graphics
     {
-        internal Graphics(int size, bool[] modules)
+        internal Graphics(int size, bool[,] modules)
         {
             _size = size;
             _modules = modules;
@@ -43,7 +43,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // The modules of this QR code (false = light, true = dark).
         // Immutable after constructor finishes.
-        private readonly bool[] _modules;
+        private readonly bool[,] _modules;
 
         internal string ToSvgString(int border, string foreground, string background)
         {
@@ -227,7 +227,7 @@ namespace Net.Codecrete.QrCodeGenerator
                             continue;
                         }
 
-                        px |= (byte)(_modules[x - border + _size * (_size - y - 1)] ? 0 : 1 << (7 - j));
+                        px |= (byte)(_modules[(_size - y - 1), x - border] ? 0 : 1 << (7 - j));
                     }
 
                     buf[62 + i + yOffset * aligned] = px;
@@ -324,13 +324,11 @@ namespace Net.Codecrete.QrCodeGenerator
         private bool[,] CopyModules()
         {
             var modules = new bool[_size, _size];
-            var index = 0;
             for (var y = 0; y < _size; y++)
             {
                 for (var x = 0; x < _size; x++)
                 {
-                    modules[y, x] = _modules[index];
-                    index += 1;
+                    modules[y, x] = _modules[y, x];
                 }
             }
 
