@@ -520,7 +520,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             "XXXXXXX XXX  XX X  XXXX  X XX  XXXX    XX  X "
         };
 
-        private static readonly List<QrSegment> Segment12 = new() { QrSegment.MakeNumeric(""), QrSegment.MakeAlphanumeric("") };
+        private static readonly List<QrSegment> Segment12 = new List<QrSegment> { QrSegment.MakeNumeric(""), QrSegment.MakeAlphanumeric("") };
         private static readonly string[] Modules12 = {
             "XXXXXXX  X    XXXXXXX",
             "X     X   XX  X     X",
@@ -545,7 +545,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             "XXXXXXX    XXX X X X "
         };
 
-        private static readonly List<QrSegment> Segment13 = new() { QrSegmentAdvanced.MakeKanji("昨夜のコンサートは最高でした。") };
+        private static readonly List<QrSegment> Segment13 = new List<QrSegment> { QrSegmentAdvanced.MakeKanji("昨夜のコンサートは最高でした。") };
         private static readonly string[] Modules13 = {
             "XXXXXXX  XXX   X  XXXXXXX",
             "X     X  X X  X   X     X",

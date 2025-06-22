@@ -27,22 +27,33 @@
 
 using System;
 using Xunit;
+using static Net.Codecrete.QrCodeGenerator.QrCode;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
 
     public class QrCodeBitmapTest
     {
-        private static QrCode.Ecc EccFromOrdinal(int val)
+        private static Ecc EccFromOrdinal(int val)
         {
-            return val switch
-            {
-                0 => QrCode.Ecc.Low,
-                1 => QrCode.Ecc.Medium,
-                2 => QrCode.Ecc.Quartile,
-                3 => QrCode.Ecc.High,
-                _ => throw new ArgumentOutOfRangeException(nameof(val), val, string.Empty)
-            };
+            Ecc ecc;
+            switch (val) {
+                case 0:
+                    ecc = Ecc.Low;
+                    break;
+                case 1:
+                    ecc = Ecc.Medium;
+                    break;
+                case 2:
+                    ecc = Ecc.Quartile;
+                    break;
+                case 3:
+                    ecc = Ecc.High;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(val), val, string.Empty);
+            }
+            return ecc;
         }
 
         [Theory]

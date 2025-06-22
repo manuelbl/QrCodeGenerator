@@ -30,15 +30,25 @@ using static Net.Codecrete.QrCodeGenerator.QrCode;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
-    public record QrCodeTestCase(
-        int Index,
-        List<QrSegment> Segments,
-        Ecc RequestedEcc,
-        string[] ExpectedModules,
-        Ecc EffectiveEcc,
-        int Mask
-    )
+    public class QrCodeTestCase
     {
+        public int Index { get; set; }
+        public List<QrSegment> Segments { get; set; }
+        public Ecc RequestedEcc { get; set; }
+        public string[] ExpectedModules { get; set; }
+        public Ecc EffectiveEcc { get; set; }
+        public int Mask { get; set; }
+
+        public QrCodeTestCase(int index, List<QrSegment> segments, Ecc requestedEcc, string[] expectedModules, Ecc effectiveEcc, int mask)
+        {
+            Index = index;
+            Segments = segments;
+            RequestedEcc = requestedEcc;
+            ExpectedModules = expectedModules;
+            EffectiveEcc = effectiveEcc;
+            Mask = mask;
+        }
+
         public override string ToString()
         {
             return $"Case {Index}";
