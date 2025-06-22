@@ -46,9 +46,6 @@ jobs:
           name: TestResults-${{ runner.os }}
           path: TestResults-*.html
 
-      - name: Create and validate NuGet package
-        run: dotnet pack --no-build --verbosity normal
-
       - name: Create and validate NuGet packages
         run: |
           dotnet tool restore
