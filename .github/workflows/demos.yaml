@@ -27,8 +27,8 @@ jobs:
           dotnet nuget add source $pkgdir --name Local
       - name: Build library package
         run: |
-          dotnet restore --verbosity normal
-          dotnet pack --configuration Release -p:ContinuousIntegrationBuild=true --verbosity normal
+          dotnet restore --configuration Release -p:ContinuousIntegrationBuild=true --verbosity normal
+          dotnet pack --no-restore --configuration Release -p:ContinuousIntegrationBuild=true --verbosity normal
       - name: Install library package
         run: |
           $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
