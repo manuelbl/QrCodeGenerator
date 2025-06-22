@@ -25,10 +25,10 @@ jobs:
           mkdir ..\LocalPackages
           $pkgdir = Resolve-Path ..\LocalPackages
           dotnet nuget add source $pkgdir --name Local
-      - name: Restore NuGet packages
-        run: dotnet restore --verbosity normal
       - name: Build library package
-        run: dotnet pack --configuration Release --no-restore --verbosity normal
+        run: |
+          dotnet restore --verbosity normal
+          dotnet pack --configuration Release --verbosity normal
       - name: Install library package
         run: |
           $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg

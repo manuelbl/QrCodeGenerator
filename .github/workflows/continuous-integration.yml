@@ -49,5 +49,5 @@ jobs:
       - name: Create and validate NuGet packages
         run: |
           dotnet tool restore
-          dotnet pack --verbosity normal
+          dotnet pack --no-build --verbosity normal
         if: startsWith(matrix.os,'windows')
