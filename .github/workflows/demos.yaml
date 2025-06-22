@@ -4,8 +4,11 @@ on: [push, pull_request]
 
 env:
   Configuration: Release
+  ContinuousIntegrationBuild: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
+  DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: true
+  TERM: xterm-256color
 
 jobs:
   build:
@@ -16,23 +19,29 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            6.x
+            8.x
+
       - name: Create local NuGet source
         run: |
           mkdir ..\LocalPackages
           $pkgdir = Resolve-Path ..\LocalPackages
           dotnet nuget add source $pkgdir --name Local
+
       - name: Build library package
         run: |
-          dotnet restore --configuration Release -p:ContinuousIntegrationBuild=true --verbosity normal
-          dotnet pack --no-restore --configuration Release -p:ContinuousIntegrationBuild=true --verbosity normal
+          dotnet tool restore
+          dotnet pack --no-build --verbosity normal
+
       - name: Install library package
         run: |
           $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
           nuget push $pkg -Source Local
+          
       - name: Build Demo-ImageSharp
         run: dotnet build
         working-directory: Demo-ImageSharp
