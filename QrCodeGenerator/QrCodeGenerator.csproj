@@ -45,6 +45,7 @@ Optional advanced features:
 - Fix for SVG generation with Norwegian locale
 - Enable trimming for .NET 6
 - Fix for `IndexOutOfRangeException`
+- Fix for mask penalty algorithm
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
@@ -65,7 +66,6 @@ Optional advanced features:
 
   <PropertyGroup Label="Packaging">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
     <EmbedAllSources>true</EmbedAllSources>
     <ContinuousIntegrationBuild Condition="$(Configuration) == 'Release'">true</ContinuousIntegrationBuild>

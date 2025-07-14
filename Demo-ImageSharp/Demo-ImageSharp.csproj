@@ -5,7 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator.Demo</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator.Demo</PackageId>
-    <Version>2.0.6</Version>
+    <Version>2.0.7</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>Demo application for QR Code Generation</Description>
