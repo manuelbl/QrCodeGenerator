@@ -34,19 +34,31 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     {
         public int Index { get; set; }
         public List<QrSegment> Segments { get; set; }
-        public Ecc RequestedEcc { get; set; }
         public string[] ExpectedModules { get; set; }
+        public Ecc RequestedEcc { get; set; }
+        public int MinVersion { get; set; }
+        public int MaxVersion { get; set; }
+        public int RequestedMask { get; set; }
+        public bool BoostEcl { get; set; }
         public Ecc EffectiveEcc { get; set; }
-        public int Mask { get; set; }
+        public int EffectiveVersion { get; set; }
+        public int EffectiveMask { get; set; }
 
-        public QrCodeTestCase(int index, List<QrSegment> segments, Ecc requestedEcc, string[] expectedModules, Ecc effectiveEcc, int mask)
+        public QrCodeTestCase(int index, List<QrSegment> segments, string[] expectedModules,
+            Ecc requestedEcc, int minVersion, int maxVersion, int requestedMask, bool boostEcl,
+            Ecc effectiveEcc, int effectiveVersion,  int effectiveMask)
         {
             Index = index;
             Segments = segments;
-            RequestedEcc = requestedEcc;
             ExpectedModules = expectedModules;
+            RequestedEcc = requestedEcc;
+            MinVersion = minVersion;
+            MaxVersion = maxVersion;
+            RequestedMask = requestedMask;
+            BoostEcl = boostEcl;
             EffectiveEcc = effectiveEcc;
-            Mask = mask;
+            EffectiveVersion = effectiveVersion;
+            EffectiveMask = effectiveMask;
         }
 
         public override string ToString()

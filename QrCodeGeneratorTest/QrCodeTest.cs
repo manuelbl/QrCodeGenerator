@@ -36,10 +36,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [ClassData(typeof(QrCodeDataProvider))]
         public void TestQrCode(QrCodeTestCase testCase)
         {
-            var qrCode = EncodeSegments(testCase.Segments, testCase.RequestedEcc);
+            var qrCode = EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.RequestedMask, testCase.BoostEcl);
             Assert.Equal(testCase.ExpectedModules.Length, qrCode.Size);
             Assert.Equal(testCase.EffectiveEcc, qrCode.ErrorCorrectionLevel);
-            Assert.Equal(testCase.Mask, qrCode.Mask);
+            Assert.Equal(testCase.EffectiveMask, qrCode.Mask);
             Assert.Equal(testCase.ExpectedModules, TestHelper.ToStringArray(qrCode));
         }
     }
