@@ -483,6 +483,17 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
+        /// Creates bitmap in the PNG format data using black for dark modules and white for light modules.
+        /// </summary>
+        /// <param name="border">The border width, as a factor of the module (QR code pixel) size.</param>
+        /// <param name="scale">The width and height, in pixels, of each module.</param>
+        /// <returns>Bitmap data</returns>
+        public byte[] ToPngBitmap(int border = 0, int scale = 1)
+        {
+            return new QrCodePng(this, scale, border).GetBytes();
+        }
+
+        /// <summary>
         /// Creates an RGB color value in little endian format.
         /// </summary>
         /// <param name="red">Red component.</param>
