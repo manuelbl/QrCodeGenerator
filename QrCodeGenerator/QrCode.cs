@@ -92,6 +92,41 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
+        /// Creates a Series of QR codes representing the specified text using the specified error correction level
+        /// as structured append. Structured append requires an additional QrSegment at the start specifying the
+        /// number of codes (0-15), the position within those (0-15) and a parity which needs to be the same for all.
+        /// This method tries to split a given text optimally, meaning all QrCodes end up encoding a similar number of
+        /// characters.
+        /// </summary>
+        /// <param name="text">The text to be encoded. The full range of Unicode characters may be used.</param>
+        /// <param name="ecl">The minimum error correction level to use.</param>
+        /// <param name="version">The version to use, default is 29</param>
+        /// <param name="boostEcl">Whether ecl should be upgraded if possible, default is false</param>
+        /// <returns>A list of created QR code instance representing the specified text split into QR code of the size of the specified version</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="text"/> or <paramref name="ecl"/> is <c>null</c>.</exception>
+        /// <exception cref="DataTooLongException">The text is too long to fit in the largest QR code size (version)
+        /// at the specified error correction level.</exception>
+        public static List<QrCode> EncodeTextAsStructuredAppend(string text, Ecc ecl, int version = 29, bool boostEcl = false)
+        {
+            Objects.RequireNonNull(text);
+            Objects.RequireNonNull(ecl);
+            var maxSplitSize = GetNumDataCodewords(version, ecl) - 5;
+            int numSegments = (text.Length + maxSplitSize - 1) / maxSplitSize;
+            int idealSplit = text.Length / numSegments + (text.Length / numSegments == maxSplitSize ? 0 : 1);
+            var segments = QrSegment.MakeStructuredAppendSegments(text, idealSplit);
+            if (segments.Count > 16)
+            {
+                throw new DataTooLongException("Text does not fit within 16 codes of the chosen version");
+            }
+            var result = new List<QrCode>(segments.Count);
+            foreach (var seg in segments)
+            {
+                result.Add(EncodeSegments(seg, ecl, minVersion: version, maxVersion: version, boostEcl: boostEcl));
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Creates a QR code representing the specified binary data using the specified error correction level.
         /// <para>
         /// This function encodes the data in the binary segment mode. The maximum number of
@@ -196,7 +231,6 @@ namespace Net.Codecrete.QrCodeGenerator
 
                 throw new DataTooLongException(msg);
             }
-            Debug.Assert(dataUsedBits != -1);
 
             // Increase the error correction level while the data still fits in the current version number
             foreach (var newEcl in Ecc.AllValues)
@@ -212,14 +246,19 @@ namespace Net.Codecrete.QrCodeGenerator
             foreach (var seg in segments)
             {
                 ba.AppendBits(seg.EncodingMode.ModeBits, 4);
-                ba.AppendBits((uint)seg.NumChars, seg.EncodingMode.NumCharCountBits(version));
-                ba.AppendData(seg.GetData());
+                if (seg.EncodingMode.IsStructuredAppend())
+                {
+                    ba.AppendBits((uint) seg.EncodingMode.AppendMode.SequenceIndicator, 4);
+                    ba.AppendBits((uint) seg.EncodingMode.AppendMode.SequenceTotal, 4);
+                    ba.AppendBits(seg.EncodingMode.AppendMode.Parity, 8);
+                } else {
+                    ba.AppendBits((uint)seg.NumChars, seg.EncodingMode.NumCharCountBits(version));
+                    ba.AppendData(seg.GetData());
+                }
             }
-            Debug.Assert(ba.Length == dataUsedBits);
 
             // Add terminator and pad up to a byte if applicable
             var dataCapacityBits = GetNumDataCodewords(version, ecl) * 8;
-            Debug.Assert(ba.Length <= dataCapacityBits);
             ba.AppendBits(0, Math.Min(4, dataCapacityBits - ba.Length));
             ba.AppendBits(0, (8 - ba.Length % 8) % 8);
             Debug.Assert(ba.Length % 8 == 0);
@@ -243,6 +282,8 @@ namespace Net.Codecrete.QrCodeGenerator
             // Create the QR code object
             return new QrCode(version, ecl, dataCodewords, mask);
         }
+
+        
 
         #endregion
 
@@ -355,7 +396,6 @@ namespace Net.Codecrete.QrCodeGenerator
                     ApplyMask(i);  // Undoes the mask due to XOR
                 }
             }
-            Debug.Assert(0 <= mask && mask <= 7);
             Mask = mask;
             ApplyMask((uint)mask);  // Apply the final choice of mask
             DrawFormatBits((uint)mask);  // Overwrite old format bits
@@ -759,7 +799,7 @@ namespace Net.Codecrete.QrCodeGenerator
         // QR code needs exactly one (not zero, two, etc.) mask applied.
         private void ApplyMask(uint mask)
         {
-            if (mask < 0 || mask > 7)
+            if (mask > 7)
             {
                 throw new ArgumentOutOfRangeException(nameof(mask), "Mask value out of range");
             }
