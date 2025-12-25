@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -84,6 +85,20 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             return new QrSegment(Mode.Byte, data.Length, ba);
+        }
+
+
+        /// <summary>
+        /// Creates a segment representing only the header of the structured append part
+        /// </summary>
+        /// <param name="parity">The parity that was calculated over the whole content</param>
+        /// <param name="seq">The sequence number of the current segment</param>
+        /// <param name="total">The number of sequences (QR codes) in total</param>
+        /// <returns>The created segment containing the specified header.</returns>
+        /// <exception cref="ArgumentNullException"><c>data</c> is <c>null</c>.</exception>
+        private static QrSegment MakeStructuredAppend(byte parity, int seq, int total)
+        {
+            return new QrSegment(Mode.StructuredAppend(parity, seq, total), 0, new BitArray(0));
         }
 
 
@@ -191,6 +206,41 @@ namespace Net.Codecrete.QrCodeGenerator
                 result.Add(MakeBytes(Encoding.UTF8.GetBytes(text)));
             }
 
+            return result;
+        }
+
+        
+        /// <summary>
+        /// Creates a series of pairs of QrSegments, each pair consisting of a Structured Append segment which only
+        /// contains metadata and a byte segment containing the data.
+        /// Structured append requires an additional QrSegment at the start specifying the
+        /// number of codes (0-15), the position within those (0-15) and a parity which needs to be the same for all.
+        /// Those are computed within this method.
+        /// </summary>
+        /// <param name="text">The text to encode as structured append, split</param>
+        /// <param name="splitSize">The size that each split should have</param>
+        /// <returns>A List of future QR codes, which each contain (at least) two segments: the structured append header and the binary data</returns>
+        public static List<List<QrSegment>> MakeStructuredAppendSegments(string text, int splitSize)
+        {
+            var result = new List<List<QrSegment>>();
+            byte parity = 0;
+            foreach (char val in text)
+                    parity ^= (val <= 255) ? (byte)val : (byte)((byte)val ^ (byte)(val >> 8));
+            var allBytes = Encoding.UTF8.GetBytes(text);
+            
+            int offset = 0;
+            int i = 0;
+            while (offset < allBytes.Length) {
+                int nextSegmentLength = offset + splitSize > allBytes.Length ? allBytes.Length - offset : splitSize;
+                var pair = new List<QrSegment>(2)
+                {
+                    QrSegment.MakeStructuredAppend(parity, i, (text.Length + splitSize - 1) / splitSize - 1),
+                    QrSegment.MakeBytes(new ArraySegment<byte>(allBytes, offset, nextSegmentLength).ToArray())
+                };
+                result.Add(pair);
+                offset += splitSize;
+                i++;
+            }
             return result;
         }
 
@@ -343,6 +393,11 @@ namespace Net.Codecrete.QrCodeGenerator
             foreach (var seg in segments)
             {
                 Objects.RequireNonNull(seg);
+                if (seg.EncodingMode.IsStructuredAppend())
+                {
+                    result += 20;
+                    continue;
+                }
                 var ccBits = seg.EncodingMode.NumCharCountBits(version);
                 if (seg.NumChars >= 1 << ccBits)
                 {
@@ -391,31 +446,40 @@ namespace Net.Codecrete.QrCodeGenerator
             /// Numeric encoding mode.
             /// </summary>
             /// <value>Numeric encoding mode.</value>
-            public static readonly Mode Numeric = new Mode(0x1, 10, 12, 14);
+            public static readonly Mode Numeric = new Mode(0x1, null, 10, 12, 14);
 
             /// <summary>
             /// Alphanumeric encoding mode.
             /// </summary>
             /// <value>Alphanumeric encoding mode.</value>
-            public static readonly Mode Alphanumeric = new Mode(0x2, 9, 11, 13);
+            public static readonly Mode Alphanumeric = new Mode(0x2, null, 9, 11, 13);
 
             /// <summary>
             /// Byte encoding mode.
             /// </summary>
             /// <value>Byte encoding mode.</value>
-            public static readonly Mode Byte = new Mode(0x4, 8, 16, 16);
+            public static readonly Mode Byte = new Mode(0x4, null, 8, 16, 16);
 
             /// <summary>
             /// Kanji encoding mode.
             /// </summary>
             /// <value>Kanji encoding mode.</value>
-            public static readonly Mode Kanji = new Mode(0x8, 8, 10, 12);
+            public static readonly Mode Kanji = new Mode(0x8, null, 10, 12);
 
             /// <summary>
             /// ECI encoding mode.
             /// </summary>
             /// <value>ECI encoding mode.</value>
-            public static readonly Mode Eci = new Mode(0x7, 0, 0, 0);
+            public static readonly Mode Eci = new Mode(0x7, null, 0, 0);
+
+            /// <summary>
+            /// StructuredAppend encoding mode.
+            /// </summary>
+            /// <value>uses Alphanumeric encoding mode.</value>
+            public static Mode StructuredAppend(byte parity, int seq, int total) 
+            { 
+                return new Mode(0x3, new StructuredAppendMode(parity, seq, total), 8, 16, 16);
+            }
 
 
             /// <summary>
@@ -439,6 +503,8 @@ namespace Net.Codecrete.QrCodeGenerator
             /// <value>Array of character count bit length</value>
             private int[] NumBitsCharCount { get; }
 
+            internal StructuredAppendMode AppendMode { get; }
+
 
             /// <summary>
             /// Returns the bit length of the character count in the QR segment header
@@ -452,11 +518,29 @@ namespace Net.Codecrete.QrCodeGenerator
                 return NumBitsCharCount[(ver + 7) / 17];
             }
 
+            internal bool IsStructuredAppend() 
+            {
+                return ModeBits == 0x3;
+            }
+
             // private constructor to initializes the constants
-            private Mode(uint modeBits, params int[] numBitsCharCount)
+            private Mode(uint modeBits, StructuredAppendMode sMode, params int[] numBitsCharCount)
             {
                 ModeBits = modeBits;
                 NumBitsCharCount = numBitsCharCount;
+                AppendMode = sMode;
+            }
+
+            internal sealed class StructuredAppendMode
+            {
+                internal byte Parity {get;}
+                internal int SequenceIndicator {get;}
+                internal int SequenceTotal {get;}
+                internal StructuredAppendMode (byte parity, int sequenceIndicator, int sequenceTotal) {
+                    Parity = parity;
+                    SequenceIndicator = sequenceIndicator;
+                    SequenceTotal = sequenceTotal;
+                }
             }
         }
 
