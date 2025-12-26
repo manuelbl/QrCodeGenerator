@@ -88,6 +88,48 @@ namespace Net.Codecrete.QrCodeGenerator
 
 
         /// <summary>
+        /// Creates a segment representing the specified binary data
+        /// encoded in byte mode. All input byte arrays are acceptable.
+        /// <para>
+        /// Any text string can be converted to UTF-8 bytes (using <c>Encoding.UTF8.GetBytes(str)</c>)
+        /// and encoded as a byte mode segment.
+        /// </para>
+        /// </summary>
+        /// <param name="data">The binary data to encode.</param>
+        /// <returns>The created segment containing the specified data.</returns>
+        /// <exception cref="ArgumentNullException"><c>data</c> is <c>null</c>.</exception>
+        public static QrSegment MakeBytes(ArraySegment<byte> data)
+        {
+            Objects.RequireNonNull(data);
+            var ba = new BitArray(0);
+            foreach (var b in data)
+            {
+                ba.AppendBits(b, 8);
+            }
+
+            return new QrSegment(Mode.Byte, data.Count, ba);
+        }
+
+
+        /// <summary>
+        /// Creates a segment for the structured append header.
+        /// </summary>
+        /// <param name="parity">The parity value.</param>
+        /// <param name="position">The position of the code within the sequence of codes (1 based).</param>
+        /// <param name="total">The total number of codes in the sequence of codes.</param>
+        /// <returns>The created segment containing the specified header.</returns>
+        /// <exception cref="ArgumentNullException"><c>data</c> is <c>null</c>.</exception>
+        private static QrSegment MakeStructuredAppend(byte parity, int position, int total)
+        {
+            var bitArray = new BitArray(0);
+            bitArray.AppendBits((uint)position - 1, 4);
+            bitArray.AppendBits((uint)total - 1, 4);
+            bitArray.AppendBits(parity, 8);
+            return new QrSegment(Mode.StructuredAppend, 0, bitArray);
+        }
+
+
+        /// <summary>
         /// Creates a segment representing the specified string of decimal digits.
         /// The segment is encoded in numeric mode.
         /// </summary>
@@ -192,6 +234,77 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             return result;
+        }
+
+
+        /// <summary>
+        /// Creates the segments represeting the specified binary data,
+        /// split into multiple QR codes (Structured Append).
+        /// <para>
+        /// The outer list represents the series of QR codes to be created.
+        /// The inner lists contains the QR segments for each QR code.
+        /// Each inner list contains at least two segments: the structured append segment and the binary data.
+        /// </para>
+        /// <para>
+        /// The data is split into slices of similar size.
+        /// </para>
+        /// <para>
+        /// If <paramref name="considerUtf8Boundaries"/> is set to <c>true</c>, the provided data is interpreted
+        /// as UTF-8 encoded text and the data is split only at UTF-8 character boundaries, i.e. no split occurs
+        /// in the middle of a multi-byte UTF-8 character sequence.
+        /// </para>
+        /// <para>
+        /// The structured append segment specifies the number of QR codes (0-15), the position within
+        /// those (0-15) and a parity which needs to be the same for all.
+        /// </para>
+        /// </summary>
+        /// <param name="data">The binary data to encode in multiple QR codes</param>
+        /// <param name="numberOfCodes">The number of codes to create.</param>
+        /// <param name="considerUtf8Boundaries">If set to <c>true</c>, splits are made only at UTF-8 character boundaries.</param>
+        /// <returns>A list of list of QR segments.</returns>
+        public static List<List<QrSegment>> MakeStructuredAppendSegments(byte[] data, int numberOfCodes, bool considerUtf8Boundaries = false)
+        {
+            var result = new List<List<QrSegment>>();
+
+            byte parity = 0;
+            foreach (var val in data)
+            {
+                parity ^= (byte)(val >> 8);
+            }
+
+            var startOfSlice = 0;
+            var length = (long)data.Length;
+            for (int position = 1; position <= numberOfCodes; position += 1)
+            {
+                var endOfSlice = (int)(length * position / numberOfCodes);
+                if (considerUtf8Boundaries)
+                {
+                    endOfSlice = NextCharacterBoundary(data, endOfSlice);
+                }
+                if (startOfSlice == endOfSlice)
+                {
+                    continue;
+                }
+
+                result.Add(new List<QrSegment>
+                {
+                    MakeStructuredAppend(parity, position, numberOfCodes),
+                    MakeBytes(new ArraySegment<byte>(data, startOfSlice, endOfSlice - startOfSlice))
+                });
+
+                startOfSlice = endOfSlice;
+            }
+
+            return result;
+        }
+
+        private static int NextCharacterBoundary(byte[] data, int startIndex)
+        {
+            while (startIndex < data.Length && (data[startIndex] & 0xC0) == 0x80)
+            {
+                startIndex += 1;
+            }
+            return startIndex;
         }
 
 
@@ -333,9 +446,16 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
 
-        // Calculates the number of bits needed to encode the given segments at the given version.
-        // Returns a non-negative number if successful. Otherwise returns -1 if a segment has too
-        // many characters to fit its length field, or the total bits exceeds int.MaxValue.
+        /// <summary>
+        /// Calculates the number of bits needed to encode the given segments.
+        /// <para>
+        /// Returns a non-negative number if successful. Otherwise returns -1 if a segment has too
+        /// many characters to fit its length field, or the total bits exceeds int.MaxValue.
+        /// </para>
+        /// </summary>
+        /// <param name="segments">The segements.</param>
+        /// <param name="version">The version number.</param>
+        /// <returns>The number of bits, or -1.</returns>
         internal static int GetTotalBits(List<QrSegment> segments, int version)
         {
             Objects.RequireNonNull(segments);
@@ -417,6 +537,11 @@ namespace Net.Codecrete.QrCodeGenerator
             /// <value>ECI encoding mode.</value>
             public static readonly Mode Eci = new Mode(0x7, 0, 0, 0);
 
+            /// <summary>
+            /// Structured append encoding mode.
+            /// </summary>
+            /// <value>Structured append encoding mode.</value>
+            public static readonly Mode StructuredAppend = new Mode(0x3, 0, 0, 0);
 
             /// <summary>
             /// Mode indicator value.

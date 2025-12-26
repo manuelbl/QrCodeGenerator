@@ -29,6 +29,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -89,6 +91,65 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(ecl);
             var segments = QrSegment.MakeSegments(text);
             return EncodeSegments(segments, ecl);
+        }
+
+        /// <summary>
+        /// Creates a series of QR codes representing the specified text.
+        /// <para>
+        /// The result will consist of the minimal number of QR codes needed
+        /// to encode the text with the given error correction level and version (size of QR code).
+        /// If multiple QR codes are required, <em>Structured Append</em> data is included to link the QR codes.
+        /// </para>
+        /// <para>
+        /// The text is split at character boundaries even though the underlying UTF-8 encoding requires
+        /// multiple bytes for some characters. This increases compatibility with QR code scanners assuming
+        /// that each individual QR codes contains a valid UTF-8 string.
+        /// </para>
+        /// </summary>
+        /// <param name="text">The text to be encoded. The full range of Unicode characters may be used.</param>
+        /// <param name="ecl">The minimum error correction level to use.</param>
+        /// <param name="version">The version (size of QR code) to use. Default is 29.</param>
+        /// <param name="boostEcl">Whether error correction level should be upgraded if possible. Default is false.</param>
+        /// <returns>A list of QR codes representing the specified text.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="text"/> or <paramref name="ecl"/> is <c>null</c>.</exception>
+        /// <exception cref="DataTooLongException">The text is too long to fit the maximum of 16 QR codes with the given parameters.</exception>
+        public static List<QrCode> EncodeTextInMultipleCodes(string text, Ecc ecl, int version = 29, bool boostEcl = true)
+        {
+            Objects.RequireNonNull(text);
+            Objects.RequireNonNull(ecl);
+
+            var textBytes = Encoding.UTF8.GetBytes(text);
+            var numCharCountBits = QrSegment.Mode.Byte.NumCharCountBits(version);
+            var numDataCodewords = GetNumDataCodewords(version, ecl);
+
+            if ((numCharCountBits + 7) / 8 + textBytes.Length <= numDataCodewords)
+            {
+                // text is short enough to fit into a single QR code
+                var segment = QrSegment.MakeBytes(textBytes);
+                var qrCode = EncodeSegments(new List<QrSegment> { segment }, ecl, minVersion: version, maxVersion: version, boostEcl: boostEcl);
+                return new List<QrCode> { qrCode };
+            }
+
+            var overhead = (2 * 4 + numCharCountBits + 16 + 7) / 8; // 2 mode indicators + char count + structured append + byte alignment
+            var maxSliceSize = numDataCodewords - overhead;
+            int numSlices = (textBytes.Length + maxSliceSize - 1) / maxSliceSize;
+
+            var segments = QrSegment.MakeStructuredAppendSegments(textBytes, numSlices, considerUtf8Boundaries: true);
+            if (segments.Max(s => s[1].NumChars) > maxSliceSize)
+            {
+                numSlices++;
+                segments = QrSegment.MakeStructuredAppendSegments(textBytes, numSlices, considerUtf8Boundaries: true);
+            }
+
+            if (numSlices > 16)
+            {
+                throw new DataTooLongException("Text is too long to fit in 16 QR codes with the given version and ECL");
+            }
+
+            int balancedSliceSize = (textBytes.Length + numSlices - 1) / numSlices;
+            return segments
+                .Select(segmentList => EncodeSegments(segmentList, ecl, minVersion: version, maxVersion: version, boostEcl: boostEcl))
+                .ToList();
         }
 
         /// <summary>
@@ -936,7 +997,7 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             if (Version == 1)
             {
-                return new int[] { };
+                return Array.Empty<int>();
             }
             else
             {
@@ -952,9 +1013,13 @@ namespace Net.Codecrete.QrCodeGenerator
             }
         }
 
-        // Returns the number of data bits that can be stored in a QR code of the given version number, after
-        // all function modules are excluded. This includes remainder bits, so it might not be a multiple of 8.
-        // The result is in the range [208, 29648]. This could be implemented as a 40-entry lookup table.
+        /// <summary>
+        /// Returns the number of data bits that can be stored in a QR code of the given version.
+        /// <para>
+        /// The returned number is after all function modules are excluded. This includes remainder bits,
+        /// so it might not be a multiple of 8. The result is in the range [208, 29648].
+        /// </para>
+        /// </summary>
         private static int GetNumRawDataModules(int ver)
         {
             if (ver < MinVersion || ver > MaxVersion)
@@ -986,10 +1051,16 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
 
-        // Returns the number of 8-bit data (i.e. not error correction) codewords contained in any
-        // QR code of the given version number and error correction level, with remainder bits discarded.
-        // This stateless pure function could be implemented as a (40*4)-cell lookup table.
-        internal static int GetNumDataCodewords(int ver, Ecc ecl)
+        /// <summary>
+        /// Returns the number of 8-bit data codewords contained in a QR code of the given version number and error correction level.
+        /// <para>
+        /// The result is the net data capacity, without error correction data, and after discarding remainder bits.
+        /// </para>
+        /// </summary>
+        /// <param name="ver">The version number.</param>
+        /// <param name="ecl">The error correction level.</param>
+        /// <returns>The number of codewords.</returns>
+        public static int GetNumDataCodewords(int ver, Ecc ecl)
         {
             return GetNumRawDataModules(ver) / 8
                 - EccCodewordsPerBlock[ecl.Ordinal, ver]
