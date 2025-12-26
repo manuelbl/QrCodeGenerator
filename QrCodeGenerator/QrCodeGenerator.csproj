@@ -5,17 +5,17 @@
     <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>2.0.7</Version>
+    <Version>2.1.0</Version>
     <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and with many examples.
 
 Core features:
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path (for raster bitmap / PNG see project home page), BMP bitmap
+- Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see project home page.
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
-- Significantly shorter code but more documentation compared to competing libraries
+- Significantly smaller code but more documentation compared to competing libraries
 - Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
 - Derived from tried and tested implementation by project Nayuki
 
@@ -26,8 +26,10 @@ Manual parameters:
 - You can create a list of data segments manually and add ECI segments.
 
 Optional advanced features:
+- Long text can be split into multiple linked QR codes (aka Structured Append)
 - Encodes Japanese Unicode text in Kanji mode to save a lot of space compared to UTF-8 bytes
-- Computes optimal segment mode switching for text with mixed numeric/alphanumeric/general/kanji parts</Description>
+- Computes optimal segment mode switching for text with mixed numeric/alphanumeric/general/kanji parts
+</Description>
     <Copyright>Copyright (c) Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
     <RepositoryUrl>https://github.com/manuelbl/QrCodeGenerator</RepositoryUrl>
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
@@ -35,27 +37,19 @@ Optional advanced features:
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>logo.png</PackageIcon>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>New in releases 2.0.x:
-- Fully compatible with .NET 6 (no longer depends on System.Drawing)
-- Separate ToBitmap() implementations for System.Drawing, SkiaSharp and ImageSharp
-- Documentation included into NuGet package
-- QR code as geometric path suitable for SVG and XAML
-- Very compact SVGs
-- BMP bitmap generation
-- Fix for SVG generation with Norwegian locale
-- Enable trimming for .NET 6
-- Fix for `IndexOutOfRangeException`
-- Fix for mask penalty algorithm
+    <PackageReleaseNotes>New in releases 2.1.x:
+- PNG support
+- Structured append / Linked QR mode
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
-    <FileVersion>2.0.7.0</FileVersion>
+    <FileVersion>2.0.1.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageVersion>2.0.7</PackageVersion>
+    <PackageVersion>2.1.0</PackageVersion>
     <PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>
     <Deterministic>True</Deterministic>
   </PropertyGroup>
@@ -81,6 +75,7 @@ Optional advanced features:
   </ItemGroup>
 
   <Target Name="ValidateNuGetPackage" AfterTargets="Pack">
+    <Exec Command="dotnet tool restore" />
     <Exec Command="dotnet validate package local $([MSBuild]::EnsureTrailingSlash($(PackageOutputPath)))$(PackageId).$(PackageVersion).nupkg" />
   </Target>
   

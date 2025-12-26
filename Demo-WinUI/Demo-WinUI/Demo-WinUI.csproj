@@ -41,7 +41,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
-    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.0.7" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.1.0" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
