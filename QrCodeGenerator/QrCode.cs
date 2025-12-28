@@ -30,7 +30,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -101,9 +100,14 @@ namespace Net.Codecrete.QrCodeGenerator
         /// If multiple QR codes are required, <em>Structured Append</em> data is included to link the QR codes.
         /// </para>
         /// <para>
-        /// The text is split at character boundaries even though the underlying UTF-8 encoding requires
-        /// multiple bytes for some characters. This increases compatibility with QR code scanners assuming
-        /// that each individual QR codes contains a valid UTF-8 string.
+        /// Each QR code might use multiple segments with different encoding modes
+        /// to maximize the amount of text that can be stored in each QR code.
+        /// </para>
+        /// <para>
+        /// Each QR code will contain a valid string as it is ensured that splitting only occurs
+        /// at character boundaries and not in the middle of a multi-byte encoding of a character.
+        /// This increases compatibility with QR code scanners that incorrectly assume that each
+        /// individual QR code in the series contains a valid UTF-8 string.
         /// </para>
         /// </summary>
         /// <param name="text">The text to be encoded. The full range of Unicode characters may be used.</param>
@@ -118,36 +122,17 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(text);
             Objects.RequireNonNull(ecl);
 
-            var textBytes = Encoding.UTF8.GetBytes(text);
-            var numCharCountBits = QrSegment.Mode.Byte.NumCharCountBits(version);
-            var numDataCodewords = GetNumDataCodewords(version, ecl);
-
-            if ((numCharCountBits + 7) / 8 + textBytes.Length <= numDataCodewords)
-            {
-                // text is short enough to fit into a single QR code
-                var segment = QrSegment.MakeBytes(textBytes);
-                var qrCode = EncodeSegments(new List<QrSegment> { segment }, ecl, minVersion: version, maxVersion: version, boostEcl: boostEcl);
+            // Test if text fits in a single QR code
+            try {
+                var segments = QrSegmentAdvanced.MakeSegmentsOptimally(text, ecl, version, version);
+                var qrCode = EncodeSegments(segments, ecl, minVersion: version, maxVersion: version, boostEcl: boostEcl);
                 return new List<QrCode> { qrCode };
-            }
-
-            var overhead = (2 * 4 + numCharCountBits + 16 + 7) / 8; // 2 mode indicators + char count + structured append + byte alignment
-            var maxSliceSize = numDataCodewords - overhead;
-            int numSlices = (textBytes.Length + maxSliceSize - 1) / maxSliceSize;
-
-            var segments = QrSegment.MakeStructuredAppendSegments(textBytes, numSlices, considerUtf8Boundaries: true);
-            if (segments.Max(s => s[1].NumChars) > maxSliceSize)
+            } catch (DataTooLongException)
             {
-                numSlices++;
-                segments = QrSegment.MakeStructuredAppendSegments(textBytes, numSlices, considerUtf8Boundaries: true);
+                // Continue with multiple QR codes
             }
 
-            if (numSlices > 16)
-            {
-                throw new DataTooLongException("Text is too long to fit in 16 QR codes with the given version and ECL");
-            }
-
-            int balancedSliceSize = (textBytes.Length + numSlices - 1) / numSlices;
-            return segments
+            return QrSegmentAdvanced.MakeSegmentsForMultipleCodes(text, ecl, version)
                 .Select(segmentList => EncodeSegments(segmentList, ecl, minVersion: version, maxVersion: version, boostEcl: boostEcl))
                 .ToList();
         }
@@ -753,7 +738,7 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(data);
             if (data.Length != GetNumDataCodewords(Version, ErrorCorrectionLevel))
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(data), "Length of data does not match version and ecl");
             }
 
             // Calculate parameter numbers
@@ -801,7 +786,7 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(data);
             if (data.Length != GetNumRawDataModules(Version) / 8)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(data), "data length does not match version");
             }
 
             var i = 0;  // Bit index into the data
@@ -865,7 +850,7 @@ namespace Net.Codecrete.QrCodeGenerator
                         case 6: invert = (x * y % 2 + x * y % 3) % 2 == 0; break;
                         case 7: invert = ((x + y) % 2 + x * y % 3) % 2 == 0; break;
                     }
-                    _modules[y, x] ^= invert & !_isFunction[y, x];
+                    _modules[y, x] ^= invert && !_isFunction[y, x];
                 }
             }
         }

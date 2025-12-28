@@ -79,46 +79,61 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(maxVersion), "Invalid value");
             }
 
-            // Iterate through version numbers, and make tentative segments
             List<QrSegment> segments = null;
             var codePoints = ToCodePoints(text);
-            for (var version = minVersion; ; version++)
+            int dataCapacityBits = 0;
+            int dataUsedBits = 0;
+
+            // Iterate through version numbers, and make tentative segments
+            for (var version = minVersion; version <= maxVersion; version += 1)
             {
                 if (version == minVersion || version == 10 || version == 27)
                     segments = MakeSegmentsOptimally(codePoints, version);
                 Debug.Assert(segments != null);
 
                 // Check if the segments fit
-                var dataCapacityBits = QrCode.GetNumDataCodewords(version, ecl) * 8;
-                var dataUsedBits = GetTotalBits(segments, version);
+                dataCapacityBits = QrCode.GetNumDataCodewords(version, ecl) * 8;
+                dataUsedBits = GetTotalBits(segments, version);
                 if (dataUsedBits != -1 && dataUsedBits <= dataCapacityBits)
                     return segments; // This version number is found to be suitable
-
-                if (version < maxVersion) continue;
-
-                // All versions in the range could not fit the given text
-                var msg = "Segment too long";
-                if (dataUsedBits != -1)
-                    msg = $"Data length = {dataUsedBits} bits, Max capacity = {dataCapacityBits} bits";
-                throw new DataTooLongException(msg);
             }
+
+            // All versions in the range could not fit the given text
+            var msg = "Segment too long";
+            if (dataUsedBits != -1)
+                msg = $"Data length = {dataUsedBits} bits, Max capacity = {dataCapacityBits} bits";
+            throw new DataTooLongException(msg);
         }
 
 
         // Returns a new list of segments that is optimal for the given text at the given version number.
-        private static List<QrSegment> MakeSegmentsOptimally(int[] codePoints, int version)
+        private static List<QrSegment> MakeSegmentsOptimally(IReadOnlyList<int> codePoints, int version)
         {
-            if (codePoints.Length == 0)
+            if (codePoints.Count == 0)
                 return new List<QrSegment>();
             var charModes = ComputeCharacterModes(codePoints, version);
             return SplitIntoSegments(codePoints, charModes);
         }
 
+        /// <summary>
+        /// Measures the length of the segments optimal for the given version number.
+        /// </summary>
+        /// <param name="codePoints">The text, as an array of codepoints.</param>
+        /// <param name="version">The version.</param>
+        /// <returns>The length, in bits.</returns>
+        private static int MeasureSegmentsOptimally(IReadOnlyList<int> codePoints, int version)
+        {
+            if (codePoints.Count == 0)
+                return 0;
+            var charModes = ComputeCharacterModes(codePoints, version);
+            return MeasureSegments(codePoints, charModes, version);
+        }
+
 
         // Returns a new array representing the optimal mode per code point based on the given text and version.
-        private static Mode[] ComputeCharacterModes(int[] codePoints, int version)
+        private static Mode[] ComputeCharacterModes(IReadOnlyList<int> codePoints, int version)
         {
-            if (codePoints.Length == 0)
+            if (codePoints.Count == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(codePoints));
             }
@@ -136,7 +151,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // charModes[i][j] represents the mode to encode the code point at
             // index i such that the final segment ends in modeTypes[j] and the
             // total number of bits is minimized over all possible choices
-            var charModes = new Mode[codePoints.Length, numModes];
+            var charModes = new Mode[codePoints.Count, numModes];
 
             // At the beginning of each iteration of the loop below,
             // prevCosts[j] is the exact minimum number of 1/6 bits needed to
@@ -144,7 +159,7 @@ namespace Net.Codecrete.QrCodeGenerator
             var prevCosts = (int[])headCosts.Clone();
 
             // Calculate costs using dynamic programming
-            for (var i = 0; i < codePoints.Length; i++)
+            for (var i = 0; i < codePoints.Count; i++)
             {
                 var c = codePoints[i];
                 var curCosts = new int[numModes];
@@ -154,7 +169,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     charModes[i, 0] = modeTypes[0];
                 }
                 // Extend a segment if possible
-                if (AlphanumericCharset.IndexOf((char)c) != -1)
+                if (AlphanumericCharset.Contains((char)c))
                 {
                     // Is alphanumeric
                     curCosts[1] = prevCosts[1] + 33; // 5.5 bits per alphanumeric char
@@ -202,7 +217,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             // Get optimal mode for each code point by tracing backwards
-            var result = new Mode[codePoints.Length];
+            var result = new Mode[codePoints.Count];
             for (var i = result.Length - 1; i >= 0; i--)
             {
                 for (var j = 0; j < numModes; j++)
@@ -220,34 +235,29 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // Returns a new list of segments based on the given text and modes, such that
         // consecutive code points in the same mode are put into the same segment.
-        private static List<QrSegment> SplitIntoSegments(int[] codePoints, IReadOnlyList<Mode> charModes)
+        private static List<QrSegment> SplitIntoSegments(IReadOnlyList<int> codePoints, IReadOnlyList<Mode> charModes)
         {
-            if (codePoints.Length == 0)
+            if (codePoints.Count == 0)
                 throw new ArgumentOutOfRangeException(nameof(codePoints));
+
             var result = new List<QrSegment>();
 
-            // Accumulate run of modes
-            var curMode = charModes[0];
-            var start = 0;
-            for (var i = 1; ; i++)
+            GroupConsecutiveModes(charModes, (startIndex, endIndex, mode) =>
             {
-                if (i < codePoints.Length && charModes[i] == curMode)
-                    continue;
-
-                var s = FromCodePoints(codePoints, start, i - start);
-                if (curMode == Mode.Byte)
+                var s = FromCodePoints(codePoints, startIndex, endIndex - startIndex);
+                if (mode == Mode.Byte)
                 {
                     result.Add(MakeBytes(Encoding.UTF8.GetBytes(s)));
                 }
-                else if (curMode == Mode.Numeric)
+                else if (mode == Mode.Numeric)
                 {
                     result.Add(MakeNumeric(s));
                 }
-                else if (curMode == Mode.Alphanumeric)
+                else if (mode == Mode.Alphanumeric)
                 {
                     result.Add(MakeAlphanumeric(s));
                 }
-                else if (curMode == Mode.Kanji)
+                else if (mode == Mode.Kanji)
                 {
                     result.Add(MakeKanji(s));
                 }
@@ -255,15 +265,41 @@ namespace Net.Codecrete.QrCodeGenerator
                 {
                     Debug.Assert(false);
                 }
+            });
 
-                if (i >= codePoints.Length)
+            return result;
+        }
+
+
+        // Measures the length of segments based on the given text and modes, such that
+        // consecutive code points in the same mode are put into the same segment.
+        private static int MeasureSegments(IReadOnlyList<int> codePoints, IReadOnlyList<Mode> charModes, int version)
+        {
+            if (codePoints.Count == 0)
+                throw new ArgumentOutOfRangeException(nameof(codePoints));
+
+            var result = 0;
+
+            GroupConsecutiveModes(charModes, (startIndex, endIndex, mode) =>
+            {
+                int numChars;
+                if (mode == Mode.Byte)
                 {
-                    return result;
+                    numChars = 0;
+                    for (int i = startIndex; i < endIndex; i += 1)
+                    {
+                        numChars += CountUtf8Bytes(codePoints[i]);
+                    }
+                }
+                else
+                {
+                    numChars = endIndex - startIndex;
                 }
 
-                curMode = charModes[i];
-                start = i;
-            }
+                result += GetTotalBits(numChars, mode, version);
+            });
+
+            return result;
         }
 
 
@@ -509,6 +545,147 @@ namespace Net.Codecrete.QrCodeGenerator
                     continue;
                 Debug.Assert(UnicodeToQrKanji[c] == 0xffff);
                 UnicodeToQrKanji[c] = (ushort)(i / 2);
+            }
+        }
+
+        #endregion
+
+        #region Structured Append
+
+        /// <summary>
+        /// Creates the segments for multiple QR codes for the specified text.
+        /// <para>
+        /// The result will consist of the minimal number of QR codes needed
+        /// to encode the text with the given error correction level and version (size of QR code).
+        /// If multiple QR codes are required, <em>Structured Append</em> data is included to link the QR codes.
+        /// </para>
+        /// <para>
+        /// Each QR code might use multiple segments with different encoding modes
+        /// to maximize the amount of text that can be stored in each QR code.
+        /// </para>
+        /// <para>
+        /// The outer list represents the series of QR codes to be created.
+        /// The inner lists contains the QR segments for each QR code.
+        /// </para>
+        /// <para>
+        /// Each QR code will contain a valid string as it is ensured that splitting only occurs
+        /// at character boundaries and not in the middle of a multi-byte encoding of a character.
+        /// This increases compatibility with QR code scanners that incorrectly assume that each
+        /// individual QR code in the series contains a valid UTF-8 string.
+        /// </para>
+        /// </summary>
+        /// <param name="text">The text to be encoded. The full range of Unicode characters may be used.</param>
+        /// <param name="ecl">The minimum error correction level to use.</param>
+        /// <param name="version">The version (size of QR code) to use. Default is 29.</param>
+        /// <returns>A list of list of QR segments representing the specified text.</returns>
+        public static List<List<QrSegment>> MakeSegmentsForMultipleCodes(string text, QrCode.Ecc ecl, int version = 29)
+        {
+            // Check arguments
+            Objects.RequireNonNull(text);
+            Objects.RequireNonNull(ecl);
+            if (version < QrCode.MinVersion || version > QrCode.MaxVersion)
+            {
+                throw new ArgumentOutOfRangeException(nameof(version), "Invalid value");
+            }
+
+            var qrCodesSegments = SplitTextIntoMultipleCodes(text, ecl, version);
+            var parity = CalculateParity(text);
+
+            // add structured append segment
+            for (int i = 0; i < qrCodesSegments.Count; i += 1)
+            {
+                qrCodesSegments[i].Insert(0, MakeStructuredAppend(parity, i + 1, qrCodesSegments.Count));
+            }
+
+            return qrCodesSegments;
+        }
+
+        private static List<List<QrSegment>> SplitTextIntoMultipleCodes(string text, QrCode.Ecc ecl, int version)
+        {
+            var codePoints = ToCodePoints(text);
+            var dataCapacityBits = QrCode.GetNumDataCodewords(version, ecl) * 8 - 20; // 20 bits for the structured append
+            var result = new List<List<QrSegment>>();
+
+            // repeatedly find the longest text that fits into a QR code of the given version and ecl
+            int startIndex = 0;
+            while (startIndex < codePoints.Length)
+            {
+                if (result.Count >= 16)
+                {
+                    throw new DataTooLongException("The text is too long to fit into 16 QR codes");
+                }
+
+                // binary search for longest text
+                var low = startIndex;
+                var high = codePoints.Length;
+                while (low < high)
+                {
+                    var mid = (low + high + 1) / 2;
+                    var requiredBits = MeasureSegmentsOptimally(new ArraySegment<int>(codePoints, startIndex, mid - startIndex), version);
+                    if (requiredBits <= dataCapacityBits)
+                    {
+                        low = mid;
+                    }
+                    else
+                    {
+                        high = mid - 1;
+                    }
+                }
+
+                if (high == startIndex)
+                {
+                    // even a version 1 QR code should be sufficient to fit the structured append header plus one character
+                    throw new InvalidOperationException("QR code splitting: should not reach");
+                }
+
+                Debug.Assert(high == codePoints.Length
+                    || MeasureSegmentsOptimally(new ArraySegment<int>(codePoints, startIndex, high - startIndex + 1), version) > dataCapacityBits);
+
+                result.Add(MakeSegmentsOptimally(new ArraySegment<int>(codePoints, startIndex, high - startIndex), version));
+                startIndex = high;
+            }
+
+            return result;
+        }
+
+        private static byte CalculateParity(string text)
+        {
+            var data = Encoding.UTF8.GetBytes(text);
+
+            byte parity = 0;
+            foreach (var value in data)
+            {
+                parity ^= (byte)(value >> 8);
+            }
+            return parity;
+        }
+
+        #endregion
+
+
+        #region Helpers
+
+        /// <summary>
+        /// Groups consecutive segment modes with the same value and calls the action.
+        /// </summary>
+        /// <param name="elements">List of segement modes</param>
+        /// <param name="action">Action to call for each group</param>
+        private static void GroupConsecutiveModes(IReadOnlyList<Mode> elements, Action<int, int, Mode> action)
+        {
+            var startIndex = 0;
+            var lastValue = elements[0];
+            var index = 0;
+            while (true)
+            {
+                if (index == elements.Count || elements[index] != lastValue)
+                {
+                    action(startIndex, index, lastValue);
+                    if (index == elements.Count)
+                        break;
+                    startIndex = index;
+                    lastValue = elements[index];
+                }
+                index += 1;
             }
         }
 

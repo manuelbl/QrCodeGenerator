@@ -68,6 +68,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(BitLengthNumeric, data.Length);
 
             Assert.Equal(BitsNumeric, BitArrayToByteArray(data));
+            Assert.Equal(TextNumeric, segment.GetText());
         }
 
         [Fact]
@@ -87,6 +88,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(BitLengthAlphanumeric, data.Length);
 
             Assert.Equal(BitsAlphanumeric, BitArrayToByteArray(data));
+            Assert.Equal(TextAlphanumeric, segment.GetText());
         }
 
         [Fact]
@@ -109,6 +111,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(BitLengthNumeric, data.Length);
 
             Assert.Equal(BitsNumeric, BitArrayToByteArray(data));
+            Assert.Equal(TextNumeric, segment.GetText());
         }
 
         [Fact]
@@ -125,6 +128,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(BitLengthAlphanumeric, data.Length);
 
             Assert.Equal(BitsAlphanumeric, BitArrayToByteArray(data));
+            Assert.Equal(TextAlphanumeric, segment.GetText());
         }
 
         [Fact]
@@ -140,6 +144,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(BitLengthUtf8, data.Length);
 
             Assert.Equal(BitsUtf8, BitArrayToByteArray(data));
+            Assert.Equal(TextUtf8, segment.GetText());
         }
 
         [Fact]
@@ -147,6 +152,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             var segments = QrSegment.MakeSegments("");
             Assert.Empty(segments);
+            Assert.Equal("", QrSegment.GetJoinedText(segments));
         }
 
         private static byte[] BitArrayToByteArray(BitArray buffer)

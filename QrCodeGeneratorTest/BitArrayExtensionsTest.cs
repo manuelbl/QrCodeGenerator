@@ -79,5 +79,16 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 ba.AppendBits(128, 4);
             });
         }
+
+        [Fact]
+        public void ExtractBits()
+        {
+            var ba = new BitArray(0);
+            ba.AppendBits(18, 6);
+            ba.AppendBits(0b11001010, 8);
+
+            Assert.Equal(18u, ba.ExtractBits(0, 6));
+            Assert.Equal(0b11001010u, ba.ExtractBits(6, 8));
+        }
     }
 }

@@ -170,7 +170,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // Background - Light
             buf[58] = (byte)background; // blue
             buf[59] = (byte)(background >> 8); // green
-            buf[60] = (byte)(background >> 16); // red;
+            buf[60] = (byte)(background >> 16); // red
 
             var scaledBorder = border * scale;
 
@@ -247,9 +247,9 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         // Append a SVG/XAML path for the QR code to the provided string builder
-        private  void CreatePath(StringBuilder path, bool[,] modules, int border)
+        private static void CreatePath(StringBuilder path, bool[,] modules, int border)
         {
-            // Simple algorithms to reduce the number of rectangles for drawing the QR code
+            // Simple algorithm to reduce the number of rectangles for drawing the QR code
             // and reduce SVG/XAML size.
             var size = modules.GetLength(0);
             for (var y = 0; y < size; y++)
@@ -297,7 +297,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // append path command
             if (x != 0 || y != 0)
             {
-                path.Append(" ");
+                path.Append(' ');
             }
 
             // Different locales use different minus signs.

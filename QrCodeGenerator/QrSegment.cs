@@ -112,24 +112,6 @@ namespace Net.Codecrete.QrCodeGenerator
 
 
         /// <summary>
-        /// Creates a segment for the structured append header.
-        /// </summary>
-        /// <param name="parity">The parity value.</param>
-        /// <param name="position">The position of the code within the sequence of codes (1 based).</param>
-        /// <param name="total">The total number of codes in the sequence of codes.</param>
-        /// <returns>The created segment containing the specified header.</returns>
-        /// <exception cref="ArgumentNullException"><c>data</c> is <c>null</c>.</exception>
-        private static QrSegment MakeStructuredAppend(byte parity, int position, int total)
-        {
-            var bitArray = new BitArray(0);
-            bitArray.AppendBits((uint)position - 1, 4);
-            bitArray.AppendBits((uint)total - 1, 4);
-            bitArray.AppendBits(parity, 8);
-            return new QrSegment(Mode.StructuredAppend, 0, bitArray);
-        }
-
-
-        /// <summary>
         /// Creates a segment representing the specified string of decimal digits.
         /// The segment is encoded in numeric mode.
         /// </summary>
@@ -196,19 +178,37 @@ namespace Net.Codecrete.QrCodeGenerator
 
 
         /// <summary>
+        /// Creates a segment for the structured append header.
+        /// </summary>
+        /// <param name="parity">The parity value.</param>
+        /// <param name="position">The position of the code within the sequence of codes (1 based).</param>
+        /// <param name="total">The total number of codes in the sequence of codes.</param>
+        /// <returns>The created segment containing the specified header.</returns>
+        /// <exception cref="ArgumentNullException"><c>data</c> is <c>null</c>.</exception>
+        internal static QrSegment MakeStructuredAppend(byte parity, int position, int total)
+        {
+            var bitArray = new BitArray(0);
+            bitArray.AppendBits((uint)position - 1, 4);
+            bitArray.AppendBits((uint)total - 1, 4);
+            bitArray.AppendBits(parity, 8);
+            return new QrSegment(Mode.StructuredAppend, 0, bitArray);
+        }
+
+
+        /// <summary>
         /// Creates a list of zero or more segments representing the specified text string.
         /// <para>
         /// The text may contain the full range of Unicode characters.
         /// </para>
         /// <para>
-        /// The result may multiple segments with various encoding modes in order to minimize the length of the bit stream.
+        /// The result may consist of multiple segments with various encoding modes in order to minimize the length of the bit stream.
         /// </para>
         /// </summary>
         /// <param name="text">The text to be encoded.</param>
         /// <returns>The created mutable list of segments representing the specified text.</returns>
         /// <exception cref="ArgumentNullException"><c>text</c> is <c>null</c>.</exception>
         /// <remarks>
-        /// The current implementation does not use multiple segments.
+        /// The current implementation does not create multiple segments.
         /// </remarks>
         public static List<QrSegment> MakeSegments(string text)
         {
@@ -235,78 +235,6 @@ namespace Net.Codecrete.QrCodeGenerator
 
             return result;
         }
-
-
-        /// <summary>
-        /// Creates the segments represeting the specified binary data,
-        /// split into multiple QR codes (Structured Append).
-        /// <para>
-        /// The outer list represents the series of QR codes to be created.
-        /// The inner lists contains the QR segments for each QR code.
-        /// Each inner list contains at least two segments: the structured append segment and the binary data.
-        /// </para>
-        /// <para>
-        /// The data is split into slices of similar size.
-        /// </para>
-        /// <para>
-        /// If <paramref name="considerUtf8Boundaries"/> is set to <c>true</c>, the provided data is interpreted
-        /// as UTF-8 encoded text and the data is split only at UTF-8 character boundaries, i.e. no split occurs
-        /// in the middle of a multi-byte UTF-8 character sequence.
-        /// </para>
-        /// <para>
-        /// The structured append segment specifies the number of QR codes (0-15), the position within
-        /// those (0-15) and a parity which needs to be the same for all.
-        /// </para>
-        /// </summary>
-        /// <param name="data">The binary data to encode in multiple QR codes</param>
-        /// <param name="numberOfCodes">The number of codes to create.</param>
-        /// <param name="considerUtf8Boundaries">If set to <c>true</c>, splits are made only at UTF-8 character boundaries.</param>
-        /// <returns>A list of list of QR segments.</returns>
-        public static List<List<QrSegment>> MakeStructuredAppendSegments(byte[] data, int numberOfCodes, bool considerUtf8Boundaries = false)
-        {
-            var result = new List<List<QrSegment>>();
-
-            byte parity = 0;
-            foreach (var val in data)
-            {
-                parity ^= (byte)(val >> 8);
-            }
-
-            var startOfSlice = 0;
-            var length = (long)data.Length;
-            for (int position = 1; position <= numberOfCodes; position += 1)
-            {
-                var endOfSlice = (int)(length * position / numberOfCodes);
-                if (considerUtf8Boundaries)
-                {
-                    endOfSlice = NextCharacterBoundary(data, endOfSlice);
-                }
-                if (startOfSlice == endOfSlice)
-                {
-                    continue;
-                }
-
-                result.Add(new List<QrSegment>
-                {
-                    MakeStructuredAppend(parity, position, numberOfCodes),
-                    MakeBytes(new ArraySegment<byte>(data, startOfSlice, endOfSlice - startOfSlice))
-                });
-
-                startOfSlice = endOfSlice;
-            }
-
-            return result;
-        }
-
-        private static int NextCharacterBoundary(byte[] data, int startIndex)
-        {
-            while (startIndex < data.Length && (data[startIndex] & 0xC0) == 0x80)
-            {
-                startIndex += 1;
-            }
-            return startIndex;
-        }
-
 
         /// <summary>
         /// Creates a segment representing an Extended Channel Interpretation
@@ -445,6 +373,111 @@ namespace Net.Codecrete.QrCodeGenerator
             return (BitArray)_data.Clone();  // Make defensive copy
         }
 
+        /// <summary>
+        /// Returns the text represented by this segment.
+        /// <para>
+        /// This method will fail if the segment contains binary data that
+        /// cannot be converted to text.
+        /// </para>
+        /// </summary>
+        /// <returns>The text.</returns>
+        public string GetText()
+        {
+            var result = new StringBuilder();
+            AppendText(result);
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Returns the joined text represented by the provided segments.
+        /// </summary>
+        /// <param name="segments">List of segments</param>
+        /// <returns></returns>
+        public static string GetJoinedText(List<QrSegment> segments)
+        {
+            var result = new StringBuilder();
+            foreach (var segment in segments)
+            {
+                segment.AppendText(result);
+            }
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Returns the joined text represented by the provided segments.
+        /// </summary>
+        /// <param name="segments">List of list of segments</param>
+        /// <returns></returns>
+        public static string GetJoinedText(List<List<QrSegment>> segments)
+        {
+            var result = new StringBuilder();
+            foreach (var segmentList in segments)
+            {
+                foreach (var segment in segmentList)
+                {
+                    segment.AppendText(result);
+                }
+            }
+            return result.ToString();
+        }
+
+        private void AppendText(StringBuilder builder)
+        {
+            if (EncodingMode == Mode.Numeric)
+            {
+                for (int offset = 0; offset < NumChars; offset += 3)
+                {
+                    var n = Math.Min(NumChars - offset, 3);
+                    var bitIndex = offset / 3 * 10;
+                    if (n == 3)
+                    {
+                        var value = _data.ExtractBits(bitIndex, 10);
+                        builder.Append((char)('0' + value / 100));
+                        builder.Append((char)('0' + value / 10 % 10));
+                        builder.Append((char)('0' + value % 10));
+                    }
+                    else if (n == 2)
+                    {
+                        var value = _data.ExtractBits(bitIndex, 7);
+                        builder.Append((char)('0' + value / 10));
+                        builder.Append((char)('0' + value % 10));
+                    }
+                    else if (n == 1)
+                    {
+                        var value = _data.ExtractBits(bitIndex, 4);
+                        builder.Append((char)('0' + value));
+                    }
+                }
+            }
+            else if (EncodingMode == Mode.Alphanumeric)
+            {
+                for (int offset = 0; offset < NumChars; offset += 2)
+                {
+                    var n = Math.Min(NumChars - offset, 2);
+                    var bitIndex = offset / 2 * 11;
+                    if (n == 2)
+                    {
+                        var value = (int)_data.ExtractBits(bitIndex, 11);
+                        builder.Append(AlphanumericCharset[value / 45]);
+                        builder.Append(AlphanumericCharset[value % 45]);
+                    }
+                    else
+                    {
+                        var value = (int)_data.ExtractBits(bitIndex, 6);
+                        builder.Append(AlphanumericCharset[value]);
+                    }
+                }
+            }
+            else if (EncodingMode == Mode.Byte)
+            {
+                var bytes = new byte[NumChars];
+                for (int i = 0; i < NumChars; i++)
+                {
+                    bytes[i] = (byte)_data.ExtractBits(i * 8, 8);
+                }
+                builder.Append(Encoding.UTF8.GetString(bytes));
+            }
+        }
 
         /// <summary>
         /// Calculates the number of bits needed to encode the given segments.
@@ -476,6 +509,49 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
             return (int)result;
+        }
+
+        /// <summary>
+        /// Calculates the total number of bits required to encode a data segment in a QR code.
+        /// </summary>
+        /// <param name="numChars">The number of characters in the data segment to be encoded. For byte mode, it is the number of bytes.</param>
+        /// <param name="mode">The encoding mode used for the data segment.</param>
+        /// <param name="version">The QR code version.</param>
+        /// <returns>The total number of bits required to encode the segment, including the mode indicator, character count
+        /// indicator, and data bits. Returns -1 if the number of characters exceeds the maximum allowed for the
+        /// specified mode and version.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the specified mode is not supported for this calculation.</exception>
+        internal static int GetTotalBits(int numChars, Mode mode, int version)
+        {
+            var ccBits = mode.NumCharCountBits(version);
+            if (numChars >= 1 << ccBits)
+            {
+                return -1;  // The segment's length doesn't fit the field's bit width
+            }
+
+            int dataBits = 0;
+            if (mode == Mode.Numeric)
+            {
+                dataBits = numChars / 3 * 10 + (numChars % 3 == 0 ? 0 : (numChars % 3 * 3 + 1));
+            }
+            else if (mode == Mode.Alphanumeric)
+            {
+                dataBits = numChars / 2 * 11 + (numChars % 2 == 0 ? 0 : 6);
+            }
+            else if (mode == Mode.Byte)
+            {
+                dataBits = numChars * 8;
+            }
+            else if (mode == Mode.Kanji)
+            {
+                dataBits = numChars * 13;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(mode), "Unsupported mode for this calculation");
+            }
+
+            return 4 + ccBits + dataBits;
         }
 
         #endregion
