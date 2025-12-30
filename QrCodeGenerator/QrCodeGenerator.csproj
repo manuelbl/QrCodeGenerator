@@ -15,9 +15,8 @@ Core features:
 - Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see project home page.
 - Encodes numeric and special-alphanumeric text in less space than general text
 - Open source code under the permissive MIT License
-- Significantly smaller code but more documentation compared to competing libraries
 - Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
-- Derived from tried and tested implementation by project Nayuki
+- Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
 
 Manual parameters:
 - You can specify the minimum and maximum version number allowed, and the library will automatically choose the smallest version in the range that fits the data.

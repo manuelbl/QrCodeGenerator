@@ -13,11 +13,12 @@ many more programming languages, and the [Project Nayuki web site](https://www.n
 Core features:
 
  * Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
- * Output formats: Raw modules/pixels of the QR symbol, SVG and XAML path, BMP bitmap. For raster bitmap output, additional code is provided. See [below](#raster-images--bitmaps).
+ * Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see [below](#raster-images--bitmaps).
  * Encodes numeric and special-alphanumeric text in less space than general text
  * Open source code under the permissive *MIT License*
+ * Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
  * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
- * Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp etc.
+ * Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
 
 Manual parameters:
 
@@ -28,6 +29,7 @@ Manual parameters:
 
 Optional advanced features:
 
+ * Long text can be split into multiple linked QR codes (aka Structured Append)
  * Encodes Japanese Unicode text in *Kanji mode* to save space compared to UTF-8 bytes
  * Computes *optimal segment mode* switching for text with mixed numeric/alphanumeric/general/kanji parts
 
@@ -115,9 +117,15 @@ QR Code Generator for .NET requires a .NET implementation compatible with .NET S
 
 ### Raster Images / Bitmaps
 
-Starting with .NET 6, *System.Drawing* is only supported on Windows operating system and thus cannot be used for multi-platform libraries like this one. Therefore, `ToBitmap()` has been removed and three options are now offered in the form of method extensions.
+Starting with .NET 6, *System.Drawing* is only supported on Windows operating system and thus cannot be used for multi-platform libraries like this one. Therefore, `ToBitmap()` has been removed.
 
-To use it:
+Two raster bitmap formats are supported with the need for additional libraries:
+
+- *PNG*: See `QrCode.ToPngBitmap()`
+- *BMP*: See `QrCode.ToBmpBitmap()`
+
+These methods are limited, e.g. with regards to the size of the generated image.
+For more advanced and more efficient ways to generate different raster image formats:
 
 - Select one of the imaging libraries below
 - Add the NuGet dependencies to your project
@@ -127,7 +135,7 @@ To use it:
 | ------- | -------------- | ------------------ | -------------- |
 | **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](Demo-System-Drawing/QrCodeBitmapExtensions.cs) |
 | **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
-| **ImageSharp** | Currently in beta state | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](Demo-ImageSharp/QrCodeBitmapExtensions.cs) |
+| **ImageSharp** | Alternative for multi-platform projects. Might require a commercial license. | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](Demo-ImageSharp/QrCodeBitmapExtensions.cs) |
 
 Using these extension methods, generating PNG images is straight-forward:
 
@@ -149,7 +157,7 @@ namespace Examples
 
 ## Examples
 
-Several example projects are provided:
+Several example projects demonstrate how to generate QR code with different frameworks and libraries:
 
 - [Demo-QRCode-Variety](Demo-QRCode-Variety): Demonstrates how QR codes with different encodings, error correction and masks can be generated. All QR codes are saved as SVG files.
 

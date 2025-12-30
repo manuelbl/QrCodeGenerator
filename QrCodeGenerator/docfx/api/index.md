@@ -21,11 +21,12 @@ Additional information on [GitHub project page](https://github.com/manuelbl/QrCo
 Core features:
 
  * Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
- * Output formats: Raw modules/pixels of the QR symbol and SVG XML string
+ * Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see project home page.
  * Encodes numeric and special alphanumeric text in less space than general text
  * Open source code under the permissive *MIT License*
- * Significantly shorter code but more documentation compared to competing libraries
+ * Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
  * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
+ * Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
 
 Manual parameters:
 
@@ -36,6 +37,7 @@ Manual parameters:
 
 Optional advanced features:
 
+ * Long text can be split into multiple linked QR codes (aka Structured Append)
  * Encodes Japanese Unicode text in *Kanji mode* to save a lot of space compared to UTF-8 bytes
  * Computes *optimal segment mode* switching for text with mixed numeric/alphanumeric/general/kanji parts
 
@@ -44,8 +46,8 @@ Optional advanced features:
 
 Simple operation:
 
-```cslang
-using Net.Codecrete.QrCodeGenerator;
+<pre>
+<code class="lang-csharp hljs">using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
 {
@@ -58,13 +60,13 @@ namespace Examples
             File.WriteAllText("hello-world-qr.svg", svg, Encoding.UTF8);
         }
     }
-}
-```
+}</code>
+</pre>
 
 Manual operation:
 
-```cslang
-using Net.Codecrete.QrCodeGenerator;
+<pre>
+<code class="lang-csharp hljs">using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
 {
@@ -83,8 +85,8 @@ namespace Examples
             }
         }
     }
-}
-```
+}</code>
+</pre>
 
 
 ## Requirements
@@ -99,24 +101,31 @@ QR Code Generator for .NET requires a .NET implementation compatible with .NET S
 
 ### Raster Images / Bitmaps
 
-The previous version of this library depended on *System.Drawing*, which - starting with .NET 6 - will only be supported on Windows operation system. Therefore, `ToBitmap()` has been removed and three options are now offered in the form of method extensions.
+Starting with .NET 6, *System.Drawing* is only supported on Windows operating system and thus cannot be used for multi-platform libraries like this one. Therefore, `ToBitmap()` has been removed.
 
-In order to use it:
+Two raster bitmap formats are supported with the need for additional libraries:
 
-- Select one of the libraries
+- *PNG*: See [`QrCode.ToPngBitmap()`](xref:Net.Codecrete.QrCodeGenerator.QrCode.ToPngBitmap(System.Int32,System.Int32))
+- *BMP*: See [`QrCode.ToBmpBitmap()`](xref:Net.Codecrete.QrCodeGenerator.QrCode.ToBmpBitmap(System.Int32,System.Int32))
+
+These methods are limited, e.g. with regards to the size of the generated image.
+For more advanced and more efficient ways to generate different raster image formats:
+
+- Select one of the imaging libraries below
 - Add the NuGet dependencies to your project
 - Copy the appropriate `QrCodeBitmapExtensions.cs` file to your project
 
+
 | Library | Recommendation | NuGet dependencies | Extension file |
 | ------- | -------------- | ------------------ | -------------- |
-| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
-| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
-| **ImageSharp** | Currently in beta state | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/Demo-ImageSharp/QrCodeBitmapExtensions.cs) |
+| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v2.1.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v2.1.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **ImageSharp** | Alternative for multi-platform projects. Might require a commercial license. | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v2.1.0/QrCodeBitmapExtensions.cs) |
 
 Using these extension methods, generating PNG images is straight-forward:
 
-```cslang
-using Net.Codecrete.QrCodeGenerator;
+<pre>
+<code class="lang-csharp hljs">using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
 {
@@ -128,5 +137,5 @@ namespace Examples
             qr.SaveAsPng("hello-world-qr.png", 10, 3);
         }
     }
-}
-```
+}</code>
+</pre>
