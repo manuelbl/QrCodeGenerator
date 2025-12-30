@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.10.0" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.10.1" />
     <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.1.0" />
   </ItemGroup>
 
