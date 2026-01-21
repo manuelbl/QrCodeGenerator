@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net481;$(TargetFrameworks)</TargetFrameworks>
     <RootNamespace>Net.Codecrete.QrCodeGenerator.Test</RootNamespace>
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
     <TestResultsFile>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory),'..','TestResults-$(MSBuildProjectName)-$(TargetFramework).html'))</TestResultsFile>
   </PropertyGroup>
 
@@ -17,11 +17,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageReference Include="Verify.ImageMagick" Version="3.8.1" />
-    <PackageReference Include="Verify.Xunit" Version="31.9.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Verify.ImageMagick" Version="3.8.3" />
+    <PackageReference Include="Verify.Xunit" Version="31.9.4" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" PrivateAssets="all" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
