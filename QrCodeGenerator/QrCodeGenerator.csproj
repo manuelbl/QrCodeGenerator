@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
-    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
+    <TargetFrameworks>netstandard2.0;net6.0;net8.0;net10.0</TargetFrameworks>
+    <IsTrimmable Condition="'$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net10.0'">true</IsTrimmable>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
     <Version>2.1.0</Version>
