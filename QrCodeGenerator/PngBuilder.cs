@@ -7,6 +7,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 
@@ -26,9 +27,13 @@ namespace Net.Codecrete.QrCodeGenerator
             0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777, 0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45, 0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
         };
 
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static readonly byte[] IHDR = { 73, 72, 68, 82 };
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static readonly byte[] PLTE = { 80, 76, 84, 69 };
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static readonly byte[] IDAT = { 73, 68, 65, 84 };
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static readonly byte[] IEND = { 73, 69, 78, 68 };
 
         /// <summary>
@@ -49,7 +54,7 @@ namespace Net.Codecrete.QrCodeGenerator
             var imageSize = (qrCode.Size + border * 2) * scale;
             var builder = new PngBuilder();
             builder.WriteHeader(imageSize, imageSize, 1, 3);
-            builder.WritePalette(new int[] { background, foreground });
+            builder.WritePalette(new[] { background, foreground });
             builder.WriteData(CreateBitmap(qrCode, border, scale));
             builder.WriteEnd();
             return builder.GetBytes();
@@ -98,7 +103,7 @@ namespace Net.Codecrete.QrCodeGenerator
             return data;
         }
 
-        private readonly MemoryStream stream = new MemoryStream();
+        private readonly MemoryStream _stream = new MemoryStream();
 
         /// <summary>
         /// Returns the resulting PNG bytes.
@@ -106,7 +111,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>PNG file, as a byte array.</returns>
         private byte[] GetBytes()
         {
-            var bytes = stream.ToArray();
+            var bytes = _stream.ToArray();
             SetCRC(bytes);
             return bytes;
         }
@@ -120,17 +125,17 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="colorType">The color type (see PNG specification).</param>
         private void WriteHeader(int width, int height, byte bitDepth, byte colorType)
         {
-            stream.Write(Signature, 0, Signature.Length);
+            _stream.Write(Signature, 0, Signature.Length);
 
             WriteChunkStart(IHDR, 13);
             WriteIntBigEndian((uint)width);
             WriteIntBigEndian((uint)height);
 
-            stream.WriteByte(bitDepth);
-            stream.WriteByte(colorType);
-            stream.WriteByte(0);
-            stream.WriteByte(0);
-            stream.WriteByte(0);
+            _stream.WriteByte(bitDepth);
+            _stream.WriteByte(colorType);
+            _stream.WriteByte(0);
+            _stream.WriteByte(0);
+            _stream.WriteByte(0);
 
             WriteChunkEnd();
         }
@@ -144,9 +149,9 @@ namespace Net.Codecrete.QrCodeGenerator
             WriteChunkStart(PLTE, palette.Length * 3);
             foreach (var color in palette)
             {
-                stream.WriteByte((byte)((color >> 16) & 0xFF));
-                stream.WriteByte((byte)((color >> 8) & 0xFF));
-                stream.WriteByte((byte)(color & 0xFF));
+                _stream.WriteByte((byte)((color >> 16) & 0xFF));
+                _stream.WriteByte((byte)((color >> 8) & 0xFF));
+                _stream.WriteByte((byte)(color & 0xFF));
             }
             WriteChunkEnd();
         }
@@ -160,10 +165,10 @@ namespace Net.Codecrete.QrCodeGenerator
             var compressedData = Deflate(data);
             WriteChunkStart(IDAT, compressedData.Length + 6);
 
-            stream.WriteByte(0x78);
-            stream.WriteByte(0x9C);
+            _stream.WriteByte(0x78);
+            _stream.WriteByte(0x9C);
 
-            stream.Write(compressedData, 0, compressedData.Length);
+            _stream.Write(compressedData, 0, compressedData.Length);
 
             var adler = CalcAdler32(data, 0, data.Length);
             WriteIntBigEndian(adler);
@@ -179,6 +184,7 @@ namespace Net.Codecrete.QrCodeGenerator
             WriteChunkEnd();
         }
 
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static void SetCRC(byte[] bytes)
         {
             var chunkOffset = Signature.Length;
@@ -202,21 +208,21 @@ namespace Net.Codecrete.QrCodeGenerator
         private void WriteChunkStart(byte[] type, int length)
         {
             WriteIntBigEndian((uint)length);
-            stream.Write(type, 0, 4);
+            _stream.Write(type, 0, 4);
         }
 
         private void WriteChunkEnd()
         {
-            stream.SetLength(stream.Length + 4);
-            stream.Position += 4;
+            _stream.SetLength(_stream.Length + 4);
+            _stream.Position += 4;
         }
 
         private void WriteIntBigEndian(uint value)
         {
-            stream.WriteByte((byte)(value >> 24));
-            stream.WriteByte((byte)(value >> 16));
-            stream.WriteByte((byte)(value >> 8));
-            stream.WriteByte((byte)value);
+            _stream.WriteByte((byte)(value >> 24));
+            _stream.WriteByte((byte)(value >> 16));
+            _stream.WriteByte((byte)(value >> 8));
+            _stream.WriteByte((byte)value);
         }
 
         private static byte[] Deflate(byte[] data)
@@ -231,15 +237,15 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static uint CalcAdler32(byte[] data, int index, int length)
         {
-            const uint Base = 65521;
+            const uint @base = 65521;
             uint s1 = 1;
             uint s2 = 0;
 
             var end = index + length;
             for (var n = index; n < end; n++)
             {
-                s1 = (s1 + data[n]) % Base;
-                s2 = (s2 + s1) % Base;
+                s1 = (s1 + data[n]) % @base;
+                s2 = (s2 + s1) % @base;
             }
 
             return (s2 << 16) + s1;

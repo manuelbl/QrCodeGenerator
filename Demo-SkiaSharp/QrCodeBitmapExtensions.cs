@@ -52,15 +52,9 @@ namespace Net.Codecrete.QrCodeGenerator
                 // draw modules
                 using (SKPaint paint = new SKPaint { Color = foreground })
                 {
-                    for (int y = 0; y < size; y++)
+                    foreach (var rect in qrCode.ToRectangles())
                     {
-                        for (int x = 0; x < size; x++)
-                        {
-                            if (qrCode.GetModule(x, y))
-                            {
-                                canvas.DrawRect((x + border) * scale, (y + border) * scale, scale, scale, paint);
-                            }
-                        }
+                        canvas.DrawRect((rect.X + border) * scale, (rect.Y + border) * scale, rect.Width * scale, rect.Height * scale, paint);
                     }
                 }
             }

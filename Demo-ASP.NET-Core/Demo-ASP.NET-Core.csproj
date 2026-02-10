@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.1.0" />
-    <PackageReference Include="SkiaSharp" Version="2.88.6" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.0.0" />
+    <PackageReference Include="SkiaSharp" Version="3.119.2" />
   </ItemGroup>
 
 </Project>

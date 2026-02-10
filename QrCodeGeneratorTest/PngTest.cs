@@ -26,11 +26,11 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private const string CodeText1 = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.";
         private const string CodeText2 = "The quick brown fox";
 
-        protected readonly VerifySettings Settings = new VerifySettings();
+        private readonly VerifySettings _settings = new VerifySettings();
 
         public PngTest()
         {
-            Settings.UseDirectory("ReferenceFiles");
+            _settings.UseDirectory("ReferenceFiles");
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             using (var stream = new MemoryStream(pngData))
             {
-                return Verifier.Verify(stream, "png", Settings);
+                return Verifier.Verify(stream, "png", _settings);
             }
         }
 
@@ -54,7 +54,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             using (var stream = new MemoryStream(pngData))
             {
-                return Verifier.Verify(stream, "png", Settings);
+                return Verifier.Verify(stream, "png", _settings);
             }
         }
 

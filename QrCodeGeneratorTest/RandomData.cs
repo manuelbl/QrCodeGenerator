@@ -13,14 +13,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     internal static class RandomData
     {
-        internal const string AlphanumericCharset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+        private const string AlphanumericCharset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
         internal static string MakeAlphanumericString(int length, int seed)
         {
             var random = new Random(seed);
             var charsetLength = AlphanumericCharset.Length;
             var chars = new char[length];
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i += 1)
             {
                 chars[i] = AlphanumericCharset[random.Next(charsetLength)];
             }
@@ -34,12 +34,12 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var random = new Random(seed);
             var result = new StringBuilder(length);
 
-            int n = 0;
+            var n = 0;
             while (n < length)
             {
                 var alphabet = random.Next(4);
                 var batchSize = Math.Min(length - n, random.Next(1, alphabet == 0 ? 20 : 3));
-                for (var i = 0; i < batchSize; i++)
+                for (var i = 0; i < batchSize; i += 1)
                 {
                     switch (alphabet)
                     {
@@ -53,7 +53,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                             result.Append((char)random.Next(0xc0, 0xcf));
                             break;
                         case 3: // Emoticons
-                            int codePoint = random.Next(0x1f600, 0x1f608);
+                            var codePoint = random.Next(0x1f600, 0x1f608);
                             result.Append(char.ConvertFromUtf32(codePoint));
                             break;
                     }
@@ -63,6 +63,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             return result.ToString();
+        }
+        
+        internal static byte[] MakeRandomBytes(int length, int seed)
+        {
+            var random = new Random(seed);
+            var result = new byte[length];
+            random.NextBytes(result);
+            return result;
         }
     }
 }

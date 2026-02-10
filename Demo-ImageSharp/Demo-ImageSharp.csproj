@@ -5,11 +5,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Net.Codecrete.QrCodeGenerator.Demo</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator.Demo</PackageId>
-    <Version>2.1.0</Version>
-    <Authors>Manuel Bleichenbacher, Project Nayuki</Authors>
+    <Version>3.0.0</Version>
+    <Authors>Manuel Bleichenbacher</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>Demo application for QR Code Generation</Description>
-    <Copyright>Copyright Manuel Bleichenbacher and Project Nayuki (MIT License)</Copyright>
+    <Copyright>Copyright Manuel Bleichenbacher (MIT License)</Copyright>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/manuelbl/QrCodeGenerator</PackageProjectUrl>
     <RepositoryUrl>https://github.com/manuelbl/QrCodeGenerator</RepositoryUrl>
@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.*" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.*" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
   </ItemGroup>
 

@@ -34,7 +34,7 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             [FromQuery(Name = "ecc")] int? ecc, [FromQuery(Name = "border")] int? borderWidth)
         {
             ecc = Math.Clamp(ecc ?? 1, 0, 3);
-            borderWidth = Math.Clamp(borderWidth ?? 3, 0, 999999);
+            borderWidth = Math.Clamp(borderWidth ?? 4, 0, 999999);
 
             var qrCode = QrCode.EncodeText(text, errorCorrectionLevels[(int)ecc]);
             byte[] png = qrCode.ToPng(20, (int)borderWidth);
@@ -54,7 +54,7 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             [FromQuery(Name = "ecc")] int? ecc, [FromQuery(Name = "border")] int? borderWidth)
         {
             ecc = Math.Clamp(ecc ?? 1, 0, 3);
-            borderWidth = Math.Clamp(borderWidth ?? 3, 0, 999999);
+            borderWidth = Math.Clamp(borderWidth ?? 4, 0, 999999);
 
             var qrCode = QrCode.EncodeText(text, errorCorrectionLevels[(int)ecc]);
             byte[] svg = Encoding.UTF8.GetBytes(qrCode.ToSvgString((int)borderWidth));

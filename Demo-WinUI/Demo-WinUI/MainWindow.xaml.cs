@@ -1,11 +1,14 @@
 //
 // Swiss QR Bill Generator for .NET
-// Copyright (c) 2022 Manuel Bleichenbacher
+// Copyright (c) 2026 Manuel Bleichenbacher
 // Licensed under MIT License
 // https://opensource.org/licenses/MIT
 //
 
+using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
+using Windows.Graphics;
+using WinRT.Interop;
 
 namespace Net.Codecrete.QrCodeGenerator.Demo;
 
@@ -14,18 +17,23 @@ namespace Net.Codecrete.QrCodeGenerator.Demo;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-
     public MainWindow()
     {
         InitializeComponent();
-        RootElement.Loaded += RootElement_Loaded;
+
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
+
+        Resize(700, 600);
     }
 
-    public MainViewModel ViewModel { get; } = new MainViewModel();
-
-    private void RootElement_Loaded(object sender, RoutedEventArgs e)
+    private void Resize(int widthDip, int heightDip)
     {
-        // The combo box needs help to set the initial value
-        ErrorCorrectionCombo.SelectedValue = ViewModel.ErrorCorrection;
+        var hwnd = WindowNative.GetWindowHandle(this);
+        var scale = GetDpiForWindow(hwnd) / 96.0;
+        AppWindow.Resize(new SizeInt32((int)(widthDip * scale), (int)(heightDip * scale)));
     }
+
+    [LibraryImport("user32.dll")]
+    private static partial uint GetDpiForWindow(nint hwnd);
 }

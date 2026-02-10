@@ -60,19 +60,13 @@ public static class QrCodeImageExtensions
         var drawables = new Drawables();
         drawables.FillColor(foreground);
 
-        for (var x = 0; x < size; x++)
+        foreach (var rect in qrCode.ToRectangles())
         {
-            var pointerX = (x + border) * scale;
-
-            for (var y = 0; y < size; y++)
-            {
-                if (qrCode.GetModule(x, y))
-                {
-                    var pointerY = (y + border) * scale;
-                    drawables.Rectangle(pointerX, pointerY, pointerX + scale - 1, pointerY + scale - 1);
-                }
-            }
+            var pointerX = (rect.X + border) * scale;
+            var pointerY = (rect.Y + border) * scale;
+            drawables.Rectangle(pointerX, pointerY, pointerX + rect.Width * scale - 1, pointerY + rect.Height * scale - 1);
         }
+
         drawables.Draw(image);
         return image;
     }

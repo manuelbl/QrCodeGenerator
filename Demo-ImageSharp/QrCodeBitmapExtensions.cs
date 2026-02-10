@@ -50,15 +50,9 @@ namespace Net.Codecrete.QrCodeGenerator
                 img.Fill(background);
 
                 // draw modules
-                for (int y = 0; y < size; y++)
+                foreach (var rect in qrCode.ToRectangles())
                 {
-                    for (int x = 0; x < size; x++)
-                    {
-                        if (qrCode.GetModule(x, y))
-                        {
-                            img.Fill(foreground, new Rectangle((x + border) * scale, (y + border) * scale, scale, scale));
-                        }
-                    }
+                    img.Fill(foreground, new Rectangle((rect.X + border) * scale, (rect.Y + border) * scale, rect.Width * scale, rect.Height * scale));
                 }
             });
 

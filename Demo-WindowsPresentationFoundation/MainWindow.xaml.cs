@@ -18,7 +18,7 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
     public partial class MainWindow : Window
     {
         private string _text = "QR code text";
-        private int _borderWidth = 3;
+        private int _borderWidth = 4;
         private QrCode.Ecc _errorCorrection = QrCode.Ecc.Medium;
         private readonly Tuple<string, QrCode.Ecc>[] _errorCorrectionLevels =
         {
