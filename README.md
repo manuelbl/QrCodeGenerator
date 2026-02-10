@@ -4,40 +4,35 @@ Open-source library for generating QR codes from text strings and byte arrays.
 
 The library is built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.) including .NET 6 on all platforms.
 
-It is mostly a translation of project Nayuki's Java version of the QR code generator. The project provides implementations for
-many more programming languages, and the [Project Nayuki web site](https://www.nayuki.io/page/qr-code-generator-library) has additional information about the implementation.
+It started as a translation of [Project Nayuki's](https://www.nayuki.io/page/qr-code-generator-library) Java version.
+Version 3 is a complete rewrite of the library, and it is more standard compliant
+and at least 10x faster than the original implementation.
 
 
 ## Features
 
 Core features:
 
- * Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
- * Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see [below](#raster-images--bitmaps).
- * Encodes numeric and special-alphanumeric text in less space than general text
- * Open source code under the permissive *MIT License*
- * Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
+- Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
+- Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see [below](#raster-images--bitmaps).
+- Computes optimal segment modes for smallest possible QR code.
+- High speed: 10x faster than comparable libraries
+- Open source code under the permissive *MIT License*
+- Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
  * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
- * Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
+- Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
 
-Manual parameters:
+Advanced features:
 
- * You can specify the minimum and maximum *version number* allowed, and the library will automatically choose the smallest version in the range that fits the data.
- * You can specify the *mask pattern* manually, otherwise library will automatically evaluate all 8 masks and select the optimal one.
- * You can specify an *error correction level*, or optionally allow the library to boost it if it doesn't increase the size (version).
- * You can create a list of *data segments* manually and add *ECI segments*.
-
-Optional advanced features:
-
- * Long text can be split into multiple linked QR codes (aka Structured Append)
- * Encodes Japanese Unicode text in *Kanji mode* to save space compared to UTF-8 bytes
- * Computes *optimal segment mode* switching for text with mixed numeric/alphanumeric/general/kanji parts
-
+- Specify minimum and maximum version number allowed
+- Specify text encoding and use of ECI designators
+- Create data segments manually
+- Split long text into multiple linked QR codes (aka Structured Append)
 
 
 ## Getting started
 
-1. Create a new Visual Studio project for .NET Core 3.1 (or higher) (*File > New > Project...* / *Visual C# > .NET Core > Console App (.NET Core)*)
+1. Create a new Visual Studio project for .NET 8 (or higher) (*File > New > Project...* / *Visual C# > .NET Core > Console App (.NET Core)*)
 
 2. Add the library via NuGet:
 
@@ -46,7 +41,7 @@ Optional advanced features:
    Or by running a command in the Package Manager Console
 
 ```
-Install-Package Net.Codecrete.QrCodeGenerator -Version 2.1.0
+Install-Package Net.Codecrete.QrCodeGenerator -Version 3.0.0
 ```
 3. Add the code from the example below
 
@@ -91,7 +86,8 @@ namespace Examples
         static void Main()
         {
             var segments = QrSegment.MakeSegments("3141592653589793238462643383");
-            var qr = QrCode.EncodeSegments(segments, QrCode.Ecc.High, 5, 5, 2, false);
+            var qr = QrCode.EncodeTextAdvanced("3141592653589793238462643383",
+                QrCode.Ecc.High, eci: ECI.Latin9, minVersion: 5, maxVersion: 5);
             for (int y = 0; y < qr.Size; y++)
             {
                 for (int x = 0; x < qr.Size; x++)
@@ -178,3 +174,26 @@ Several example projects demonstrate how to generate QR code with different fram
 - [Demo-ImageSharp](Demo-ImageSharp): Demonstrates how a QR code can be saved a PNG file, using the ImageSharp raster image library. Additionally, a QR code with an image in the center is created.
 
 - [Demo-ImageMagick](Demo-ImageMagick): Demonstrates how a QR code can be saved a PNG file, using the Magick.NET image manipulation library (based on ImageMagick).
+
+
+## Upgrade from version 2.x to version 3.x
+
+If your code uses `QrCode.EncodeText()` for generating QR codes, recompling the code should be sufficient.
+
+The generated QR code will not be an exact 1-to-1 match. Version 3 optmizes the
+data segments and thus can achieve a smaller QR code or a higher error correction
+level for the same text. Furthermore, if the text cannot be encoded in Latin-1,
+it will be encoded in UTF-8 together with an ECI designator indicating it.
+This is more standard-compliant than the previous version. Futher differences
+can arise from a different data mask selection. In most cases, the differences
+will be irrelvant.
+
+If your code uses `QrSegment.MakeSegments()` or other advanced methods,
+you might first want to look at `QrCode.EncodeAdvanced()`. If this is not
+sufficient for your use case, it is still possible to create the data segments
+manually. The class is now called `DataSegment` instead of `QrSegment`.
+
+The new library version no longer allows to select a specific data masking pattern
+as it can lead to QR codes that a very difficult to scan and violate the standard.
+For backward compatibility, the parameter is still present in one of the methods.
+But it is ignored.
