@@ -15,15 +15,19 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     {
         private static Ecc EccFromOrdinal(int val)
         {
-            var ecc = val switch
+            switch(val)
             {
-                0 => Ecc.Low,
-                1 => Ecc.Medium,
-                2 => Ecc.Quartile,
-                3 => Ecc.High,
-                _ => throw new ArgumentOutOfRangeException(nameof(val), val, string.Empty)
-            };
-            return ecc;
+                case 0:
+                    return Ecc.Low;
+                case 1:
+                    return Ecc.Medium;
+                case 2:
+                    return Ecc.Quartile;
+                case 3:
+                    return Ecc.High;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(val), val, string.Empty);
+            }
         }
 
         [Theory]

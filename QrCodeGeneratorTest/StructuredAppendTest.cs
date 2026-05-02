@@ -18,7 +18,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void EncodeAlphanumericStringInMultipleCodes()
         {
             var text = RandomData.MakeAlphanumericString(3000, seed: 1001);
-            var data = Encoding.Latin1.GetBytes(text);
+            var data = Encoding.GetEncoding("ISO-8859-1").GetBytes(text);
             var segments = StructuredAppend.BuildSegments(data, 29, QrCode.Ecc.Medium, ECI.Latin1, false);
             Assert.Equal(2, segments.Count);
             Assert.Equal(text, DataSegment.GetText(segments.SelectMany(it => it)));

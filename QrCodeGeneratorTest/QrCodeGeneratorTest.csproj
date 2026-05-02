@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net481;$(TargetFrameworks)</TargetFrameworks>
     <RootNamespace>Net.Codecrete.QrCodeGenerator.Test</RootNamespace>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <TestResultsFile>$([System.IO.Path]::Combine($(MSBuildThisFileDirectory),'..','TestResults-$(MSBuildProjectName)-$(TargetFramework).html'))</TestResultsFile>
-    <TargetFramework>net10.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <Version>3.0.0</Version>

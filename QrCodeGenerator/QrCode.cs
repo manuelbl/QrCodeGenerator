@@ -133,7 +133,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// maximum size (version).</exception>
         /// <remarks>
         /// Most encodings other than Latin-1 / ISO-8859-1 and the UTF encodings require that
-        /// the encoding is registered, typically using:
+        /// the encoding is registered (except for .NET Framework 4.x), typically using:
         /// <code>Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);</code>
         /// </remarks>
         [SuppressMessage("csharpsquid", "S107")]

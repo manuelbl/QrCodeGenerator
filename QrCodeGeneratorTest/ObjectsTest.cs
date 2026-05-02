@@ -8,20 +8,21 @@
 using System;
 using Xunit;
 
-namespace Net.Codecrete.QrCodeGenerator.Test;
-
-public class ObjectsTest
+namespace Net.Codecrete.QrCodeGenerator.Test
 {
-    [Fact]
-    public void RequireNonNull_Succeeds()
+    public class ObjectsTest
     {
-        Objects.RequireNonNull("test", "param");
-        Assert.True(true);
-    }
+        [Fact]
+        public void RequireNonNull_Succeeds()
+        {
+            Objects.RequireNonNull("test", "param");
+            Assert.True(true);
+        }
 
-    [Fact]
-    public void RequireNonNull_ThrowsException()
-    {
-        Assert.Throws<ArgumentNullException>(() => Objects.RequireNonNull<string>(null, "param"));
+        [Fact]
+        public void RequireNonNull_ThrowsException()
+        {
+            Assert.Throws<ArgumentNullException>(() => Objects.RequireNonNull<string>(null, "param"));
+        }
     }
 }

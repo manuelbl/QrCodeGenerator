@@ -5160,36 +5160,38 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
         internal static void WriteSourceCode()
         {
-            using var writer = new StreamWriter("Snippet.txt");
-            
-            for (var i = 0; i < TestCases.Length; i += 1)
+            using (var writer = new StreamWriter("Snippet.txt"))
             {
-                var testCase = TestCases[i];
-                var qrCode = QrCode.EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
-                var modules = TestHelper.ToStringArray(qrCode);
-                
-                writer.WriteLine($"        private static readonly string[] Modules{i} = {{");
-                for (var j = 0; j < modules.Length; j += 1)
+
+                for (var i = 0; i < TestCases.Length; i += 1)
                 {
-                    var delimiter = j < modules.Length - 1 ? "," : "";
-                    writer.WriteLine($"            \"{modules[j]}\"{delimiter}");
+                    var testCase = TestCases[i];
+                    var qrCode = QrCode.EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
+                    var modules = TestHelper.ToStringArray(qrCode);
+
+                    writer.WriteLine($"        private static readonly string[] Modules{i} = {{");
+                    for (var j = 0; j < modules.Length; j += 1)
+                    {
+                        var delimiter = j < modules.Length - 1 ? "," : "";
+                        writer.WriteLine($"            \"{modules[j]}\"{delimiter}");
+                    }
+                    writer.WriteLine("        };");
+                }
+
+                writer.WriteLine();
+
+                writer.WriteLine("        private static readonly QrCodeTestCase[] TestCases = new QrCodeTestCase[] {");
+                for (var i = 0; i < TestCases.Length; i += 1)
+                {
+                    var testCase = TestCases[i];
+                    var segmentIndex = Array.IndexOf(AllSegments, testCase.Segments);
+                    var boostEcl = testCase.BoostEcl ? "true" : "false";
+                    var qrCode = QrCode.EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
+                    writer.WriteLine(
+                        $"            new QrCodeTestCase({i}, Segment{segmentIndex}, Modules{i}, Ecc.{testCase.RequestedEcc.ToString()}, {testCase.MinVersion}, {testCase.MaxVersion}, {boostEcl}, Ecc.{qrCode.ErrorCorrectionLevel.ToString()}, {qrCode.Version}, {qrCode.Mask}),");
                 }
                 writer.WriteLine("        };");
             }
-
-            writer.WriteLine();
-            
-            writer.WriteLine("        private static readonly QrCodeTestCase[] TestCases = new QrCodeTestCase[] {");
-            for (var i = 0; i < TestCases.Length; i += 1)
-            {
-                var testCase = TestCases[i];
-                var segmentIndex = AllSegments.IndexOf(testCase.Segments);
-                var boostEcl = testCase.BoostEcl ? "true" : "false";
-                var qrCode = QrCode.EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
-                writer.WriteLine(
-                    $"            new QrCodeTestCase({i}, Segment{segmentIndex}, Modules{i}, Ecc.{testCase.RequestedEcc.ToString()}, {testCase.MinVersion}, {testCase.MaxVersion}, {boostEcl}, Ecc.{qrCode.ErrorCorrectionLevel.ToString()}, {qrCode.Version}, {qrCode.Mask}),");
-            }
-            writer.WriteLine("        };");
         }
     }
 }

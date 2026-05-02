@@ -7,30 +7,31 @@
 
 using Xunit;
 
-namespace Net.Codecrete.QrCodeGenerator.Test;
-
-public class QrCodeCachingTest
+namespace Net.Codecrete.QrCodeGenerator.Test
 {
-    [Theory, CombinatorialData]
-    public void RepeatedGenerationProducesIdenticalQrCode(
-        [CombinatorialValues(1, 10, 25, 40)] int version,
-        [CombinatorialValues(QrCode.Ecc.Low, QrCode.Ecc.High)] QrCode.Ecc ecc)
+    public class QrCodeCachingTest
     {
-        var text = RandomData.MakeAlphanumericString(QrCodeCapacity.GetAlphanumericCapacity(version, (int)ecc), 0xC0FFEE);
-
-        var first = QrCode.EncodeText(text, ecc);
-        var second = QrCode.EncodeText(text, ecc);
-
-        Assert.Equal(first.Version, second.Version);
-        Assert.Equal(first.Size, second.Size);
-        Assert.Equal(first.Mask, second.Mask);
-        Assert.Equal(first.ErrorCorrectionLevel, second.ErrorCorrectionLevel);
-
-        for (var y = 0; y < first.Size; y += 1)
+        [Theory, CombinatorialData]
+        public void RepeatedGenerationProducesIdenticalQrCode(
+            [CombinatorialValues(1, 10, 25, 40)] int version,
+            [CombinatorialValues(QrCode.Ecc.Low, QrCode.Ecc.High)] QrCode.Ecc ecc)
         {
-            for (var x = 0; x < first.Size; x += 1)
+            var text = RandomData.MakeAlphanumericString(QrCodeCapacity.GetAlphanumericCapacity(version, (int)ecc), 0xC0FFEE);
+
+            var first = QrCode.EncodeText(text, ecc);
+            var second = QrCode.EncodeText(text, ecc);
+
+            Assert.Equal(first.Version, second.Version);
+            Assert.Equal(first.Size, second.Size);
+            Assert.Equal(first.Mask, second.Mask);
+            Assert.Equal(first.ErrorCorrectionLevel, second.ErrorCorrectionLevel);
+
+            for (var y = 0; y < first.Size; y += 1)
             {
-                Assert.True(first.GetModule(x, y) == second.GetModule(x, y), $"module ({x},{y})");
+                for (var x = 0; x < first.Size; x += 1)
+                {
+                    Assert.True(first.GetModule(x, y) == second.GetModule(x, y), $"module ({x},{y})");
+                }
             }
         }
     }
