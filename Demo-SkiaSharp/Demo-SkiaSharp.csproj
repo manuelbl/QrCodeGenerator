@@ -17,9 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.*" />
-    <PackageReference Include="SkiaSharp" Version="2.*" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.*" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.*" />
+    <PackageReference Include="SkiaSharp" Version="3.*" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.*" />
   </ItemGroup>
 
 </Project>

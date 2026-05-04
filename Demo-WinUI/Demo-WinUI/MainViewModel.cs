@@ -23,19 +23,19 @@ public partial class MainViewModel : ObservableObject
     /// QR code text
     /// </summary>
     [ObservableProperty]
-    string text = "Hello, world!";
+    public partial string Text { get; set; } = "Hello, world!";
 
     /// <summary>
     /// QR code error correction level
     /// </summary>
     [ObservableProperty]
-    QrCode.Ecc errorCorrection = QrCode.Ecc.Medium;
+    public partial QrCode.Ecc ErrorCorrection { get; set; } = QrCode.Ecc.Medium;
 
     /// <summary>
     /// Width of border around QR code (in QR code pixels)
     /// </summary>
     [ObservableProperty]
-    int borderWidth = 3;
+    public partial int BorderWidth { get; set; } = 3;
 
     private readonly Tuple<string, QrCode.Ecc>[] errorCorrectionLevels_ =
     {

@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="MixERP.Net.VCards" Version="1.0.7" />
-    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.*" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.*" />
   </ItemGroup>
 
 </Project>
