@@ -36,10 +36,11 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
         // The main application program.
         internal static void Main()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Enable support for encodings like ShiftJIS
+
             DoBasicDemo();
             DoVarietyDemo();
-            DoSegmentDemo();
-            DoMaskDemo();
+            DoEncodingDemo();
             DoBinaryDemo();
         }
 
@@ -48,8 +49,8 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
         // Creates a single QR code, then writes it to an SVG file.
         private static void DoBasicDemo()
         {
-            const string text = "Hello, world!"; // User-supplied Unicode text
-            var errCorLvl = QrCode.Ecc.Low; // Error correction level
+            const string text = "Hello, world!"; // Payload text
+            var errCorLvl = QrCode.Ecc.Low; // Minimal error correction level
 
             var qr = QrCode.EncodeText(text, errCorLvl); // Make the QR code symbol
             SaveAsSvg(qr, "hello-world-QR.svg", border: 4); // Save as SVG
@@ -65,11 +66,7 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
 
             // Alphanumeric mode encoding (5.5 bits per character)
             qr = QrCode.EncodeText("DOLLAR-AMOUNT:$39.87 PERCENTAGE:100.00% OPERATIONS:+-*/", QrCode.Ecc.High);
-            SaveAsSvg(qr, "alphanumeric-QR.svg", 2);
-
-            // Unicode text as UTF-8
-            qr = QrCode.EncodeText("こんにちwa、世界！ αβγδ", QrCode.Ecc.Quartile);
-            SaveAsSvg(qr, "unicode-QR.svg", 3);
+            SaveAsSvg(qr, "alphanumeric-QR.svg", 4);
 
             // Moderately large QR code using longer text (from Lewis Carroll's Alice in Wonderland)
             qr = QrCode.EncodeText(
@@ -83,74 +80,14 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             SaveAsSvg(qr, "alice-wonderland-QR.svg", 10);
         }
 
-
-        // Creates QR codes with manually specified segments for better compactness.
-        private static void DoSegmentDemo()
+        private static void DoEncodingDemo()
         {
-            // Illustration "silver"
-            const string silver0 = "THE SQUARE ROOT OF 2 IS 1.";
-            const string silver1 = "41421356237309504880168872420969807856967187537694807317667973799";
-            var qr = QrCode.EncodeText(silver0 + silver1, QrCode.Ecc.Low);
-            SaveAsSvg(qr, "sqrt2-monolithic-QR.svg", 3);
-
-            var segs = new List<QrSegment>
-            {
-                QrSegment.MakeAlphanumeric(silver0),
-                QrSegment.MakeNumeric(silver1)
-            };
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Low);
-            SaveAsSvg(qr, "sqrt2-segmented-QR.svg", 3);
-
-            // Illustration "golden"
-            const string golden0 = "Golden ratio φ = 1.";
-            const string golden1 =
-                "6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374";
-            const string golden2 = "......";
-            qr = QrCode.EncodeText(golden0 + golden1 + golden2, QrCode.Ecc.Low);
-            SaveAsSvg(qr, "phi-monolithic-QR.svg", 5);
-
-            segs = new List<QrSegment>
-            {
-                QrSegment.MakeBytes(Encoding.UTF8.GetBytes(golden0)),
-                QrSegment.MakeNumeric(golden1),
-                QrSegment.MakeAlphanumeric(golden2)
-            };
-
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Low);
-            SaveAsSvg(qr, "phi-segmented-QR.svg", 5);
-
-            // Illustration "Madoka": kanji, kana, Cyrillic, full-width Latin, Greek characters
-            const string madoka = "「魔法少女まどか☆マギカ」って、　ИАИ　ｄｅｓｕ　κα？";
-            qr = QrCode.EncodeText(madoka, QrCode.Ecc.Low);
-            SaveAsSvg(qr, "madoka-utf8-QR.svg", 4);
-
-            segs = new List<QrSegment> { QrSegmentAdvanced.MakeKanji(madoka) };
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Low);
-            SaveAsSvg(qr, "madoka-kanji-QR.svg", 4);
+            // ShiftJIS encoding so Kanji characters are compactly encoded (13 bits per character)
+            var qr = QrCode.EncodeTextAdvanced("こんにちは", QrCode.Ecc.Medium, eci: ECI.ShiftJIS); // Japanese "Hello"
+            SaveAsSvg(qr, "kanji-QR.svg", 4);
         }
 
 
-        // Creates QR codes with the same size and contents but different mask patterns.
-        private static void DoMaskDemo()
-        {
-            // Project Nayuki URL
-            var segs = QrSegment.MakeSegments("https://www.nayuki.io/");
-            var qr = QrCode.EncodeSegments(segs, QrCode.Ecc.High);
-            SaveAsSvg(qr, "project-nayuki-automask-QR.svg", 6);
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.High, QrCode.MinVersion, QrCode.MaxVersion, 3);  // Force mask 3
-            SaveAsSvg(qr, "project-nayuki-mask3-QR.svg", 6);
-
-            // Chinese text as UTF-8
-            segs = QrSegment.MakeSegments("維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫");
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Medium, QrCode.MinVersion, QrCode.MaxVersion, 0);  // Force mask 0
-            SaveAsSvg(qr, "unicode-mask0-QR.svg");
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Medium, QrCode.MinVersion, QrCode.MaxVersion, 1);  // Force mask 1
-            SaveAsSvg(qr, "unicode-mask1-QR.svg");
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Medium, QrCode.MinVersion, QrCode.MaxVersion, 5);  // Force mask 5
-            SaveAsSvg(qr, "unicode-mask5-QR.svg");
-            qr = QrCode.EncodeSegments(segs, QrCode.Ecc.Medium, QrCode.MinVersion, QrCode.MaxVersion, 7);  // Force mask 7
-            SaveAsSvg(qr, "unicode-mask7-QR.svg");
-        }
 
         private static void DoBinaryDemo()
         {

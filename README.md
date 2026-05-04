@@ -19,7 +19,7 @@ Core features:
 - High speed: 10x faster than comparable libraries
 - Open source code under the permissive *MIT License*
 - Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
- * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
+- Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
 - Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
 
 Advanced features:
