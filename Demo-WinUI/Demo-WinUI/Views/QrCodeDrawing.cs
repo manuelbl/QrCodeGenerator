@@ -14,9 +14,9 @@ using Windows.Foundation;
 using Windows.Storage.Streams;
 using Windows.UI;
 
-namespace Net.Codecrete.QrCodeGenerator.Demo;
+namespace Net.Codecrete.QrCodeGenerator.Demo.Views;
 
-public class QrCodeDrawing
+public static class QrCodeDrawing
 {
     /// <summary>
     /// Draws the QR code in the specified drawing context.
