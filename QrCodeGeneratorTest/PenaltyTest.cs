@@ -5,6 +5,7 @@
  * https://github.com/manuelbl/QrCodeGenerator
  */
 
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
@@ -249,6 +250,20 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Theory]
+        [InlineData(21, 3)]
+        [InlineData(65, 61)]
+        [InlineData(69, 62)]
+        [InlineData(73, 63)]
+        [InlineData(77, 64)]
+        [InlineData(81, 65)]
+        public void Calc2By2Blocks_OverlappingBlocksCountedMultipleTimes(int size, int x)
+        {
+            var modules = CreateCheckerboard(size);
+            modules.FillRect(x, 4, 3, 3);
+            Assert.Equal(12, Penalty.Calc2By2Blocks(modules));
+        }
+
+        [Theory]
         [InlineData(17, 0.5, 0)]
         [InlineData(21, 0.545, 0)]
         [InlineData(21, 0.455, 0)]
@@ -413,6 +428,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
         }
 
+        [SuppressMessage("squid", "S2234")]
         // Transpose modules (mirror diagonally)
         private static void Transpose(BitMatrix modules)
         {

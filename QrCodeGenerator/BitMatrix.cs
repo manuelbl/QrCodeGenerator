@@ -331,20 +331,26 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
-        /// Returns the number of set bits in this matrix.
+        /// Returns the number of bits set in this matrix
+        /// (aka population count).
         /// </summary>
         /// <returns>The number of bits.</returns>
-        internal int BitCount()
+        internal int PopCount()
         {
             var sum = 0;
             foreach (var v in Raw)
             {
-                sum += BitCount(v);
+                sum += PopCount(v);
             }
             return sum;
         }
         
-        internal static int BitCount(ulong i)
+        /// <summary>
+        /// Returns the number of bits set in this value
+        /// (aka population count).
+        /// </summary>
+        /// <returns>The value.</returns>
+        internal static int PopCount(ulong i)
         {
             i = i - ((i >> 1) & 0x5555555555555555UL);
             i = (i & 0x3333333333333333UL) + ((i >> 2) & 0x3333333333333333UL);

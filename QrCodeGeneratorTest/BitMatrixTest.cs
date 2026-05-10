@@ -107,7 +107,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             bitMatrix.FillRect(40, 40, 30, 30);
 
             Assert.True(bitMatrix.Get(50, 50));
-            Assert.Equal(30 * 30, bitMatrix.BitCount());
+            Assert.Equal(30 * 30, bitMatrix.PopCount());
         }
 
         [Theory]
@@ -122,7 +122,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             bitMatrix.FillRect(x, y, width, height);
 
-            Assert.Equal(0, bitMatrix.BitCount());
+            Assert.Equal(0, bitMatrix.PopCount());
         }
 
         [Fact]
@@ -159,7 +159,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             a.And(b);
 
-            Assert.Equal(0, a.BitCount());
+            Assert.Equal(0, a.PopCount());
         }
 
         [Fact]
@@ -170,10 +170,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             a.FillRect(5, 7, 91, 33);
             a.Set(199, 199, true);
 
-            var expected = a.BitCount();
+            var expected = a.PopCount();
             a.And(a);
 
-            Assert.Equal(expected, a.BitCount());
+            Assert.Equal(expected, a.PopCount());
             Assert.True(a.Get(199, 199));
         }
 
@@ -219,7 +219,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             a.Xor(a);
 
-            Assert.Equal(0, a.BitCount());
+            Assert.Equal(0, a.PopCount());
         }
 
         [Fact]
@@ -231,12 +231,12 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             a.FillRect(20, 20, 40, 40);
             b.FillRect(50, 50, 30, 30);
-            var expected = a.BitCount();
+            var expected = a.PopCount();
 
             a.Xor(b);
             a.Xor(b);
 
-            Assert.Equal(expected, a.BitCount());
+            Assert.Equal(expected, a.PopCount());
             Assert.True(a.Get(20, 20));
             Assert.False(a.Get(80, 80));
         }
@@ -314,7 +314,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             m.Transpose();
 
             Assert.True(m.Get(0, 0));
-            Assert.Equal(1, m.BitCount());
+            Assert.Equal(1, m.PopCount());
         }
 
         [Fact]
@@ -385,7 +385,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             bitMatrix.FillRect(0, 0, 100, 100);
             bitMatrix.FillRect(150, 150, 50, 50);
 
-            Assert.Equal(100 * 100 + 50 * 50, bitMatrix.BitCount());
+            Assert.Equal(100 * 100 + 50 * 50, bitMatrix.PopCount());
             Assert.True(bitMatrix.Get(0, 0));
             Assert.True(bitMatrix.Get(99, 99));
             Assert.False(bitMatrix.Get(100, 100));

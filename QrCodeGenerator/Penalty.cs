@@ -119,10 +119,10 @@ namespace Net.Codecrete.QrCodeGenerator
                 var rs2 = fw2 & ((t2 << 1) | (t1 >> 63));
                 var rs3 = fw3 & ((t3 << 1) | (t2 >> 63));
 
-                fiveWindowCount += BitMatrix.BitCount(fw0) + BitMatrix.BitCount(fw1)
-                                 + BitMatrix.BitCount(fw2) + BitMatrix.BitCount(fw3);
-                run5StartCount += BitMatrix.BitCount(rs0) + BitMatrix.BitCount(rs1)
-                                + BitMatrix.BitCount(rs2) + BitMatrix.BitCount(rs3);
+                fiveWindowCount += BitMatrix.PopCount(fw0) + BitMatrix.PopCount(fw1)
+                                 + BitMatrix.PopCount(fw2) + BitMatrix.PopCount(fw3);
+                run5StartCount += BitMatrix.PopCount(rs0) + BitMatrix.PopCount(rs1)
+                                + BitMatrix.PopCount(rs2) + BitMatrix.PopCount(rs3);
             }
 
             return fiveWindowCount + 2 * run5StartCount;
@@ -160,7 +160,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     var aShift = (a >> 1) | (aNext << 63);
                     var bShift = (b >> 1) | (bNext << 63);
                     var monochrome = ~((a ^ aShift) | (b ^ bShift) | (a ^ b)) & edgeMask[w];
-                    count += BitMatrix.BitCount(monochrome);
+                    count += BitMatrix.PopCount(monochrome);
                 }
             }
 
@@ -227,7 +227,7 @@ namespace Net.Codecrete.QrCodeGenerator
             // Penalty for the proportion of dark modules in the entire symbol.
             // Penalty points: N4 * k, where k is the rating of the deviation of the proportion of
             // the dark modules in the symbol from 50%, in steps of 5%, and N4 is 10.
-            var darkModules = modules.BitCount();
+            var darkModules = modules.PopCount();
 
             var size = modules.Size;
             var totalNumber = size * size;
