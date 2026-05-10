@@ -61,6 +61,24 @@ namespace Net.Codecrete.QrCodeGenerator
             return sum + CalcColorBalance(modules);
         }
 
+#if DEBUG
+        internal static int CalculatePenaltyDebug(BitMatrix modules, BitMatrix transposed, ref QrCodeBuilder.PenaltyInfo penaltyInfo)
+        {
+            penaltyInfo.Blocks = Calc2By2Blocks(modules);
+            penaltyInfo.VerticalStreaks = CalcSameColor(transposed);
+            penaltyInfo.HorizontalStreaks = CalcSameColor(modules);
+            penaltyInfo.HorizontalFinderPatterns = CalcFinderPattern(modules);
+            penaltyInfo.VerticalFinderPatterns = CalcFinderPattern(transposed);
+            penaltyInfo.ColorBalance = CalcColorBalance(modules);
+
+            penaltyInfo.Total = penaltyInfo.Blocks
+                + penaltyInfo.VerticalStreaks + penaltyInfo.HorizontalStreaks
+                + penaltyInfo.HorizontalFinderPatterns + penaltyInfo.VerticalFinderPatterns
+                + penaltyInfo.ColorBalance;
+            return penaltyInfo.Total;
+        }
+#endif
+
         internal static int CalcSameColor(BitMatrix modules)
         {
             // Penalty for adjacent modules in a row in the same color.

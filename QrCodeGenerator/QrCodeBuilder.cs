@@ -13,7 +13,12 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
-    internal static class QrCodeBuilder
+#if DEBUG
+    public
+#else
+    internal
+#endif
+    static class QrCodeBuilder
     {
         #region Caches
 
@@ -702,7 +707,20 @@ namespace Net.Codecrete.QrCodeGenerator
                 // apply pattern
                 modules.Xor(mask);
                 transposed.Xor(maskT);
+
+#if DEBUG
+                int penalty;
+                if (DebugAccess != null) {
+                    penalty = Penalty.CalculatePenaltyDebug(modules, transposed, ref DebugAccess.Penalties[pattern]);
+                }
+                else
+                {
+                    penalty = Penalty.CalculatePenalty(modules, transposed, lowestPenalty);
+                }
+#else
                 var penalty = Penalty.CalculatePenalty(modules, transposed, lowestPenalty);
+#endif
+
                 // undo pattern
                 modules.Xor(mask);
                 transposed.Xor(maskT);
@@ -713,13 +731,20 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
+#if DEBUG
+            if (DebugAccess != null && DebugAccess.ForcedDataMask >= 0)
+            {
+                bestPattern = DebugAccess.ForcedDataMask;
+            }
+#endif
+
             DrawFormatInformation(modules, ecc, bestPattern);
             var bestMask = GetDataMaskPattern(bestPattern, version);
             modules.Xor(bestMask);
             return bestPattern;
         }
 
-        #endregion
+#endregion
         
         #region Capacity
 
@@ -962,5 +987,30 @@ namespace Net.Codecrete.QrCodeGenerator
         };
 
         #endregion
+
+#if DEBUG
+        #region Debugging
+
+        public struct PenaltyInfo
+        {
+            public int HorizontalStreaks { get; set; }
+            public int VerticalStreaks { get; set; }
+            public int Blocks { get; set; }
+            public int HorizontalFinderPatterns { get; set; }
+            public int VerticalFinderPatterns { get; set; }
+            public int ColorBalance { get; set; }
+            public int Total { get; set; }
+        }
+
+        public class DebugInfo
+        {
+            public PenaltyInfo[] Penalties { get; } = new PenaltyInfo[8];
+            public int ForcedDataMask { get; set; } = -1;
+        }
+
+        public static DebugInfo DebugAccess { get; set; }
+
+        #endregion
+#endif
     }
 }
