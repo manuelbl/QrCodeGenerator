@@ -60,6 +60,8 @@
                 <Label Content="Error Correction:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
                 <ComboBox x:Name="ErrorCorrectionCombo" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="0,6,24,6"
                   ItemsSource="{Binding Path=ErrorCorrectionLevels, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=ErrorCorrection}"/>
+                <CheckBox x:Name="BoostEccCheckBox" Content="Fixed ECC" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,6,24,6"
+                  IsChecked="{Binding Path=FixedEcc, UpdateSourceTrigger=PropertyChanged}"/>
                 <Label Content="Border Width:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
                 <TextBox x:Name="BorderWidthTextBox" Text="{Binding Path=BorderWidth, UpdateSourceTrigger=PropertyChanged}"
                  HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Margin="0,6" Padding="5,3"/>

@@ -41,6 +41,7 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             DoBasicDemo();
             DoVarietyDemo();
             DoEncodingDemo();
+            DoEmojiDemo();
             DoBinaryDemo();
         }
 
@@ -85,6 +86,13 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             // ShiftJIS encoding so Kanji characters are compactly encoded (13 bits per character)
             var qr = QrCode.EncodeTextAdvanced("こんにちは", QrCode.Ecc.Medium, eci: ECI.ShiftJIS); // Japanese "Hello"
             SaveAsSvg(qr, "kanji-QR.svg", 4);
+        }
+
+
+        private static void DoEmojiDemo()
+        {
+            var qr = QrCode.EncodeText("🎲 😇 🤒 🏌 ⏭ 🚍", QrCode.Ecc.Quartile);
+            SaveAsSvg(qr, "emojis-QR.svg", 4);
         }
 
 

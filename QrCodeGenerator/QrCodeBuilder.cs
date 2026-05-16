@@ -33,6 +33,12 @@ namespace Net.Codecrete.QrCodeGenerator
 
         internal static QrCode Build(List<DataSegment> dataSegments, int ecc, int minVersion = 1, int maxVersion = 40, bool boostEcc = true)
         {
+#if DEBUG
+            if (DebugAccess != null)
+            {
+                DebugAccess.DataSegments = dataSegments;
+            }
+#endif
             var result = FindVersionAndEcc(dataSegments, ecc, minVersion, maxVersion, boostEcc);
             var version = result.Item1;
             ecc = result.Item2;
@@ -1006,6 +1012,7 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             public PenaltyInfo[] Penalties { get; } = new PenaltyInfo[8];
             public int ForcedDataMask { get; set; } = -1;
+            public List<DataSegment> DataSegments { get; set; }
         }
 
         public static DebugInfo DebugAccess { get; set; }

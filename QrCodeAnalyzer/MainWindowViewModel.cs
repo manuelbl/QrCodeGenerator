@@ -24,6 +24,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private string _text = "QR code text";
     private int _borderWidth = 4;
     private QrCode.Ecc _errorCorrection = QrCode.Ecc.Medium;
+    private bool fixedEcc = false;
     private int _dataMaskPattern = -1;
     private QrCodeBuilder.PenaltyInfo _penaltyDetails;
     private ImageSource? _qrCodeImage;
@@ -98,6 +99,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public bool FixedEcc
+    {
+        get => fixedEcc;
+        set
+        {
+            if (fixedEcc == value) return;
+            fixedEcc = value;
+            UpdateQrCode();
+            OnPropertyChanged();
+        }
+    }
+
     public int DataMaskPattern
     {
         get => _dataMaskPattern;
@@ -162,7 +175,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void UpdateQrCode()
     {
         _debugInfo.ForcedDataMask = _dataMaskPattern;
-        var qrCode = QrCode.EncodeText(_text, _errorCorrection);
+        var qrCode = QrCode.EncodeTextAdvanced(_text, _errorCorrection, boostEcl: !fixedEcc);
         _currentQrCode = qrCode;
         SelectedDataMaskPattern = qrCode.Mask;
         PenaltyDetails = _debugInfo.Penalties[qrCode.Mask];
