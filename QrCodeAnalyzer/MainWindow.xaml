@@ -5,15 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Net.Codecrete.QrCodeGenerator.Analyzer"
         mc:Ignorable="d"
-        Title="QR Code" Height="560" Width="600"
+        Title="QR Code" Height="650" Width="700"
         Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
     <Grid Margin="20,16,20,16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto" MinWidth="150"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="140"/>
         </Grid.RowDefinitions>
@@ -22,7 +23,7 @@
         <Grid Grid.Row="0" Grid.Column="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -32,31 +33,51 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label Content="Horz. Streaks:" Grid.Row="0" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
-                   PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="{Binding Path=PenaltyDetails.HorizontalStreaks}" Grid.Row="0" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
-                   PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="Vert. Streaks:" Grid.Row="1" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
-                   PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="{Binding Path=PenaltyDetails.VerticalStreaks}" Grid.Row="1" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
-                   PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="Boxes:" Grid.Row="2" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="Blocks"
-                   PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="{Binding Path=PenaltyDetails.Blocks}" Grid.Row="2" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="Blocks"
-                   PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="Horz. Finder:" Grid.Row="3" Grid.Column="0" />
-            <Label Content="{Binding Path=PenaltyDetails.HorizontalFinderPatterns}" Grid.Row="3" Grid.Column="1" />
-            <Label Content="Vert. Finder:" Grid.Row="4" Grid.Column="0" />
-            <Label Content="{Binding Path=PenaltyDetails.VerticalFinderPatterns}" Grid.Row="4" Grid.Column="1" />
-            <Label Content="Balance:" Grid.Row="5" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyDetails.ColorBalance}" Grid.Row="5" Grid.Column="1" />
-            <Label Content="Total:" Grid.Row="6" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyDetails.Total}" Grid.Row="6" Grid.Column="1" />
+            <TextBlock Text="General" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Padding="5,2"/>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="Gray" BorderThickness="0,0,0,1" VerticalAlignment="Bottom"/>
+            <Label Content="Version:" Grid.Row="1" Grid.Column="0"/>
+            <Label Content="{Binding Path=QrCodeVersion}" Grid.Row="1" Grid.Column="1"/>
+            <Label Content="Size:" Grid.Row="2" Grid.Column="0"/>
+            <Label Content="{Binding Path=QrCodeSize}" Grid.Row="2" Grid.Column="1"/>
+            <Label Content="ECC:" Grid.Row="3" Grid.Column="0"/>
+            <Label Content="{Binding Path=SelectedEcc}" Grid.Row="3" Grid.Column="1"/>
+            <Label Content="Data Mask:" Grid.Row="4" Grid.Column="0"/>
+            <Label Content="{Binding Path=SelectedDataMaskPattern}" Grid.Row="4" Grid.Column="1"/>
+            <TextBlock Text="Penalty" FontWeight="Bold" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Padding="5,10,5,2"/>
+            <Border Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="Gray" BorderThickness="0,0,0,1" VerticalAlignment="Bottom"/>
+            <Label Content="Horz. Streaks:" Grid.Row="7" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="{Binding Path=PenaltyDetails.HorizontalStreaks}" Grid.Row="7" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="Vert. Streaks:" Grid.Row="8" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="{Binding Path=PenaltyDetails.VerticalStreaks}" Grid.Row="8" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="Boxes:" Grid.Row="9" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="Blocks"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="{Binding Path=PenaltyDetails.Blocks}" Grid.Row="9" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="Blocks"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="Horz. Finder:" Grid.Row="10" Grid.Column="0"/>
+            <Label Content="{Binding Path=PenaltyDetails.HorizontalFinderPatterns}" Grid.Row="10" Grid.Column="1"/>
+            <Label Content="Vert. Finder:" Grid.Row="11" Grid.Column="0"/>
+            <Label Content="{Binding Path=PenaltyDetails.VerticalFinderPatterns}" Grid.Row="11" Grid.Column="1"/>
+            <Label Content="Balance:" Grid.Row="12" Grid.Column="0"/>
+            <Label Content="{Binding Path=PenaltyDetails.ColorBalance}" Grid.Row="12" Grid.Column="1"/>
+            <Label Content="Total:" Grid.Row="13" Grid.Column="0"/>
+            <Label Content="{Binding Path=PenaltyDetails.Total}" Grid.Row="13" Grid.Column="1"/>
         </Grid>
-        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
-            <TextBox x:Name="QrCodeTextBox" Text="{Binding Path=Text, UpdateSourceTrigger=PropertyChanged}"
+        <TextBox x:Name="QrCodeTextBox" Text="{Binding Path=Text, UpdateSourceTrigger=PropertyChanged}"
+                 Grid.Row="1" Grid.ColumnSpan="2"
                  Padding="5,3" Margin="0,6"/>
+        <StackPanel Grid.Row="2" Grid.Column="0">
             <WrapPanel>
                 <Label Content="Error Correction:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
                 <ComboBox x:Name="ErrorCorrectionCombo" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="0,6,24,6"
@@ -71,13 +92,12 @@
                 <Label Content="Data Mask:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
                 <ComboBox x:Name="DataMaskCombo" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="0,6,24,6"
                   ItemsSource="{Binding Path=DataMasks, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=DataMaskPattern}"/>
-                <Label Content="Selected Data Mask:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
-                <Label Content="{Binding Path=SelectedDataMaskPattern, Mode=OneWay}" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
             </WrapPanel>
-            <Button x:Name="CopyButton" Content="Copy QR Code" Grid.Row="3" Margin="0,6,0,0"
-                VerticalAlignment="Center" HorizontalAlignment="Right" Padding="10,3" Click="CopyButton_Click"/>
         </StackPanel>
-        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
+        <Button x:Name="CopyButton" Content="Copy QR Code" Margin="0,6,0,0"
+                VerticalAlignment="Top" HorizontalAlignment="Right" Padding="10,3" Click="CopyButton_Click"
+                Grid.Row="2" Grid.Column="1"/>
+        <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="1*"/>

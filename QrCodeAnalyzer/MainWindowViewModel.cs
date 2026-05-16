@@ -37,6 +37,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private QrCode? _currentQrCode;
     private HighlightKind _highlight = HighlightKind.None;
     private IReadOnlyList<SegmentRow> _dataSegments = Array.Empty<SegmentRow>();
+    private int _qrCodeVersion;
+    private string _qrCodeSize = string.Empty;
+    private QrCode.Ecc _selectedEcc;
 
     public MainWindowViewModel()
     {
@@ -160,6 +163,39 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public int QrCodeVersion
+    {
+        get => _qrCodeVersion;
+        private set
+        {
+            if (_qrCodeVersion == value) return;
+            _qrCodeVersion = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string QrCodeSize
+    {
+        get => _qrCodeSize;
+        private set
+        {
+            if (_qrCodeSize == value) return;
+            _qrCodeSize = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public QrCode.Ecc SelectedEcc
+    {
+        get => _selectedEcc;
+        private set
+        {
+            if (_selectedEcc == value) return;
+            _selectedEcc = value;
+            OnPropertyChanged();
+        }
+    }
+
     public IReadOnlyList<SegmentRow> DataSegments
     {
         get => _dataSegments;
@@ -195,6 +231,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _currentQrCode = qrCode;
         SelectedDataMaskPattern = qrCode.Mask;
         PenaltyDetails = _debugInfo.Penalties[qrCode.Mask];
+        QrCodeVersion = qrCode.Version;
+        QrCodeSize = $"{qrCode.Size}×{qrCode.Size}";
+        SelectedEcc = qrCode.ErrorCorrectionLevel;
         DataSegments = _debugInfo.DataSegments?.Select(BuildSegmentRow).ToArray()
             ?? (IReadOnlyList<SegmentRow>)Array.Empty<SegmentRow>();
         RenderQrCodeImage();
