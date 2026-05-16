@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Net.Codecrete.QrCodeGenerator.Analyzer
 {
@@ -22,7 +23,7 @@ namespace Net.Codecrete.QrCodeGenerator.Analyzer
                 }
             }
 
-            return rectangles;
+            return FilterOutsideFinderArea(rectangles, qr.Size);
         }
 
         internal static List<Rectangle> GetHorizontalStreaks(QrCode qr)
@@ -54,7 +55,8 @@ namespace Net.Codecrete.QrCodeGenerator.Analyzer
                     rectangles.Add(new Rectangle(size - count, y, count, 1));
                 }
             }
-            return rectangles;
+
+            return FilterOutsideFinderArea(rectangles, qr.Size);
         }
 
 
@@ -87,7 +89,19 @@ namespace Net.Codecrete.QrCodeGenerator.Analyzer
                     rectangles.Add(new Rectangle(x, size - count, 1, count));
                 }
             }
-            return rectangles;
+            return FilterOutsideFinderArea(rectangles, qr.Size);
+        }
+
+        private static List<Rectangle> FilterOutsideFinderArea(List<Rectangle> rectangles, int size)
+        {
+            return [.. rectangles.Where(r => !IsInFinderArea(r.X, r.Y, r.Width, r.Height, size))];
+        }
+
+        private static bool IsInFinderArea(int x, int y, int w, int h, int size)
+        {
+            return (x >= 0 && y >= 0 && x + w <= 8 && y + h <= 8)
+                || (x >= size - 8 && y >= 0 && x + w <= size && y + h <= 8)
+                || (x >= 0 && y >= size - 8 && x + w <= 8 && y + h <= size);
         }
     }
 }
