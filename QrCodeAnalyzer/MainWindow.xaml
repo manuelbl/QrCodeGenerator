@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Net.Codecrete.QrCodeGenerator.Analyzer"
         mc:Ignorable="d"
-        Title="QR Code" Height="400" Width="600"
+        Title="QR Code" Height="560" Width="600"
         Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
     <Grid Margin="20,16,20,16">
         <Grid.ColumnDefinitions>
@@ -15,6 +15,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="140"/>
         </Grid.RowDefinitions>
         <Image Source="{Binding Path=QrCodeImage}" Grid.Row="0" Grid.Column="0" Margin="0,0,0,16"
             RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased"/>
@@ -76,5 +77,36 @@
             <Button x:Name="CopyButton" Content="Copy QR Code" Grid.Row="3" Margin="0,6,0,0"
                 VerticalAlignment="Center" HorizontalAlignment="Right" Padding="10,3" Click="CopyButton_Click"/>
         </StackPanel>
+        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Mode" FontWeight="Bold" Padding="4,2"/>
+                <TextBlock Grid.Column="1" Text="Content" FontWeight="Bold" Padding="4,2"/>
+                <Border Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="Gray" BorderThickness="0,0,0,1" VerticalAlignment="Bottom"/>
+            </Grid>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Path=DataSegments}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Path=Mode}" FontFamily="Consolas, Cascadia Mono" Padding="4,2"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Path=Content}" FontFamily="Consolas, Cascadia Mono" Padding="4,2" TextWrapping="Wrap"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Window>

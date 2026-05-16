@@ -8,14 +8,19 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace Net.Codecrete.QrCodeGenerator.Analyzer;
 
 public enum HighlightKind { None, Blocks, HorizontalStreaks, VerticalStreaks }
+
+public sealed record SegmentRow(string Mode, string Content);
 
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
@@ -31,6 +36,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private int _selectedDataMaskPattern = -1;
     private QrCode? _currentQrCode;
     private HighlightKind _highlight = HighlightKind.None;
+    private IReadOnlyList<SegmentRow> _dataSegments = Array.Empty<SegmentRow>();
 
     public MainWindowViewModel()
     {
@@ -154,6 +160,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public IReadOnlyList<SegmentRow> DataSegments
+    {
+        get => _dataSegments;
+        private set
+        {
+            _dataSegments = value;
+            OnPropertyChanged();
+        }
+    }
+
     public HighlightKind Highlight
     {
         get => _highlight;
@@ -179,7 +195,63 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _currentQrCode = qrCode;
         SelectedDataMaskPattern = qrCode.Mask;
         PenaltyDetails = _debugInfo.Penalties[qrCode.Mask];
+        DataSegments = _debugInfo.DataSegments?.Select(BuildSegmentRow).ToArray()
+            ?? (IReadOnlyList<SegmentRow>)Array.Empty<SegmentRow>();
         RenderQrCodeImage();
+    }
+
+    private static SegmentRow BuildSegmentRow(DataSegment segment)
+    {
+        return segment.Mode switch
+        {
+            DataSegmentMode.Numeric => new SegmentRow("Numeric", DecodeAscii(segment.DataBytes)),
+            DataSegmentMode.Alphanumeric => new SegmentRow("Alphanumeric", DecodeAscii(segment.DataBytes)),
+            DataSegmentMode.Binary => new SegmentRow("Byte", FormatByteContent(segment.DataBytes)),
+            DataSegmentMode.Kanji => new SegmentRow("Kanji", FormatHex(segment.DataBytes)),
+            DataSegmentMode.ECI => new SegmentRow("ECI", "TODO"),
+            DataSegmentMode.StructuredAppend => new SegmentRow("Structured Append", "TODO"),
+            _ => new SegmentRow(segment.Mode.ToString(), FormatHex(segment.DataBytes)),
+        };
+    }
+
+    private static string DecodeAscii(ArraySegment<byte> data)
+    {
+        return data.Array == null ? string.Empty : Encoding.ASCII.GetString(data.Array, data.Offset, data.Count);
+    }
+
+    private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, throwOnInvalidBytes: true);
+
+    private static string FormatByteContent(ArraySegment<byte> data)
+    {
+        if (data.Array == null || data.Count == 0) return string.Empty;
+        try
+        {
+            var text = StrictUtf8.GetString(data.Array, data.Offset, data.Count);
+            foreach (var c in text)
+            {
+                if (c < 0x20 && c != '\t' && c != '\r' && c != '\n')
+                {
+                    return FormatHex(data);
+                }
+            }
+            return text;
+        }
+        catch (DecoderFallbackException)
+        {
+            return FormatHex(data);
+        }
+    }
+
+    private static string FormatHex(ArraySegment<byte> data)
+    {
+        if (data.Array == null || data.Count == 0) return string.Empty;
+        var sb = new StringBuilder(data.Count * 3);
+        for (int i = 0; i < data.Count; i++)
+        {
+            if (i > 0) sb.Append(' ');
+            sb.Append(data.Array[data.Offset + i].ToString("X2"));
+        }
+        return sb.ToString();
     }
 
     private void RenderQrCodeImage()
