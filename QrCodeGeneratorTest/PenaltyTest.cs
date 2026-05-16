@@ -12,6 +12,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class PenaltyTest
     {
+        // Base penalty for streaks (due to finder patterns)
+        private const int BasePenaltyStreaks = 66;
+        // Base penalty of 2 by 2 block (due to finder patterns)
+        private const int BasePenalty2By2Blocks = 36;
+        // Base penalty finder patterns
+        private const int BasePenaltyFinderPattern = 360;
+        
         [Theory, CombinatorialData]
         public void CalcSameColor_NoStreaks([CombinatorialValues(17, 25, 37)] int size, [CombinatorialValues(false, true)] bool invert)
         {
@@ -30,7 +37,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             // no streaks
-            Assert.Equal(0, Penalty.CalcSameColor(modules));
+            Assert.Equal(0 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory, CombinatorialData]
@@ -50,7 +57,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             // 1 streak of 5
-            Assert.Equal(3, Penalty.CalcSameColor(modules));
+            Assert.Equal(3 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory, CombinatorialData]
@@ -70,7 +77,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             // 1 streak of 5
-            Assert.Equal(3, Penalty.CalcSameColor(modules));
+            Assert.Equal(3 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory, CombinatorialData]
@@ -90,7 +97,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             // 1 streak of 9
-            Assert.Equal(7, Penalty.CalcSameColor(modules));
+            Assert.Equal(7 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory]
@@ -115,7 +122,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 modules.Set(startCol + 5, 3, false);
             }
 
-            Assert.Equal(3, Penalty.CalcSameColor(modules));
+            Assert.Equal(3 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory]
@@ -132,7 +139,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 modules.Set(x, 4, true);
             }
 
-            Assert.Equal(3, Penalty.CalcSameColor(modules));
+            Assert.Equal(3 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory]
@@ -149,7 +156,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 modules.Set(x, 4, true);
             }
 
-            Assert.Equal(3, Penalty.CalcSameColor(modules));
+            Assert.Equal(3 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
         }
 
         [Theory]
@@ -167,6 +174,25 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 modules.Set(x, 2, false);
             }
 
+            Assert.Equal(0 - BasePenaltyStreaks, Penalty.CalcSameColor(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void CalcSameColor_BasePenalty([CombinatorialValues(21, 29, 37, 65, 129, 177)]int size)
+        {
+            var modules = CreateCheckerboardWithFinders(size);
+            
+            // ensure the white area around the finder pattern does not extend into the data area
+            modules.Set(7, 8, true);
+            modules.Set(8, 7, true);
+            modules.Set(7, size - 9, true);
+            modules.Set(8, size - 8, true);
+            modules.Set(size - 8, 8, true);
+            modules.Set(size - 9, 7, true);
+            
+            Assert.Equal(0, Penalty.CalcSameColor(modules));
+            
+            modules.Transpose();
             Assert.Equal(0, Penalty.CalcSameColor(modules));
         }
 
@@ -180,10 +206,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             // no blocks
-            Assert.Equal(0, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(0 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
 
             Transpose(modules);
-            Assert.Equal(0, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(0 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
         }
 
         [Theory, CombinatorialData]
@@ -209,10 +235,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             // 2 blocks
-            Assert.Equal(6, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(6 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
 
             Transpose(modules);
-            Assert.Equal(6, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(6 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
         }
 
         [Theory]
@@ -228,7 +254,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             modules.Set(63, 6, true);
             modules.Set(64, 6, true);
 
-            Assert.Equal(3, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(3 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
         }
 
         [Theory]
@@ -246,7 +272,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             modules.Set(size - 2, size - 1, true);
             modules.Set(size - 1, size - 1, true);
 
-            Assert.Equal(3, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(3 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
         }
 
         [Theory]
@@ -260,7 +286,17 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             var modules = CreateCheckerboard(size);
             modules.FillRect(x, 4, 3, 3);
-            Assert.Equal(12, Penalty.Calc2By2Blocks(modules));
+            Assert.Equal(12 - BasePenalty2By2Blocks, Penalty.Calc2By2Blocks(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void Calc2By2Blocks_BasePenalty([CombinatorialValues(21, 29, 37, 65, 129, 177)]int size)
+        {
+            var modules = CreateCheckerboardWithFinders(size);
+            Assert.Equal(0, Penalty.Calc2By2Blocks(modules));
+            
+            modules.Transpose();
+            Assert.Equal(0, Penalty.Calc2By2Blocks(modules));
         }
 
         [Theory]
@@ -283,6 +319,16 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             Transpose(modules);
             Assert.Equal(expectedPenalty, Penalty.CalcColorBalance(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void CalcColorBalance_BasePenalty([CombinatorialValues(21, 29, 37, 65, 129, 177)]int size)
+        {
+            var modules = CreateCheckerboardWithFinders(size);
+            Assert.Equal(0, Penalty.CalcColorBalance(modules));
+            
+            modules.Transpose();
+            Assert.Equal(0, Penalty.CalcColorBalance(modules));
         }
 
         [Theory]
@@ -318,10 +364,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             DrawFinderPattern(modules, 3, 3, leading: 0, trailing: 3);
             DrawFinderPattern(modules, 8, 6, leading: 3, trailing: 0);
 
-            Assert.Equal(-360, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(0 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
 
             Invert(modules);
-            Assert.Equal(-360, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(0 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
         }
 
         [Theory, CombinatorialData]
@@ -331,10 +377,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             DrawFinderPattern(modules, 4, 3, leading: isLeading ? 4 : 1, trailing: isLeading ? 1 : 4);
 
-            Assert.Equal(-320, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(40 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
 
             Invert(modules);
-            Assert.Equal(-360, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(0 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
         }
 
         [Theory]
@@ -354,10 +400,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             DrawFinderPattern(modules, x, y, leading: x, trailing: 1);
 
-            Assert.Equal(-320, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(40 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
 
             Invert(modules);
-            Assert.Equal(-360, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(0 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
         }
 
         [Theory]
@@ -378,10 +424,20 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             DrawFinderPattern(modules, size - x - 7, y, leading: 1, trailing: x);
 
-            Assert.Equal(-320, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(40 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
 
             Invert(modules);
-            Assert.Equal(-360, Penalty.CalcFinderPattern(modules));
+            Assert.Equal(0 - BasePenaltyFinderPattern, Penalty.CalcFinderPattern(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void CalcFinderPattern_BasePenalty([CombinatorialValues(21, 29, 37, 65, 129, 177)]int size)
+        {
+            var modules = CreateCheckerboardWithFinders(size);
+            Assert.Equal(0, Penalty.CalcFinderPattern(modules));
+            
+            modules.Transpose();
+            Assert.Equal(0, Penalty.CalcFinderPattern(modules));
         }
 
         private static BitMatrix Fill(int size, double percent)
@@ -405,15 +461,42 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
         private static BitMatrix CreateCheckerboard(int size)
         {
-            var result = new BitMatrix(size);
+            var matrix = new BitMatrix(size);
             for (var y = 0; y < size; y += 1)
             {
                 for (var x = y % 2; x < size; x += 2)
                 {
-                    result.Set(x, y, true);
+                    matrix.Set(x, y, true);
                 }
             }
-            return result;
+            return matrix;
+        }
+
+        private static BitMatrix CreateCheckerboardWithFinders(int size)
+        {
+            var matrix = CreateCheckerboard(size);
+
+            matrix.Invert();
+            matrix.FillRect(0, 0, 8, 8);
+            matrix.FillRect(0, size - 8, 8, 8);
+            matrix.FillRect(size - 8, 0, 8, 8);
+            matrix.Invert();
+            
+            matrix.FillRect(0, 0, 7, 7);
+            matrix.FillRect(0, size - 7, 7, 7);
+            matrix.FillRect(size - 7, 0, 7, 7);
+
+            matrix.Invert();
+            matrix.FillRect(1, 1, 5, 5);
+            matrix.FillRect(1, size - 6, 5, 5);
+            matrix.FillRect(size - 6, 1, 5, 5);
+            matrix.Invert();
+            
+            matrix.FillRect(2, 2, 3, 3);
+            matrix.FillRect(2, size - 5, 3, 3);
+            matrix.FillRect(size - 5, 2, 3, 3);
+
+            return matrix;
         }
 
         private static void Invert(BitMatrix modules)

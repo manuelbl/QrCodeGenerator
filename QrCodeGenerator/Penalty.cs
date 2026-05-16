@@ -125,7 +125,8 @@ namespace Net.Codecrete.QrCodeGenerator
                                 + BitMatrix.PopCount(rs2) + BitMatrix.PopCount(rs3);
             }
 
-            return fiveWindowCount + 2 * run5StartCount;
+            // each finder pattern contributes 2 streaks of 5, 2 streaks of 7 and 1 streak of 8
+            return fiveWindowCount + 2 * run5StartCount - 3 * (2 * 3 + 2 * 5 + 6);
         }
 
         internal static int Calc2By2Blocks(BitMatrix modules)
@@ -164,7 +165,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-            return count * 3;
+            // subtract the 3 x 4 blocks contributed by the finder patterns
+            return (count - 4 * 3) * 3;
         }
 
         private static ulong[] BuildEdgeMask(int validBits)
@@ -217,7 +219,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-            // The mandatory finder pattern should lead to 9 matches.
+            // The mandatory finder pattern leads to 9 matches.
             // Subtract them.
             return (count - 9) * 40;
         }
