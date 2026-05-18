@@ -450,12 +450,12 @@ namespace Net.Codecrete.QrCodeGenerator
             protectedModules.FillRect(8, protectedModules.Size - 7, 1, 7);
         }
 
-        private static void DrawFormatInformation(BitMatrix modules, int ecc, int pattern)
+        internal static void DrawFormatInformation(BitMatrix modules, int ecc, int pattern)
         {
             DrawFormatBits(modules, GetFormatInformationBits(ecc, pattern));
         }
 
-        private static void DrawFormatInformation(BitMatrix modules, BitMatrix transposed, int ecc, int pattern)
+        internal static void DrawFormatInformation(BitMatrix modules, BitMatrix transposed, int ecc, int pattern)
         {
             DrawFormatBits(modules, transposed, GetFormatInformationBits(ecc, pattern));
         }

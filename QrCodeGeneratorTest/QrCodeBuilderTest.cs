@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Xunit;
 
@@ -287,6 +288,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.True(modules.Get(cx, cy), $"align center ({cx},{cy})");
         }
 
+        [SuppressMessage("csharpsquid", "S2234")]
         private static void AssertMirrored(BitMatrix matrix)
         {
             var size = matrix.Size;
@@ -337,6 +339,33 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Theory, CombinatorialData]
+        public void DrawVersionInformation([CombinatorialRange(7, 40, 1)] int version)
+        {
+            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
+            var size = modules.Size;
+            var expected = QrCodeBuilder.GetVersionInformationBits(version);
+
+            var bottomLeft = 0;
+            var topRight = 0;
+            for (var bit = 0; bit < 18; bit += 1)
+            {
+                var x = bit / 3;
+                var y = bit % 3;
+                if (modules.Get(x, size - 11 + y))
+                {
+                    bottomLeft |= 1 << bit;
+                }
+                if (modules.Get(size - 11 + y, x))
+                {
+                    topRight |= 1 << bit;
+                }
+            }
+
+            Assert.Equal(expected, bottomLeft);
+            Assert.Equal(expected, topRight);
+        }
+
+        [Theory, CombinatorialData]
         public void GetVersionInformationBits([CombinatorialRange(7, 40, 1)] int version)
         {
             var bits = QrCodeBuilder.GetVersionInformationBits(version);
@@ -357,6 +386,81 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 }
             }
             Assert.Equal(0, remainder);
+        }
+
+        [Theory, CombinatorialData]
+        public void DrawFormatInformation(
+            [CombinatorialRange(1, 40)] int version,
+            [CombinatorialRange(0, 3, 1)] int ecc,
+            [CombinatorialRange(0, 7, 1)] int pattern)
+        {
+            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
+            QrCodeBuilder.DrawFormatInformation(modules, ecc, pattern);
+
+            var expected = QrCodeBuilder.GetFormatInformationBits(ecc, pattern);
+            Assert.Equal(expected, ExtractFormatInformationA(modules));
+            Assert.Equal(expected, ExtractFormatInformationB(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void DrawFormatInformationTransposed(
+            [CombinatorialRange(1, 40)] int version,
+            [CombinatorialRange(0, 3, 1)] int ecc,
+            [CombinatorialRange(0, 7, 1)] int pattern)
+        {
+            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
+            var transposed = modules.Copy();
+            transposed.Transpose();
+            
+            QrCodeBuilder.DrawFormatInformation(modules, transposed, ecc, pattern);
+            
+            transposed.Transpose();
+            
+            var expected = QrCodeBuilder.GetFormatInformationBits(ecc, pattern);
+            Assert.Equal(expected, ExtractFormatInformationA(modules));
+            Assert.Equal(expected, ExtractFormatInformationB(modules));
+            Assert.Equal(expected, ExtractFormatInformationA(transposed));
+            Assert.Equal(expected, ExtractFormatInformationB(transposed));
+        }
+
+        private static int ExtractFormatInformationA(BitMatrix modules)
+        {
+            // Placement A (around top-left finder): column 8 going down (skipping row 6),
+            // corner, then row 8 going left (skipping column 6).
+            var placementA = 0;
+            for (var i = 0; i < 6; i += 1)
+            {
+                if (modules.Get(8, i)) placementA |= 1 << i;
+            }
+
+            if (modules.Get(8, 7)) placementA |= 1 << 6;
+            if (modules.Get(8, 8)) placementA |= 1 << 7;
+            if (modules.Get(7, 8)) placementA |= 1 << 8;
+            for (var i = 9; i < 15; i += 1)
+            {
+                if (modules.Get(14 - i, 8)) placementA |= 1 << i;
+            }
+            
+            return placementA;
+        }
+
+        private static int ExtractFormatInformationB(BitMatrix modules)
+        {
+            int size = modules.Size;
+            
+            // Placement B: row 8 from right border going left (bits 0..7),
+            // then column 8 from row size-7 going down to bottom border (bits 8..14).
+            var placementB = 0;
+            for (var i = 0; i < 8; i += 1)
+            {
+                if (modules.Get(size - 1 - i, 8)) placementB |= 1 << i;
+            }
+            for (var i = 8; i < 15; i += 1)
+            {
+                if (modules.Get(8, size - 15 + i)) placementB |= 1 << i;
+            }
+
+            return placementB;
         }
 
         [Theory, CombinatorialData]
