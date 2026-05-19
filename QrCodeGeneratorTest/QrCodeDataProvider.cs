@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QR code generator library (.NET)
  *
  * Copyright (c) Manuel Bleichenbacher (MIT License)
@@ -9,26 +9,53 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using static Net.Codecrete.QrCodeGenerator.QrCode;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class QrCodeDataProvider : IEnumerable<object[]>
     {
-        private static readonly List<DataSegment> Segment0 = DataSegment.FromText("");
-        private static readonly List<DataSegment> Segment1 = DataSegment.FromText("A");
-        private static readonly List<DataSegment> Segment2 = DataSegment.FromText("Hello, world!");
-        private static readonly List<DataSegment> Segment3 = DataSegment.FromText("The quick brown fox jumps over the lazy dog");
-        private static readonly List<DataSegment> Segment4 = DataSegment.FromText("87634846443833526");
-        private static readonly List<DataSegment> Segment5 = DataSegment.FromText("kVtnmdZMDB wbhQ4Y0L0D 6dxWYgeDO7 6XEq8JBGFD dbA5ruetw0 zIevtZZkJL UnEcrObNuS COOscwe4PD PL2lKGcbqk uXnmfUX00E l4FsUfvkiU O8bje4GTce  C85HiEHDha EoObmX7Hef VEipzaCPV7 XpBy5cgYRZ VzlrmMTRSW f0U7Dt0x5j Mb5uk2JcA6 MFov2hnHQR");
-        private static readonly List<DataSegment> Segment6 = DataSegment.FromText("😀 € éñ 💩");
-        private static readonly List<DataSegment> Segment7 = DataSegment.FromText("DOLLAR-AMOUNT:$39.87 PERCENTAGE:100.00% OPERATIONS:+-*/");
-        private static readonly List<DataSegment> Segment8 = DataSegment.FromText("こんにちwa、世界！ αβγδ");
-        private static readonly List<DataSegment> Segment9 = DataSegment.FromText("Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?' So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.");
-        private static readonly List<DataSegment> Segment10 = DataSegment.FromText("https://www.nayuki.io/");
-        private static readonly List<DataSegment> Segment11 = DataSegment.FromText("維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫");
-        private static readonly List<DataSegment> Segment12 = DataSegment.FromText("昨夜のコンサートは最高でした。", eci: ECI.ShiftJIS);
-        private static readonly List<DataSegment> Segment13 = DataSegment.FromText("2342342340ABC234234jkl~~");
+        // Must run before Segment12 (Shift-JIS) is initialized, hence the field-initializer placement.
+        private static readonly bool _encodingsRegistered = RegisterEncodings();
+
+        private static bool RegisterEncodings()
+        {
+#if NET
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+            return true;
+        }
+
+        private static readonly string Text0 = "";
+        private static readonly string Text1 = "A";
+        private static readonly string Text2 = "Hello, world!";
+        private static readonly string Text3 = "The quick brown fox jumps over the lazy dog";
+        private static readonly string Text4 = "87634846443833526";
+        private static readonly string Text5 = "kVtnmdZMDB wbhQ4Y0L0D 6dxWYgeDO7 6XEq8JBGFD dbA5ruetw0 zIevtZZkJL UnEcrObNuS COOscwe4PD PL2lKGcbqk uXnmfUX00E l4FsUfvkiU O8bje4GTce  C85HiEHDha EoObmX7Hef VEipzaCPV7 XpBy5cgYRZ VzlrmMTRSW f0U7Dt0x5j Mb5uk2JcA6 MFov2hnHQR";
+        private static readonly string Text6 = "😀 € éñ 💩";
+        private static readonly string Text7 = "DOLLAR-AMOUNT:$39.87 PERCENTAGE:100.00% OPERATIONS:+-*/";
+        private static readonly string Text8 = "こんにちwa、世界！ αβγδ";
+        private static readonly string Text9 = "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?' So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.";
+        private static readonly string Text10 = "https://www.nayuki.io/";
+        private static readonly string Text11 = "維基百科（Wikipedia，聆聽i/ˌwɪkᵻˈpiːdi.ə/）是一個自由內容、公開編輯且多語言的網路百科全書協作計畫";
+        private static readonly string Text12 = "昨夜のコンサートは最高でした。";
+        private static readonly string Text13 = "2342342340ABC234234jkl~~";
+
+        private static readonly List<DataSegment> Segment0 = DataSegment.FromText(Text0);
+        private static readonly List<DataSegment> Segment1 = DataSegment.FromText(Text1);
+        private static readonly List<DataSegment> Segment2 = DataSegment.FromText(Text2);
+        private static readonly List<DataSegment> Segment3 = DataSegment.FromText(Text3);
+        private static readonly List<DataSegment> Segment4 = DataSegment.FromText(Text4);
+        private static readonly List<DataSegment> Segment5 = DataSegment.FromText(Text5);
+        private static readonly List<DataSegment> Segment6 = DataSegment.FromText(Text6);
+        private static readonly List<DataSegment> Segment7 = DataSegment.FromText(Text7);
+        private static readonly List<DataSegment> Segment8 = DataSegment.FromText(Text8);
+        private static readonly List<DataSegment> Segment9 = DataSegment.FromText(Text9);
+        private static readonly List<DataSegment> Segment10 = DataSegment.FromText(Text10);
+        private static readonly List<DataSegment> Segment11 = DataSegment.FromText(Text11);
+        private static readonly List<DataSegment> Segment12 = DataSegment.FromText(Text12, eci: ECI.ShiftJIS);
+        private static readonly List<DataSegment> Segment13 = DataSegment.FromText(Text13);
 
         private static readonly string[] Modules0 = {
             "XXXXXXX  XXX  XXXXXXX",
@@ -5012,118 +5039,118 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         };
 
         private static readonly QrCodeTestCase[] TestCases = new QrCodeTestCase[] {
-            new QrCodeTestCase(0, Segment0, Modules0, Ecc.Low, 1, 40, true, Ecc.High, 1, 3),
-            new QrCodeTestCase(1, Segment0, Modules1, Ecc.Low, 4, 4, false, Ecc.Low, 4, 1),
-            new QrCodeTestCase(2, Segment0, Modules2, Ecc.Medium, 1, 40, true, Ecc.High, 1, 3),
-            new QrCodeTestCase(3, Segment0, Modules3, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 2),
-            new QrCodeTestCase(4, Segment0, Modules4, Ecc.Quartile, 1, 40, true, Ecc.High, 1, 3),
-            new QrCodeTestCase(5, Segment0, Modules5, Ecc.Quartile, 4, 4, false, Ecc.Quartile, 4, 4),
-            new QrCodeTestCase(6, Segment0, Modules6, Ecc.High, 1, 40, true, Ecc.High, 1, 3),
-            new QrCodeTestCase(7, Segment0, Modules7, Ecc.High, 4, 4, false, Ecc.High, 4, 4),
-            new QrCodeTestCase(8, Segment1, Modules8, Ecc.Low, 1, 40, true, Ecc.High, 1, 4),
-            new QrCodeTestCase(9, Segment1, Modules9, Ecc.Low, 4, 4, false, Ecc.Low, 4, 1),
-            new QrCodeTestCase(10, Segment1, Modules10, Ecc.Medium, 1, 40, true, Ecc.High, 1, 4),
-            new QrCodeTestCase(11, Segment1, Modules11, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 2),
-            new QrCodeTestCase(12, Segment1, Modules12, Ecc.Quartile, 1, 40, true, Ecc.High, 1, 4),
-            new QrCodeTestCase(13, Segment1, Modules13, Ecc.Quartile, 4, 4, false, Ecc.Quartile, 4, 6),
-            new QrCodeTestCase(14, Segment1, Modules14, Ecc.High, 1, 40, true, Ecc.High, 1, 4),
-            new QrCodeTestCase(15, Segment1, Modules15, Ecc.High, 4, 4, false, Ecc.High, 4, 6),
-            new QrCodeTestCase(16, Segment2, Modules16, Ecc.Low, 1, 40, true, Ecc.Medium, 1, 2),
-            new QrCodeTestCase(17, Segment2, Modules17, Ecc.Low, 4, 4, false, Ecc.Low, 4, 4),
-            new QrCodeTestCase(18, Segment2, Modules18, Ecc.Medium, 1, 40, true, Ecc.Medium, 1, 2),
-            new QrCodeTestCase(19, Segment2, Modules19, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 2),
-            new QrCodeTestCase(20, Segment2, Modules20, Ecc.Quartile, 1, 40, true, Ecc.High, 2, 2),
-            new QrCodeTestCase(21, Segment2, Modules21, Ecc.Quartile, 5, 5, false, Ecc.Quartile, 5, 3),
-            new QrCodeTestCase(22, Segment2, Modules22, Ecc.High, 1, 40, true, Ecc.High, 2, 2),
-            new QrCodeTestCase(23, Segment2, Modules23, Ecc.High, 5, 5, false, Ecc.High, 5, 4),
-            new QrCodeTestCase(24, Segment3, Modules24, Ecc.Low, 1, 40, true, Ecc.Low, 3, 6),
-            new QrCodeTestCase(25, Segment3, Modules25, Ecc.Low, 6, 6, false, Ecc.Low, 6, 2),
-            new QrCodeTestCase(26, Segment3, Modules26, Ecc.Medium, 1, 40, true, Ecc.Quartile, 4, 2),
-            new QrCodeTestCase(27, Segment3, Modules27, Ecc.Medium, 7, 7, false, Ecc.Medium, 7, 0),
-            new QrCodeTestCase(28, Segment3, Modules28, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 4, 2),
-            new QrCodeTestCase(29, Segment3, Modules29, Ecc.Quartile, 7, 7, false, Ecc.Quartile, 7, 5),
-            new QrCodeTestCase(30, Segment3, Modules30, Ecc.High, 1, 40, true, Ecc.High, 5, 7),
-            new QrCodeTestCase(31, Segment3, Modules31, Ecc.High, 8, 8, false, Ecc.High, 8, 4),
-            new QrCodeTestCase(32, Segment4, Modules32, Ecc.Low, 1, 40, true, Ecc.High, 1, 1),
-            new QrCodeTestCase(33, Segment4, Modules33, Ecc.Low, 4, 4, false, Ecc.Low, 4, 1),
-            new QrCodeTestCase(34, Segment4, Modules34, Ecc.Medium, 1, 40, true, Ecc.High, 1, 1),
-            new QrCodeTestCase(35, Segment4, Modules35, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 4),
-            new QrCodeTestCase(36, Segment4, Modules36, Ecc.Quartile, 1, 40, true, Ecc.High, 1, 1),
-            new QrCodeTestCase(37, Segment4, Modules37, Ecc.Quartile, 4, 4, false, Ecc.Quartile, 4, 0),
-            new QrCodeTestCase(38, Segment4, Modules38, Ecc.High, 1, 40, true, Ecc.High, 1, 1),
-            new QrCodeTestCase(39, Segment4, Modules39, Ecc.High, 4, 4, false, Ecc.High, 4, 6),
-            new QrCodeTestCase(40, Segment5, Modules40, Ecc.Low, 1, 40, true, Ecc.Low, 9, 4),
-            new QrCodeTestCase(41, Segment5, Modules41, Ecc.Low, 12, 12, false, Ecc.Low, 12, 2),
-            new QrCodeTestCase(42, Segment5, Modules42, Ecc.Medium, 1, 40, true, Ecc.Medium, 11, 7),
-            new QrCodeTestCase(43, Segment5, Modules43, Ecc.Medium, 14, 14, false, Ecc.Medium, 14, 7),
-            new QrCodeTestCase(44, Segment5, Modules44, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 13, 4),
-            new QrCodeTestCase(45, Segment5, Modules45, Ecc.Quartile, 16, 16, false, Ecc.Quartile, 16, 4),
-            new QrCodeTestCase(46, Segment5, Modules46, Ecc.High, 1, 40, true, Ecc.High, 15, 1),
-            new QrCodeTestCase(47, Segment5, Modules47, Ecc.High, 18, 18, false, Ecc.High, 18, 2),
-            new QrCodeTestCase(48, Segment6, Modules48, Ecc.Low, 1, 40, true, Ecc.Quartile, 2, 0),
-            new QrCodeTestCase(49, Segment6, Modules49, Ecc.Low, 5, 5, false, Ecc.Low, 5, 4),
-            new QrCodeTestCase(50, Segment6, Modules50, Ecc.Medium, 1, 40, true, Ecc.Quartile, 2, 0),
-            new QrCodeTestCase(51, Segment6, Modules51, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 6),
-            new QrCodeTestCase(52, Segment6, Modules52, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 2, 0),
-            new QrCodeTestCase(53, Segment6, Modules53, Ecc.Quartile, 5, 5, false, Ecc.Quartile, 5, 1),
-            new QrCodeTestCase(54, Segment6, Modules54, Ecc.High, 1, 40, true, Ecc.High, 3, 1),
-            new QrCodeTestCase(55, Segment6, Modules55, Ecc.High, 6, 6, false, Ecc.High, 6, 4),
-            new QrCodeTestCase(56, Segment7, Modules56, Ecc.Low, 1, 40, true, Ecc.Medium, 3, 1),
-            new QrCodeTestCase(57, Segment7, Modules57, Ecc.Low, 6, 6, false, Ecc.Low, 6, 4),
-            new QrCodeTestCase(58, Segment7, Modules58, Ecc.Medium, 1, 40, true, Ecc.Medium, 3, 1),
-            new QrCodeTestCase(59, Segment7, Modules59, Ecc.Medium, 6, 6, false, Ecc.Medium, 6, 6),
-            new QrCodeTestCase(60, Segment7, Modules60, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 4, 0),
-            new QrCodeTestCase(61, Segment7, Modules61, Ecc.Quartile, 7, 7, false, Ecc.Quartile, 7, 4),
-            new QrCodeTestCase(62, Segment7, Modules62, Ecc.High, 1, 40, true, Ecc.High, 5, 3),
-            new QrCodeTestCase(63, Segment7, Modules63, Ecc.High, 8, 8, false, Ecc.High, 8, 0),
-            new QrCodeTestCase(64, Segment8, Modules64, Ecc.Low, 1, 40, true, Ecc.Medium, 3, 3),
-            new QrCodeTestCase(65, Segment8, Modules65, Ecc.Low, 6, 6, false, Ecc.Low, 6, 4),
-            new QrCodeTestCase(66, Segment8, Modules66, Ecc.Medium, 1, 40, true, Ecc.Medium, 3, 3),
-            new QrCodeTestCase(67, Segment8, Modules67, Ecc.Medium, 6, 6, false, Ecc.Medium, 6, 2),
-            new QrCodeTestCase(68, Segment8, Modules68, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 4, 4),
-            new QrCodeTestCase(69, Segment8, Modules69, Ecc.Quartile, 7, 7, false, Ecc.Quartile, 7, 4),
-            new QrCodeTestCase(70, Segment8, Modules70, Ecc.High, 1, 40, true, Ecc.High, 5, 6),
-            new QrCodeTestCase(71, Segment8, Modules71, Ecc.High, 8, 8, false, Ecc.High, 8, 0),
-            new QrCodeTestCase(72, Segment9, Modules72, Ecc.Low, 1, 40, true, Ecc.Low, 17, 2),
-            new QrCodeTestCase(73, Segment9, Modules73, Ecc.Low, 20, 20, false, Ecc.Low, 20, 2),
-            new QrCodeTestCase(74, Segment9, Modules74, Ecc.Medium, 1, 40, true, Ecc.Medium, 19, 2),
-            new QrCodeTestCase(75, Segment9, Modules75, Ecc.Medium, 22, 22, false, Ecc.Medium, 22, 4),
-            new QrCodeTestCase(76, Segment9, Modules76, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 23, 4),
-            new QrCodeTestCase(77, Segment9, Modules77, Ecc.Quartile, 26, 26, false, Ecc.Quartile, 26, 2),
-            new QrCodeTestCase(78, Segment9, Modules78, Ecc.High, 1, 40, true, Ecc.High, 26, 2),
-            new QrCodeTestCase(79, Segment9, Modules79, Ecc.High, 29, 29, false, Ecc.High, 29, 2),
-            new QrCodeTestCase(80, Segment10, Modules80, Ecc.Low, 1, 40, true, Ecc.Medium, 2, 3),
-            new QrCodeTestCase(81, Segment10, Modules81, Ecc.Low, 5, 5, false, Ecc.Low, 5, 1),
-            new QrCodeTestCase(82, Segment10, Modules82, Ecc.Medium, 1, 40, true, Ecc.Medium, 2, 3),
-            new QrCodeTestCase(83, Segment10, Modules83, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 6),
-            new QrCodeTestCase(84, Segment10, Modules84, Ecc.Quartile, 1, 40, true, Ecc.High, 3, 3),
-            new QrCodeTestCase(85, Segment10, Modules85, Ecc.Quartile, 6, 6, false, Ecc.Quartile, 6, 4),
-            new QrCodeTestCase(86, Segment10, Modules86, Ecc.High, 1, 40, true, Ecc.High, 3, 3),
-            new QrCodeTestCase(87, Segment10, Modules87, Ecc.High, 6, 6, false, Ecc.High, 6, 2),
-            new QrCodeTestCase(88, Segment11, Modules88, Ecc.Low, 1, 40, true, Ecc.Low, 7, 6),
-            new QrCodeTestCase(89, Segment11, Modules89, Ecc.Low, 10, 10, false, Ecc.Low, 10, 6),
-            new QrCodeTestCase(90, Segment11, Modules90, Ecc.Medium, 1, 40, true, Ecc.Medium, 8, 6),
-            new QrCodeTestCase(91, Segment11, Modules91, Ecc.Medium, 11, 11, false, Ecc.Medium, 11, 2),
-            new QrCodeTestCase(92, Segment11, Modules92, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 10, 1),
-            new QrCodeTestCase(93, Segment11, Modules93, Ecc.Quartile, 13, 13, false, Ecc.Quartile, 13, 3),
-            new QrCodeTestCase(94, Segment11, Modules94, Ecc.High, 1, 40, true, Ecc.High, 12, 5),
-            new QrCodeTestCase(95, Segment11, Modules95, Ecc.High, 15, 15, false, Ecc.High, 15, 4),
-            new QrCodeTestCase(96, Segment12, Modules96, Ecc.Low, 1, 40, true, Ecc.Medium, 2, 1),
-            new QrCodeTestCase(97, Segment12, Modules97, Ecc.Low, 5, 5, false, Ecc.Low, 5, 1),
-            new QrCodeTestCase(98, Segment12, Modules98, Ecc.Medium, 1, 40, true, Ecc.Medium, 2, 1),
-            new QrCodeTestCase(99, Segment12, Modules99, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 4),
-            new QrCodeTestCase(100, Segment12, Modules100, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 3, 3),
-            new QrCodeTestCase(101, Segment12, Modules101, Ecc.Quartile, 6, 6, false, Ecc.Quartile, 6, 5),
-            new QrCodeTestCase(102, Segment12, Modules102, Ecc.High, 1, 40, true, Ecc.High, 4, 7),
-            new QrCodeTestCase(103, Segment12, Modules103, Ecc.High, 6, 6, false, Ecc.High, 6, 3),
-            new QrCodeTestCase(104, Segment13, Modules104, Ecc.Low, 1, 40, true, Ecc.Quartile, 2, 0),
-            new QrCodeTestCase(105, Segment13, Modules105, Ecc.Low, 5, 5, false, Ecc.Low, 5, 1),
-            new QrCodeTestCase(106, Segment13, Modules106, Ecc.Medium, 1, 40, true, Ecc.Quartile, 2, 0),
-            new QrCodeTestCase(107, Segment13, Modules107, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 4),
-            new QrCodeTestCase(108, Segment13, Modules108, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 2, 0),
-            new QrCodeTestCase(109, Segment13, Modules109, Ecc.Quartile, 5, 5, false, Ecc.Quartile, 5, 1),
-            new QrCodeTestCase(110, Segment13, Modules110, Ecc.High, 1, 40, true, Ecc.High, 3, 2),
-            new QrCodeTestCase(111, Segment13, Modules111, Ecc.High, 6, 6, false, Ecc.High, 6, 2),
+            new QrCodeTestCase(0, Segment0, Text0, Modules0, Ecc.Low, 1, 40, true, Ecc.High, 1, 3),
+            new QrCodeTestCase(1, Segment0, Text0, Modules1, Ecc.Low, 4, 4, false, Ecc.Low, 4, 1),
+            new QrCodeTestCase(2, Segment0, Text0, Modules2, Ecc.Medium, 1, 40, true, Ecc.High, 1, 3),
+            new QrCodeTestCase(3, Segment0, Text0, Modules3, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 2),
+            new QrCodeTestCase(4, Segment0, Text0, Modules4, Ecc.Quartile, 1, 40, true, Ecc.High, 1, 3),
+            new QrCodeTestCase(5, Segment0, Text0, Modules5, Ecc.Quartile, 4, 4, false, Ecc.Quartile, 4, 4),
+            new QrCodeTestCase(6, Segment0, Text0, Modules6, Ecc.High, 1, 40, true, Ecc.High, 1, 3),
+            new QrCodeTestCase(7, Segment0, Text0, Modules7, Ecc.High, 4, 4, false, Ecc.High, 4, 4),
+            new QrCodeTestCase(8, Segment1, Text1, Modules8, Ecc.Low, 1, 40, true, Ecc.High, 1, 4),
+            new QrCodeTestCase(9, Segment1, Text1, Modules9, Ecc.Low, 4, 4, false, Ecc.Low, 4, 1),
+            new QrCodeTestCase(10, Segment1, Text1, Modules10, Ecc.Medium, 1, 40, true, Ecc.High, 1, 4),
+            new QrCodeTestCase(11, Segment1, Text1, Modules11, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 2),
+            new QrCodeTestCase(12, Segment1, Text1, Modules12, Ecc.Quartile, 1, 40, true, Ecc.High, 1, 4),
+            new QrCodeTestCase(13, Segment1, Text1, Modules13, Ecc.Quartile, 4, 4, false, Ecc.Quartile, 4, 6),
+            new QrCodeTestCase(14, Segment1, Text1, Modules14, Ecc.High, 1, 40, true, Ecc.High, 1, 4),
+            new QrCodeTestCase(15, Segment1, Text1, Modules15, Ecc.High, 4, 4, false, Ecc.High, 4, 6),
+            new QrCodeTestCase(16, Segment2, Text2, Modules16, Ecc.Low, 1, 40, true, Ecc.Medium, 1, 2),
+            new QrCodeTestCase(17, Segment2, Text2, Modules17, Ecc.Low, 4, 4, false, Ecc.Low, 4, 4),
+            new QrCodeTestCase(18, Segment2, Text2, Modules18, Ecc.Medium, 1, 40, true, Ecc.Medium, 1, 2),
+            new QrCodeTestCase(19, Segment2, Text2, Modules19, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 2),
+            new QrCodeTestCase(20, Segment2, Text2, Modules20, Ecc.Quartile, 1, 40, true, Ecc.High, 2, 2),
+            new QrCodeTestCase(21, Segment2, Text2, Modules21, Ecc.Quartile, 5, 5, false, Ecc.Quartile, 5, 3),
+            new QrCodeTestCase(22, Segment2, Text2, Modules22, Ecc.High, 1, 40, true, Ecc.High, 2, 2),
+            new QrCodeTestCase(23, Segment2, Text2, Modules23, Ecc.High, 5, 5, false, Ecc.High, 5, 4),
+            new QrCodeTestCase(24, Segment3, Text3, Modules24, Ecc.Low, 1, 40, true, Ecc.Low, 3, 6),
+            new QrCodeTestCase(25, Segment3, Text3, Modules25, Ecc.Low, 6, 6, false, Ecc.Low, 6, 2),
+            new QrCodeTestCase(26, Segment3, Text3, Modules26, Ecc.Medium, 1, 40, true, Ecc.Quartile, 4, 2),
+            new QrCodeTestCase(27, Segment3, Text3, Modules27, Ecc.Medium, 7, 7, false, Ecc.Medium, 7, 0),
+            new QrCodeTestCase(28, Segment3, Text3, Modules28, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 4, 2),
+            new QrCodeTestCase(29, Segment3, Text3, Modules29, Ecc.Quartile, 7, 7, false, Ecc.Quartile, 7, 5),
+            new QrCodeTestCase(30, Segment3, Text3, Modules30, Ecc.High, 1, 40, true, Ecc.High, 5, 7),
+            new QrCodeTestCase(31, Segment3, Text3, Modules31, Ecc.High, 8, 8, false, Ecc.High, 8, 4),
+            new QrCodeTestCase(32, Segment4, Text4, Modules32, Ecc.Low, 1, 40, true, Ecc.High, 1, 1),
+            new QrCodeTestCase(33, Segment4, Text4, Modules33, Ecc.Low, 4, 4, false, Ecc.Low, 4, 1),
+            new QrCodeTestCase(34, Segment4, Text4, Modules34, Ecc.Medium, 1, 40, true, Ecc.High, 1, 1),
+            new QrCodeTestCase(35, Segment4, Text4, Modules35, Ecc.Medium, 4, 4, false, Ecc.Medium, 4, 4),
+            new QrCodeTestCase(36, Segment4, Text4, Modules36, Ecc.Quartile, 1, 40, true, Ecc.High, 1, 1),
+            new QrCodeTestCase(37, Segment4, Text4, Modules37, Ecc.Quartile, 4, 4, false, Ecc.Quartile, 4, 0),
+            new QrCodeTestCase(38, Segment4, Text4, Modules38, Ecc.High, 1, 40, true, Ecc.High, 1, 1),
+            new QrCodeTestCase(39, Segment4, Text4, Modules39, Ecc.High, 4, 4, false, Ecc.High, 4, 6),
+            new QrCodeTestCase(40, Segment5, Text5, Modules40, Ecc.Low, 1, 40, true, Ecc.Low, 9, 4),
+            new QrCodeTestCase(41, Segment5, Text5, Modules41, Ecc.Low, 12, 12, false, Ecc.Low, 12, 2),
+            new QrCodeTestCase(42, Segment5, Text5, Modules42, Ecc.Medium, 1, 40, true, Ecc.Medium, 11, 7),
+            new QrCodeTestCase(43, Segment5, Text5, Modules43, Ecc.Medium, 14, 14, false, Ecc.Medium, 14, 7),
+            new QrCodeTestCase(44, Segment5, Text5, Modules44, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 13, 4),
+            new QrCodeTestCase(45, Segment5, Text5, Modules45, Ecc.Quartile, 16, 16, false, Ecc.Quartile, 16, 4),
+            new QrCodeTestCase(46, Segment5, Text5, Modules46, Ecc.High, 1, 40, true, Ecc.High, 15, 1),
+            new QrCodeTestCase(47, Segment5, Text5, Modules47, Ecc.High, 18, 18, false, Ecc.High, 18, 2),
+            new QrCodeTestCase(48, Segment6, Text6, Modules48, Ecc.Low, 1, 40, true, Ecc.Quartile, 2, 0),
+            new QrCodeTestCase(49, Segment6, Text6, Modules49, Ecc.Low, 5, 5, false, Ecc.Low, 5, 4),
+            new QrCodeTestCase(50, Segment6, Text6, Modules50, Ecc.Medium, 1, 40, true, Ecc.Quartile, 2, 0),
+            new QrCodeTestCase(51, Segment6, Text6, Modules51, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 6),
+            new QrCodeTestCase(52, Segment6, Text6, Modules52, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 2, 0),
+            new QrCodeTestCase(53, Segment6, Text6, Modules53, Ecc.Quartile, 5, 5, false, Ecc.Quartile, 5, 1),
+            new QrCodeTestCase(54, Segment6, Text6, Modules54, Ecc.High, 1, 40, true, Ecc.High, 3, 1),
+            new QrCodeTestCase(55, Segment6, Text6, Modules55, Ecc.High, 6, 6, false, Ecc.High, 6, 4),
+            new QrCodeTestCase(56, Segment7, Text7, Modules56, Ecc.Low, 1, 40, true, Ecc.Medium, 3, 1),
+            new QrCodeTestCase(57, Segment7, Text7, Modules57, Ecc.Low, 6, 6, false, Ecc.Low, 6, 4),
+            new QrCodeTestCase(58, Segment7, Text7, Modules58, Ecc.Medium, 1, 40, true, Ecc.Medium, 3, 1),
+            new QrCodeTestCase(59, Segment7, Text7, Modules59, Ecc.Medium, 6, 6, false, Ecc.Medium, 6, 6),
+            new QrCodeTestCase(60, Segment7, Text7, Modules60, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 4, 0),
+            new QrCodeTestCase(61, Segment7, Text7, Modules61, Ecc.Quartile, 7, 7, false, Ecc.Quartile, 7, 4),
+            new QrCodeTestCase(62, Segment7, Text7, Modules62, Ecc.High, 1, 40, true, Ecc.High, 5, 3),
+            new QrCodeTestCase(63, Segment7, Text7, Modules63, Ecc.High, 8, 8, false, Ecc.High, 8, 0),
+            new QrCodeTestCase(64, Segment8, Text8, Modules64, Ecc.Low, 1, 40, true, Ecc.Medium, 3, 3),
+            new QrCodeTestCase(65, Segment8, Text8, Modules65, Ecc.Low, 6, 6, false, Ecc.Low, 6, 4),
+            new QrCodeTestCase(66, Segment8, Text8, Modules66, Ecc.Medium, 1, 40, true, Ecc.Medium, 3, 3),
+            new QrCodeTestCase(67, Segment8, Text8, Modules67, Ecc.Medium, 6, 6, false, Ecc.Medium, 6, 2),
+            new QrCodeTestCase(68, Segment8, Text8, Modules68, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 4, 4),
+            new QrCodeTestCase(69, Segment8, Text8, Modules69, Ecc.Quartile, 7, 7, false, Ecc.Quartile, 7, 4),
+            new QrCodeTestCase(70, Segment8, Text8, Modules70, Ecc.High, 1, 40, true, Ecc.High, 5, 6),
+            new QrCodeTestCase(71, Segment8, Text8, Modules71, Ecc.High, 8, 8, false, Ecc.High, 8, 0),
+            new QrCodeTestCase(72, Segment9, Text9, Modules72, Ecc.Low, 1, 40, true, Ecc.Low, 17, 2),
+            new QrCodeTestCase(73, Segment9, Text9, Modules73, Ecc.Low, 20, 20, false, Ecc.Low, 20, 2),
+            new QrCodeTestCase(74, Segment9, Text9, Modules74, Ecc.Medium, 1, 40, true, Ecc.Medium, 19, 2),
+            new QrCodeTestCase(75, Segment9, Text9, Modules75, Ecc.Medium, 22, 22, false, Ecc.Medium, 22, 4),
+            new QrCodeTestCase(76, Segment9, Text9, Modules76, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 23, 4),
+            new QrCodeTestCase(77, Segment9, Text9, Modules77, Ecc.Quartile, 26, 26, false, Ecc.Quartile, 26, 2),
+            new QrCodeTestCase(78, Segment9, Text9, Modules78, Ecc.High, 1, 40, true, Ecc.High, 26, 2),
+            new QrCodeTestCase(79, Segment9, Text9, Modules79, Ecc.High, 29, 29, false, Ecc.High, 29, 2),
+            new QrCodeTestCase(80, Segment10, Text10, Modules80, Ecc.Low, 1, 40, true, Ecc.Medium, 2, 3),
+            new QrCodeTestCase(81, Segment10, Text10, Modules81, Ecc.Low, 5, 5, false, Ecc.Low, 5, 1),
+            new QrCodeTestCase(82, Segment10, Text10, Modules82, Ecc.Medium, 1, 40, true, Ecc.Medium, 2, 3),
+            new QrCodeTestCase(83, Segment10, Text10, Modules83, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 6),
+            new QrCodeTestCase(84, Segment10, Text10, Modules84, Ecc.Quartile, 1, 40, true, Ecc.High, 3, 3),
+            new QrCodeTestCase(85, Segment10, Text10, Modules85, Ecc.Quartile, 6, 6, false, Ecc.Quartile, 6, 4),
+            new QrCodeTestCase(86, Segment10, Text10, Modules86, Ecc.High, 1, 40, true, Ecc.High, 3, 3),
+            new QrCodeTestCase(87, Segment10, Text10, Modules87, Ecc.High, 6, 6, false, Ecc.High, 6, 2),
+            new QrCodeTestCase(88, Segment11, Text11, Modules88, Ecc.Low, 1, 40, true, Ecc.Low, 7, 6),
+            new QrCodeTestCase(89, Segment11, Text11, Modules89, Ecc.Low, 10, 10, false, Ecc.Low, 10, 6),
+            new QrCodeTestCase(90, Segment11, Text11, Modules90, Ecc.Medium, 1, 40, true, Ecc.Medium, 8, 6),
+            new QrCodeTestCase(91, Segment11, Text11, Modules91, Ecc.Medium, 11, 11, false, Ecc.Medium, 11, 2),
+            new QrCodeTestCase(92, Segment11, Text11, Modules92, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 10, 1),
+            new QrCodeTestCase(93, Segment11, Text11, Modules93, Ecc.Quartile, 13, 13, false, Ecc.Quartile, 13, 3),
+            new QrCodeTestCase(94, Segment11, Text11, Modules94, Ecc.High, 1, 40, true, Ecc.High, 12, 5),
+            new QrCodeTestCase(95, Segment11, Text11, Modules95, Ecc.High, 15, 15, false, Ecc.High, 15, 4),
+            new QrCodeTestCase(96, Segment12, Text12, Modules96, Ecc.Low, 1, 40, true, Ecc.Medium, 2, 1),
+            new QrCodeTestCase(97, Segment12, Text12, Modules97, Ecc.Low, 5, 5, false, Ecc.Low, 5, 1),
+            new QrCodeTestCase(98, Segment12, Text12, Modules98, Ecc.Medium, 1, 40, true, Ecc.Medium, 2, 1),
+            new QrCodeTestCase(99, Segment12, Text12, Modules99, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 4),
+            new QrCodeTestCase(100, Segment12, Text12, Modules100, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 3, 3),
+            new QrCodeTestCase(101, Segment12, Text12, Modules101, Ecc.Quartile, 6, 6, false, Ecc.Quartile, 6, 5),
+            new QrCodeTestCase(102, Segment12, Text12, Modules102, Ecc.High, 1, 40, true, Ecc.High, 4, 7),
+            new QrCodeTestCase(103, Segment12, Text12, Modules103, Ecc.High, 6, 6, false, Ecc.High, 6, 3),
+            new QrCodeTestCase(104, Segment13, Text13, Modules104, Ecc.Low, 1, 40, true, Ecc.Quartile, 2, 0),
+            new QrCodeTestCase(105, Segment13, Text13, Modules105, Ecc.Low, 5, 5, false, Ecc.Low, 5, 1),
+            new QrCodeTestCase(106, Segment13, Text13, Modules106, Ecc.Medium, 1, 40, true, Ecc.Quartile, 2, 0),
+            new QrCodeTestCase(107, Segment13, Text13, Modules107, Ecc.Medium, 5, 5, false, Ecc.Medium, 5, 4),
+            new QrCodeTestCase(108, Segment13, Text13, Modules108, Ecc.Quartile, 1, 40, true, Ecc.Quartile, 2, 0),
+            new QrCodeTestCase(109, Segment13, Text13, Modules109, Ecc.Quartile, 5, 5, false, Ecc.Quartile, 5, 1),
+            new QrCodeTestCase(110, Segment13, Text13, Modules110, Ecc.High, 1, 40, true, Ecc.High, 3, 2),
+            new QrCodeTestCase(111, Segment13, Text13, Modules111, Ecc.High, 6, 6, false, Ecc.High, 6, 2),
         };
 
         public IEnumerator<object[]> GetEnumerator()
@@ -5158,6 +5185,24 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Segment13
         };
 
+        internal static readonly string[] AllTexts = new string[]
+        {
+            Text0,
+            Text1,
+            Text2,
+            Text3,
+            Text4,
+            Text5,
+            Text6,
+            Text7,
+            Text8,
+            Text9,
+            Text10,
+            Text11,
+            Text12,
+            Text13
+        };
+
         internal static void WriteSourceCode()
         {
             using (var writer = new StreamWriter("Snippet.txt"))
@@ -5188,7 +5233,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                     var boostEcl = testCase.BoostEcl ? "true" : "false";
                     var qrCode = QrCode.EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
                     writer.WriteLine(
-                        $"            new QrCodeTestCase({i}, Segment{segmentIndex}, Modules{i}, Ecc.{testCase.RequestedEcc.ToString()}, {testCase.MinVersion}, {testCase.MaxVersion}, {boostEcl}, Ecc.{qrCode.ErrorCorrectionLevel.ToString()}, {qrCode.Version}, {qrCode.Mask}),");
+                        $"            new QrCodeTestCase({i}, Segment{segmentIndex}, Text{segmentIndex}, Modules{i}, Ecc.{testCase.RequestedEcc.ToString()}, {testCase.MinVersion}, {testCase.MaxVersion}, {boostEcl}, Ecc.{qrCode.ErrorCorrectionLevel.ToString()}, {qrCode.Version}, {qrCode.Mask}),");
                 }
                 writer.WriteLine("        };");
             }

@@ -14,6 +14,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
     {
         public QrCodeTestCase(int index,
         List<DataSegment> segments,
+        string expectedText,
         string[] expectedModules,
         Ecc requestedEcc,
         int minVersion,
@@ -25,6 +26,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             Index = index;
             Segments = segments;
+            ExpectedText = expectedText;
             ExpectedModules = expectedModules;
             RequestedEcc = requestedEcc;
             MinVersion = minVersion;
@@ -37,6 +39,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
         public int Index { get; }
         public List<DataSegment> Segments { get; }
+        public string ExpectedText { get; }
         public string[] ExpectedModules { get; }
         public Ecc RequestedEcc { get; }
         public int MinVersion { get; }
