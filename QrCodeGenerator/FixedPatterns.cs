@@ -42,16 +42,16 @@ namespace Net.Codecrete.QrCodeGenerator
         // inverted reserved mask (the modules the payload zig-zag may fill). Both are
         // computed by a single BuildFixedPatterns walk and cached together.
         // The cached instances are shared and must not be mutated (CreateWithFixedPatterns
-        // hands out a Copy; GetDataMask's result is treated as read-only by callers).
-        private static readonly ConcurrentDictionary<int, (BitMatrix Drawn, BitMatrix DataMask)> Cache
+        // hands out a Copy; GetPayloadAreaMap's result is treated as read-only by callers).
+        private static readonly ConcurrentDictionary<int, (BitMatrix Drawn, BitMatrix PayloadAreaMap)> Cache
             = new ConcurrentDictionary<int, (BitMatrix, BitMatrix)>();
 
-        private static (BitMatrix Drawn, BitMatrix DataMask) GetCached(int version)
+        private static (BitMatrix Drawn, BitMatrix PayloadAreaMap) GetCached(int version)
         {
             return Cache.GetOrAdd(version, ComputeCached);
         }
 
-        private static (BitMatrix Drawn, BitMatrix DataMask) ComputeCached(int version)
+        private static (BitMatrix Drawn, BitMatrix PayloadAreaMap) ComputeCached(int version)
         {
             var (drawn, reserved) = BuildFixedPatterns(version);
             // Turn the reserved mask into the payload-area map (where data goes).
@@ -84,9 +84,9 @@ namespace Net.Codecrete.QrCodeGenerator
         /// </summary>
         /// <param name="version">The QR code version.</param>
         /// <returns>A shared <see cref="BitMatrix"/> instance.</returns>
-        internal static BitMatrix GetDataMask(int version)
+        internal static BitMatrix GetPayloadAreaMap(int version)
         {
-            return GetCached(version).DataMask;
+            return GetCached(version).PayloadAreaMap;
         }
 
         #endregion

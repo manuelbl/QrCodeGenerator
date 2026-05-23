@@ -26,7 +26,7 @@ The union of all fixed-pattern footprints — every module the payload must not 
 
 **Payload-area map**:
 The complement of the reserved modules: the modules the payload zig-zag is allowed
-to fill. This is what `GetDataMask` returns.
+to fill. This is what `GetPayloadAreaMap` returns.
 _Avoid_: "data mask" — see Flagged ambiguities.
 
 **Mask pattern**:
@@ -52,11 +52,3 @@ lowest penalty score. Exposed as `QrCode.Mask`.
 > emits both: it stamps the dark **modules** and reserves the **footprint** in the same
 > place. You can't infer reserved from drawn, because a footprint reserves light modules
 > too."
-
-## Flagged ambiguities
-
-- **"data mask"** was used for two distinct things: (1) the **payload-area map**
-  returned by `GetDataMask` / `DataMaskCache`, and (2) a **mask pattern** (the 8 XOR
-  patterns), as in `GetDataMaskPattern`. Resolved: prefer **payload-area map** for (1)
-  and **mask pattern** for (2). The existing `GetDataMask` method name is retained for
-  compatibility but denotes the payload-area map.

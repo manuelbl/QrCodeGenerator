@@ -296,7 +296,7 @@ namespace Net.Codecrete.QrCodeGenerator
         [SuppressMessage("csharpsquid", "S127")]
         internal static void FillPayload(BitMatrix modules, byte[] codewords, int version)
         {
-            var dataMask = FixedPatterns.GetDataMask(version);
+            var payloadArea = FixedPatterns.GetPayloadAreaMap(version);
 
             // zigzag up and down with a 2-wide stride, starting in the right bottom corner
             var size = modules.Size;
@@ -322,7 +322,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     // alternate between the 2 columns
                     for (var x = h; x > h - 2; x -= 1)
                     {
-                        if (!dataMask.Get(x, y))
+                        if (!payloadArea.Get(x, y))
                         {
                             // skip modules not intended for payload
                             continue;
@@ -358,7 +358,7 @@ namespace Net.Codecrete.QrCodeGenerator
         private static BitMatrix CreateDataMaskPattern((int patternIndex, int version) key)
         {
             var pattern = CreatePattern(key.patternIndex, key.version);
-            pattern.And(FixedPatterns.GetDataMask(key.version));
+            pattern.And(FixedPatterns.GetPayloadAreaMap(key.version));
             return pattern;
         }
 

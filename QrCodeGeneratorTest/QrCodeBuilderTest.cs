@@ -176,15 +176,15 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             var modules = FixedPatterns.CreateWithFixedPatterns(version);
-            var dataMask = FixedPatterns.GetDataMask(version);
+            var payloadArea = FixedPatterns.GetPayloadAreaMap(version);
             var size = modules.Size;
-            Assert.Equal(0, CountDarkDataModules(modules, dataMask));
+            Assert.Equal(0, CountDarkDataModules(modules, payloadArea));
 
             QrCodeBuilder.FillPayload(modules, codewords, version);
 
-            var darkModules = CountDarkDataModules(modules, dataMask);
+            var darkModules = CountDarkDataModules(modules, payloadArea);
             Assert.Equal(codewords.Length * 8, darkModules);
-            var lightModules = CountLightDataModules(modules, dataMask);
+            var lightModules = CountLightDataModules(modules, payloadArea);
             Assert.InRange(lightModules, 0, 7);
 
             // assert that all light modules are near the bottom left corner
@@ -196,7 +196,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 {
                     for (var y = size - 12 - versionInfoOffset; y < size - 8 - versionInfoOffset; y += 1)
                     {
-                        if (!modules.Get(x, y) && dataMask.Get(x, y))
+                        if (!modules.Get(x, y) && payloadArea.Get(x, y))
                         {
                             count += 1;
                         }
@@ -321,7 +321,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
         }
 
-        private static int CountDarkDataModules(BitMatrix modules, BitMatrix dataMask)
+        private static int CountDarkDataModules(BitMatrix modules, BitMatrix payloadArea)
         {
             var sum = 0;
             var size = modules.Size;
@@ -329,7 +329,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             {
                 for (var y = 0; y < size; y += 1)
                 {
-                    if (modules.Get(x, y) && dataMask.Get(x, y))
+                    if (modules.Get(x, y) && payloadArea.Get(x, y))
                     {
                         sum += 1;
                     }
@@ -338,7 +338,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             return sum;
         }
 
-        private static int CountLightDataModules(BitMatrix modules, BitMatrix dataMask)
+        private static int CountLightDataModules(BitMatrix modules, BitMatrix payloadArea)
         {
             var sum = 0;
             var size = modules.Size;
@@ -346,7 +346,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             {
                 for (var y = 0; y < size; y += 1)
                 {
-                    if (!modules.Get(x, y) && dataMask.Get(x, y))
+                    if (!modules.Get(x, y) && payloadArea.Get(x, y))
                     {
                         sum += 1;
                     }
