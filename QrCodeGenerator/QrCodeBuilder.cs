@@ -17,8 +17,6 @@ namespace Net.Codecrete.QrCodeGenerator
     {
         #region Caches
 
-        private static readonly ConcurrentDictionary<int, BitMatrix> FixedPatternsCache = new ConcurrentDictionary<int, BitMatrix>();
-        private static readonly ConcurrentDictionary<int, BitMatrix> DataMaskCache = new ConcurrentDictionary<int, BitMatrix>();
         private static readonly ConcurrentDictionary<(int, int), BitMatrix> DataMaskPatternCache = new ConcurrentDictionary<(int, int), BitMatrix>();
         private static readonly ConcurrentDictionary<(int, int), BitMatrix> DataMaskPatternTransposedCache = new ConcurrentDictionary<(int, int), BitMatrix>();
 
@@ -44,7 +42,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static QrCode Build(byte[] codewords, int ecc, int version, EncodingInfo encodingInfo)
         {
-            var modules = CreateWithFixedPatterns(version);
+            var modules = FixedPatterns.CreateWithFixedPatterns(version);
             FillPayload(modules, codewords, version);
             var pattern = ApplyBestPattern(modules, version, ecc, encodingInfo);
             return new QrCode(modules, (QrCode.Ecc)ecc, pattern);
@@ -211,249 +209,7 @@ namespace Net.Codecrete.QrCodeGenerator
         
         #endregion
         
-        #region Fixed Patterns
-
-        internal static BitMatrix CreateProtectedModules(int version)
-        {
-            var size = GetSize(version);
-            var protectedModules = new BitMatrix(size);
-
-            // Single asymmetric modules module
-            protectedModules.Set(8, size - 8, true);
-
-            // Protect the area for the format information
-            ProtectFormatBits(protectedModules);
-
-            // Draw the version information
-            ProtectVersionInformation(protectedModules, version);
-
-            // Draw the three finder patterns and adjacent separators
-            // top left
-            protectedModules.FillRect(0, 0, 8, 8);
-
-            // top right
-            protectedModules.FillRect(size - 8, 0, 8, 8);
-
-            // bottom left
-            protectedModules.FillRect(0, size - 8, 8, 8);
-
-            // Timing patterns
-            protectedModules.FillRect(8, 6, size - 16, 1);
-            protectedModules.FillRect(6, 8, 1, size - 16);
-
-            // Alignment patterns
-            ProtectAlignmentPatterns(protectedModules, version);
-            
-            return protectedModules;
-        }
-
-        /// <summary>
-        /// Create a <see cref="BitMatrix"/> instance for the given version
-        /// with the fixed patterns (finder, timing etc.) already drawn.
-        /// </summary>
-        /// <param name="version">The QR code version.</param>
-        /// <returns>A new <see cref="BitMatrix"/> instance.</returns>
-        internal static BitMatrix CreateWithFixedPatterns(int version)
-        {
-            return FixedPatternsCache.GetOrAdd(version, ComputeFixedPatterns).Copy();
-        }
-
-        private static BitMatrix ComputeFixedPatterns(int version)
-        {
-            var size = GetSize(version);
-            var modules = new BitMatrix(size);
-
-            // Single asymmetric modules module
-            modules.Set(8, size - 8, true);
-
-            // Draw the version information
-            DrawVersionInformation(modules, version);
-
-            // Draw the three finder patterns and adjacent separators
-            // top left
-            DrawFinderPattern(modules, 0, 0);
-
-            // top right
-            DrawFinderPattern(modules, size - 7, 0);
-
-            // bottom left
-            DrawFinderPattern(modules, 0, size - 7);
-
-            // Timing patterns
-            DrawTimingPattern(modules);
-
-            // Alignment patterns
-            DrawAlignmentPatterns(modules, version);
-            
-            return modules;
-        }
-
-        private static void DrawFinderPattern(BitMatrix modules, int x, int y)
-        {
-            for (var i = 0; i < 7; i += 1)
-            {
-                modules.Set(x + i, y,     true);
-                modules.Set(x + i, y + 6, true);
-            }
-
-            for (var i = 1; i < 6; i += 1)
-            {
-                modules.Set(x,     y + i, true);
-                modules.Set(x + 1, y + i, false);
-                modules.Set(x + 5, y + i, false);
-                modules.Set(x + 6, y + i, true);
-            }
-
-            for (var i = 2; i < 5; i += 1)
-            {
-                modules.Set(x + i, y + 1, false);
-                modules.Set(x + i, y + 5, false);
-            }
-
-            for (var i = 2; i < 5; i += 1)
-            {
-                modules.Set(x + i, y + 2, true);
-                modules.Set(x + i, y + 3, true);
-                modules.Set(x + i, y + 4, true);
-            }
-        }
-
-        private static void ProtectAlignmentPatterns(BitMatrix protectedModules, int version)
-        {
-            if (version == 1)
-            {
-                // no alignment patterns in version 1
-                return;
-            }
-
-            var positions = GetAlignmentPatternPosition(version);
-            var numPositions = positions.Length;
-
-            for (var x = 0; x < numPositions; x += 1)
-            {
-                for (var y = 0; y < numPositions; y += 1)
-                {
-                    if ((x == 0 && y == 0) || (x == numPositions - 1 && y == 0) || (x == 0 && y == numPositions - 1))
-                    {
-                        // no alignment patterns near the 3 finder patterns
-                        continue;
-                    }
-
-                    protectedModules.FillRect(positions[x] - 2, positions[y] - 2, 5, 5);
-                }
-            }
-        }
-
-        private static void DrawAlignmentPatterns(BitMatrix modules, int version)
-        {
-            if (version == 1)
-            {
-                // no alignment patterns in version 1
-                return;
-            }
-
-            var positions = GetAlignmentPatternPosition(version);
-            var numPositions = positions.Length;
-
-            for (var x = 0; x < numPositions; x += 1)
-            {
-                for (var y = 0; y < numPositions; y += 1)
-                {
-                    if ((x == 0 && y == 0) || (x == numPositions - 1 && y == 0) || (x == 0 && y == numPositions - 1))
-                    {
-                        // no alignment patterns near the 3 finder patterns
-                        continue;
-                    }
-
-                    DrawAlignmentPattern(modules, positions[x], positions[y]);
-                }
-            }
-        }
-
-        private static void DrawAlignmentPattern(BitMatrix modules, int x, int y)
-        {
-            for (var i = -2; i <= 2; i += 1)
-            {
-                modules.Set(x + i, y - 2, true);
-                modules.Set(x + i, y + 2, true);
-            }
-
-            for (var i = -1; i <= 1; i += 1)
-            {
-                modules.Set(x - 2, y + i, true);
-                modules.Set(x + 2, y + i, true);
-            }
-
-            modules.Set(x, y, true);
-        }
-
-        private static void DrawTimingPattern(BitMatrix modules)
-        {
-            var size = modules.Size;
-            for (var x = 8; x < size - 8; x += 1)
-            {
-                var isDark = ((x + 1) & 1) != 0;
-                modules.Set(x, 6, isDark);
-                modules.Set(6, x, isDark);
-            }
-        }
-
-        #endregion
-
-        #region Version information
-
-        private static void ProtectVersionInformation(BitMatrix protectedModules, int version)
-        {
-            if (version < 7)
-            {
-                // no version information for versions 1-6
-                return;
-            }
-
-            var size = protectedModules.Size;
-            // left bottom corner
-            protectedModules.FillRect(0, size - 11, 6, 3);
-
-            // top right corner
-            protectedModules.FillRect(size - 11, 0, 3, 6);
-        }
-
-        private static void DrawVersionInformation(BitMatrix modules, int version)
-        {
-            if (version < 7)
-            {
-                // no version information for versions 1-6
-                return;
-            }
-
-            var size = modules.Size;
-            var bits = GetVersionInformationBits(version);
-
-            for (var bit = 0; bit < 18; bit += 1)
-            {
-                var isDark = (bits & (1 << bit)) != 0;
-                var x = bit / 3;
-                var y = bit % 3;
-
-                // left bottom corner
-                modules.Set(x, size - 11 + y, isDark);
-
-                // top right corner
-                modules.Set(size - 11 + y, x, isDark);
-            }
-        }
-
-        #endregion
-
         #region Format information
-
-        private static void ProtectFormatBits(BitMatrix protectedModules)
-        {
-            protectedModules.FillRect(8, 0, 1, 9);
-            protectedModules.FillRect(0, 8, 8, 1);
-            protectedModules.FillRect(protectedModules.Size - 8, 8, 8, 1);
-            protectedModules.FillRect(8, protectedModules.Size - 7, 1, 7);
-        }
 
         internal static void DrawFormatInformation(BitMatrix modules, int ecc, int pattern)
         {
@@ -540,7 +296,7 @@ namespace Net.Codecrete.QrCodeGenerator
         [SuppressMessage("csharpsquid", "S127")]
         internal static void FillPayload(BitMatrix modules, byte[] codewords, int version)
         {
-            var dataMask = GetDataMask(version);
+            var dataMask = FixedPatterns.GetDataMask(version);
 
             // zigzag up and down with a 2-wide stride, starting in the right bottom corner
             var size = modules.Size;
@@ -602,7 +358,7 @@ namespace Net.Codecrete.QrCodeGenerator
         private static BitMatrix CreateDataMaskPattern((int patternIndex, int version) key)
         {
             var pattern = CreatePattern(key.patternIndex, key.version);
-            pattern.And(GetDataMask(key.version));
+            pattern.And(FixedPatterns.GetDataMask(key.version));
             return pattern;
         }
 
@@ -625,27 +381,6 @@ namespace Net.Codecrete.QrCodeGenerator
             var pattern = GetDataMaskPattern(key.patternIndex, key.version).Copy();
             pattern.Transpose();
             return pattern;
-        }
-
-        /// <summary>
-        /// Returns a <see cref="BitMatrix"/> for the specified version
-        /// with all bits set where payload data goes.
-        /// <para>
-        /// The returned matrix is shared and cached. Callers must not mutate it.
-        /// </para>
-        /// </summary>
-        /// <param name="version">The QR code version.</param>
-        /// <returns>A shared BitMatrix instance.</returns>
-        internal static BitMatrix GetDataMask(int version)
-        {
-            return DataMaskCache.GetOrAdd(version, CreateDataMask);
-        }
-
-        private static BitMatrix CreateDataMask(int version)
-        {
-            var modules = CreateProtectedModules(version);
-            modules.Invert();
-            return modules;
         }
 
         /// <summary>

@@ -138,13 +138,30 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Theory, CombinatorialData]
         public void DrawFixedPatterns([CombinatorialRange(1, 40)] int version)
         {
-            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
-            var protectedModules = QrCodeBuilder.CreateProtectedModules(version);
+            var (drawn, reserved) = FixedPatterns.BuildFixedPatterns(version);
 
-            AssertMirrored(modules);
-            AssertMirrored(protectedModules);
+            AssertMirrored(drawn);
+            AssertMirrored(reserved);
 
-            AssertFixedPatterns(modules);
+            AssertFixedPatterns(drawn);
+
+            // every dark fixed module must lie within the reserved mask (drawn AND NOT reserved == 0)
+            AssertDrawnWithinReserved(drawn, reserved);
+        }
+
+        private static void AssertDrawnWithinReserved(BitMatrix drawn, BitMatrix reserved)
+        {
+            var size = drawn.Size;
+            for (var y = 0; y < size; y += 1)
+            {
+                for (var x = 0; x < size; x += 1)
+                {
+                    if (drawn.Get(x, y))
+                    {
+                        Assert.True(reserved.Get(x, y), $"drawn but not reserved ({x},{y})");
+                    }
+                }
+            }
         }
 
         [Theory, CombinatorialData]
@@ -158,8 +175,8 @@ namespace Net.Codecrete.QrCodeGenerator.Test
                 codewords[i] = 0xff;
             }
 
-            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
-            var dataMask = QrCodeBuilder.GetDataMask(version);
+            var modules = FixedPatterns.CreateWithFixedPatterns(version);
+            var dataMask = FixedPatterns.GetDataMask(version);
             var size = modules.Size;
             Assert.Equal(0, CountDarkDataModules(modules, dataMask));
 
@@ -341,7 +358,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Theory, CombinatorialData]
         public void DrawVersionInformation([CombinatorialRange(7, 40, 1)] int version)
         {
-            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
+            var modules = FixedPatterns.CreateWithFixedPatterns(version);
             var size = modules.Size;
             var expected = QrCodeBuilder.GetVersionInformationBits(version);
 
@@ -394,7 +411,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             [CombinatorialRange(0, 3, 1)] int ecc,
             [CombinatorialRange(0, 7, 1)] int pattern)
         {
-            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
+            var modules = FixedPatterns.CreateWithFixedPatterns(version);
             QrCodeBuilder.DrawFormatInformation(modules, ecc, pattern);
 
             var expected = QrCodeBuilder.GetFormatInformationBits(ecc, pattern);
@@ -408,7 +425,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             [CombinatorialRange(0, 3, 1)] int ecc,
             [CombinatorialRange(0, 7, 1)] int pattern)
         {
-            var modules = QrCodeBuilder.CreateWithFixedPatterns(version);
+            var modules = FixedPatterns.CreateWithFixedPatterns(version);
             var transposed = modules.Copy();
             transposed.Transpose();
             
