@@ -67,7 +67,7 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             var structuredAppendLength = new DataSegmentStructuredAppend(1, 10, 0).GetTotalLength(40);
             var eciLength = !eci.Equals(ECI.None) ? new DataSegmentEci(eci).GetTotalLength(40) : 0;
-            var dataCapacity = QrCodeBuilder.GetCodewordDataCapacity(version, (int)ecl) * 8
+            var dataCapacity = QrCodeParameters.GetCodewordDataCapacity(version, (int)ecl) * 8
                                - structuredAppendLength - eciLength;
 
             var result = Split(data, version, dataCapacity, isUtf8);

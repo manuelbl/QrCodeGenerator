@@ -31,7 +31,7 @@ namespace Net.Codecrete.QrCodeGenerator
     /// <para>
     /// The format information is reserve-only here; its bits depend on the error
     /// correction level and the chosen mask pattern and are drawn later by
-    /// <see cref="QrCodeBuilder.DrawFormatInformation(BitMatrix, int, int)"/>.
+    /// <see cref="MatrixEncoder.DrawFormatInformation(BitMatrix, int, int)"/>.
     /// </para>
     /// </summary>
     internal static class FixedPatterns
@@ -110,7 +110,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>The drawn modules and the reserved-module mask.</returns>
         internal static (BitMatrix Drawn, BitMatrix Reserved) BuildFixedPatterns(int version)
         {
-            var size = QrCodeBuilder.GetSize(version);
+            var size = QrCodeParameters.GetSize(version);
             var drawn = new BitMatrix(size);
             var reserved = new BitMatrix(size);
 
@@ -190,7 +190,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return;
             }
 
-            var positions = QrCodeBuilder.GetAlignmentPatternPosition(version);
+            var positions = QrCodeParameters.GetAlignmentPatternPosition(version);
             var numPositions = positions.Length;
 
             for (var x = 0; x < numPositions; x += 1)
@@ -270,7 +270,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             var size = modules.Size;
-            var bits = QrCodeBuilder.GetVersionInformationBits(version);
+            var bits = QrCodeParameters.GetVersionInformationBits(version);
 
             for (var bit = 0; bit < 18; bit += 1)
             {

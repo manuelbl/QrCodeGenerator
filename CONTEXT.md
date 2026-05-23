@@ -33,8 +33,16 @@ _Avoid_: "data mask" — see Flagged ambiguities.
 One of the 8 XOR patterns (index 0–7) applied to the payload area and chosen by
 lowest penalty score. Exposed as `QrCode.Mask`.
 
+**Codewords**:
+The 8-bit symbols the payload becomes after a version and error correction level are
+chosen: data codewords (segment bits + terminator + padding) followed by Reed-Solomon
+error correction codewords, interleaved per spec, ready to fill into the matrix.
+
 ## Relationships
 
+- The encode pipeline is: text → data segments → **codewords** → **module** matrix.
+  A **version**/error-correction level is planned first, then the **codewords** are
+  built, then filled into the matrix and a **mask pattern** is chosen.
 - A **version** (1–40) fully determines the **fixed patterns** and therefore the
   **reserved modules** and the **payload-area map**.
 - The **reserved modules** are the union of every fixed-pattern **footprint**;

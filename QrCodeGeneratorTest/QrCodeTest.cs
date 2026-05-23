@@ -60,7 +60,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             }
 
             var qrCode = EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
-            var expectedBytes = QrCodeBuilder.BuildCodewords(testCase.Segments, qrCode.Version, (int)qrCode.ErrorCorrectionLevel);
+            var expectedBytes = Codewords.BuildData(testCase.Segments, qrCode.Version, (int)qrCode.ErrorCorrectionLevel);
 
             var bits = ToZXingBitMatrix(qrCode);
             var result = new ZXingDecoder().decode(bits, null);

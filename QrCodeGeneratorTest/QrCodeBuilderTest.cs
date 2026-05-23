@@ -40,7 +40,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
             var minVersion = initialVersion == -1 ? 1 : initialVersion;
             var maxVersion = initialVersion == -1 ? 40 : initialVersion;
-            var (version, ecc) = QrCodeBuilder.FindVersionAndEcc(segments, initialEcc, minVersion, maxVersion, improveEcc);
+            var (version, ecc) = VersionPlanner.Plan(segments, initialEcc, minVersion, maxVersion, improveEcc);
             Assert.Equal(resultingVersion, version);
             Assert.Equal(resultingEcc, ecc);
         }
@@ -49,12 +49,12 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void FindVersionBoundaries([CombinatorialRange(1, 40)] int version, [CombinatorialRange(0, 3)] int ecc)
         {
             var segments = MakeAlphaNumSegments(QrCodeCapacity.GetAlphanumericCapacity(version, ecc));
-            var (resultingVersion, resultingEcc) = QrCodeBuilder.FindVersionAndEcc(segments, ecc);
+            var (resultingVersion, resultingEcc) = VersionPlanner.Plan(segments, ecc);
             Assert.Equal(version, resultingVersion);
             Assert.Equal(ecc, resultingEcc);
 
             segments = MakeAlphaNumSegments(QrCodeCapacity.GetAlphanumericCapacity(version, ecc) + 1);
-            Assert.Throws<DataTooLongException>(() => QrCodeBuilder.FindVersionAndEcc(segments, ecc, version, version, false));
+            Assert.Throws<DataTooLongException>(() => VersionPlanner.Plan(segments, ecc, version, version, false));
         }
     
         [Theory]
@@ -63,7 +63,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void DataTooLongException(int textLength, int minVersion, int maxVersion)
         {
             var segments = MakeAlphaNumSegments(textLength);
-            var exception = Assert.Throws<DataTooLongException>(() => QrCodeBuilder.FindVersionAndEcc(segments, 1, minVersion, maxVersion));
+            var exception = Assert.Throws<DataTooLongException>(() => VersionPlanner.Plan(segments, 1, minVersion, maxVersion));
             if (minVersion == maxVersion)
             {
                 Assert.Contains($"version {maxVersion}", exception.Message);
@@ -78,7 +78,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             {
                 var textLength = QrCodeCapacity.GetAlphanumericCapacity(version, ecc) + i;
                 var segments = MakeAlphaNumSegments(textLength);
-                var codewords = QrCodeBuilder.BuildCodewords(segments, version, ecc);
+                var codewords = Codewords.BuildData(segments, version, ecc);
             
                 var expectedCodewords = (DataSegment.GetBitLength(segments, version) + 7) / 8;
                 var maxCodewords = QrCodeCapacity.GetNumDataCodewords(version, ecc);
@@ -103,7 +103,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             var textLength = QrCodeCapacity.GetAlphanumericCapacity(version, ecc);
             var segments = MakeAlphaNumSegments(textLength);
-            var codewords = QrCodeBuilder.BuildCodewords(segments, version, ecc);
+            var codewords = Codewords.BuildData(segments, version, ecc);
 
             var expectedCodewords = QrCodeCapacity.GetNumDataCodewords(version, ecc);
             Assert.Equal(expectedCodewords, codewords.Length);
@@ -114,9 +114,9 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             var textLength = QrCodeCapacity.GetAlphanumericCapacity(version, ecc);
             var segments = MakeAlphaNumSegments(textLength);
-            var codewords = QrCodeBuilder.BuildCodewords(segments, version, ecc);
+            var codewords = Codewords.BuildData(segments, version, ecc);
 
-            var result = QrCodeBuilder.AddErrorCorrection(codewords, version, ecc);
+            var result = Codewords.AddErrorCorrection(codewords, version, ecc);
 
             Assert.Equal(QrCodeCapacity.GetTotalCodewords(version), result.Length);
 
@@ -131,7 +131,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [InlineData(40, 177)]
         public void GetQrCodeSize(int version, int expectedSize)
         {
-            var actualSize = QrCodeBuilder.GetSize(version);
+            var actualSize = QrCodeParameters.GetSize(version);
             Assert.Equal(expectedSize, actualSize);
         }
 
@@ -168,7 +168,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void FillPayload([CombinatorialRange(1, 40)] int version)
         {
             // create the payload consisting of all dark modules
-            var numCodewords = QrCodeBuilder.GetCodewordCapacity(version);
+            var numCodewords = QrCodeParameters.GetCodewordCapacity(version);
             var codewords = new byte[numCodewords];
             for (var i = 0; i < numCodewords; i += 1)
             {
@@ -180,7 +180,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var size = modules.Size;
             Assert.Equal(0, CountDarkDataModules(modules, payloadArea));
 
-            QrCodeBuilder.FillPayload(modules, codewords, version);
+            MatrixEncoder.FillPayload(modules, codewords, version);
 
             var darkModules = CountDarkDataModules(modules, payloadArea);
             Assert.Equal(codewords.Length * 8, darkModules);
@@ -267,7 +267,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             if (version == 1)
                 return;
 
-            var positions = QrCodeBuilder.GetAlignmentPatternPosition(version);
+            var positions = QrCodeParameters.GetAlignmentPatternPosition(version);
             var numPositions = positions.Length;
 
             for (var xi = 0; xi < numPositions; xi += 1)
@@ -360,7 +360,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         {
             var modules = FixedPatterns.CreateWithFixedPatterns(version);
             var size = modules.Size;
-            var expected = QrCodeBuilder.GetVersionInformationBits(version);
+            var expected = QrCodeParameters.GetVersionInformationBits(version);
 
             var bottomLeft = 0;
             var topRight = 0;
@@ -385,7 +385,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Theory, CombinatorialData]
         public void GetVersionInformationBits([CombinatorialRange(7, 40, 1)] int version)
         {
-            var bits = QrCodeBuilder.GetVersionInformationBits(version);
+            var bits = QrCodeParameters.GetVersionInformationBits(version);
 
             // The upper 6 bits must equal the version number
             Assert.Equal(version, bits >> 12);
@@ -412,9 +412,9 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             [CombinatorialRange(0, 7, 1)] int pattern)
         {
             var modules = FixedPatterns.CreateWithFixedPatterns(version);
-            QrCodeBuilder.DrawFormatInformation(modules, ecc, pattern);
+            MatrixEncoder.DrawFormatInformation(modules, ecc, pattern);
 
-            var expected = QrCodeBuilder.GetFormatInformationBits(ecc, pattern);
+            var expected = QrCodeParameters.GetFormatInformationBits(ecc, pattern);
             Assert.Equal(expected, ExtractFormatInformationA(modules));
             Assert.Equal(expected, ExtractFormatInformationB(modules));
         }
@@ -429,11 +429,11 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var transposed = modules.Copy();
             transposed.Transpose();
             
-            QrCodeBuilder.DrawFormatInformation(modules, transposed, ecc, pattern);
+            MatrixEncoder.DrawFormatInformation(modules, transposed, ecc, pattern);
             
             transposed.Transpose();
             
-            var expected = QrCodeBuilder.GetFormatInformationBits(ecc, pattern);
+            var expected = QrCodeParameters.GetFormatInformationBits(ecc, pattern);
             Assert.Equal(expected, ExtractFormatInformationA(modules));
             Assert.Equal(expected, ExtractFormatInformationB(modules));
             Assert.Equal(expected, ExtractFormatInformationA(transposed));
@@ -485,13 +485,13 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             [CombinatorialRange(0, 3, 1)] int ecc,
             [CombinatorialRange(0, 7, 1)] int pattern)
         {
-            var bits = QrCodeBuilder.GetFormatInformationBits(ecc, pattern);
+            var bits = QrCodeParameters.GetFormatInformationBits(ecc, pattern);
 
             // Undo the XOR mask to recover the raw BCH(15,5) codeword
             var raw = bits ^ 0b101010000010010;
 
             // The 5 MSB data bits: 2 bits for ECC level + 3 bits for data mask pattern
-            var eccBits = QrCodeBuilder.GetErrorCorrectionLevelBits(ecc);
+            var eccBits = QrCodeParameters.GetErrorCorrectionLevelBits(ecc);
             Assert.Equal(eccBits, (raw >> 13) & 0x3);
             Assert.Equal(pattern, (raw >> 10) & 0x7);
 
@@ -512,7 +512,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         private static byte[] ExtractDataCodewords(byte[] codewordsWithEcc, int version, int ecc)
         {
             var numDataCodewords = QrCodeCapacity.GetNumDataCodewords(version, ecc);
-            var numBlocks = QrCodeBuilder.GetNumBlocks(version, ecc);
+            var numBlocks = QrCodeParameters.GetNumBlocks(version, ecc);
             var smallBlockDataLength = numDataCodewords / numBlocks;
             var numLargeBlocks = numDataCodewords % numBlocks;
             var numSmallBlocks = numBlocks - numLargeBlocks;

@@ -3,9 +3,12 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
+    <LangVersion>7.3</LangVersion>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
     <Version>3.0.0</Version>
+    <PackageVersion>3.0.0</PackageVersion>
+    <FileVersion>3.0.0.0</FileVersion>
     <Authors>Manuel Bleichenbacher</Authors>
     <Product>QR Code Generator for .NET</Product>
     <Description>QR Code Generator for .NET – simple, compact and with many examples.
@@ -39,11 +42,9 @@ Advanced features:
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
-    <FileVersion>2.0.1.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageVersion>3.0.0</PackageVersion>
     <!--PackageValidationBaselineVersion>3.0.0</PackageValidationBaselineVersion-->
     <Deterministic>True</Deterministic>
   </PropertyGroup>
