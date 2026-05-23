@@ -55,24 +55,24 @@
             <Border Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="Gray" BorderThickness="0,0,0,1" VerticalAlignment="Bottom"/>
             <Label Content="Horz. Streaks:" Grid.Row="7" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="{Binding Path=PenaltyDetails.HorizontalStreaks}" Grid.Row="7" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
+            <Label Content="{Binding Path=PenaltyInfo.HorizontalStreaks}" Grid.Row="7" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="HorizontalStreaks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
             <Label Content="Vert. Streaks:" Grid.Row="8" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="{Binding Path=PenaltyDetails.VerticalStreaks}" Grid.Row="8" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
+            <Label Content="{Binding Path=PenaltyInfo.VerticalStreaks}" Grid.Row="8" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="VerticalStreaks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
             <Label Content="Boxes:" Grid.Row="9" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="Blocks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="{Binding Path=PenaltyDetails.Blocks}" Grid.Row="9" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="Blocks"
+            <Label Content="{Binding Path=PenaltyInfo.Blocks}" Grid.Row="9" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="Blocks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
             <Label Content="Horz. Finder:" Grid.Row="10" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyDetails.HorizontalFinderPatterns}" Grid.Row="10" Grid.Column="1"/>
+            <Label Content="{Binding Path=PenaltyInfo.HorizontalFinderPatterns}" Grid.Row="10" Grid.Column="1"/>
             <Label Content="Vert. Finder:" Grid.Row="11" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyDetails.VerticalFinderPatterns}" Grid.Row="11" Grid.Column="1"/>
+            <Label Content="{Binding Path=PenaltyInfo.VerticalFinderPatterns}" Grid.Row="11" Grid.Column="1"/>
             <Label Content="Balance:" Grid.Row="12" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyDetails.ColorBalance}" Grid.Row="12" Grid.Column="1"/>
+            <Label Content="{Binding Path=PenaltyInfo.ColorBalance}" Grid.Row="12" Grid.Column="1"/>
             <Label Content="Total:" Grid.Row="13" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyDetails.Total}" Grid.Row="13" Grid.Column="1"/>
+            <Label Content="{Binding Path=PenaltyInfo.Total}" Grid.Row="13" Grid.Column="1"/>
         </Grid>
         <TextBox x:Name="QrCodeTextBox" Text="{Binding Path=Text, UpdateSourceTrigger=PropertyChanged}"
                  Grid.Row="1" Grid.ColumnSpan="2"

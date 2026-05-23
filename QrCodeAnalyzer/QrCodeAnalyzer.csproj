@@ -11,9 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="QrCodeGenerator">
-      <HintPath>..\QrCodeGenerator\bin\Debug\netstandard2.0\QrCodeGenerator.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.0.0" />
   </ItemGroup>
 
 </Project>

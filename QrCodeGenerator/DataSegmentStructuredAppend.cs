@@ -5,7 +5,7 @@ namespace Net.Codecrete.QrCodeGenerator
     /// <summary>
     /// Data segment for the structured append header.
     /// </summary>
-    public class DataSegmentStructuredAppend : DataSegment
+    internal class DataSegmentStructuredAppend : DataSegment
     {
         private const int StructuredAppendBitLength = 16;
         

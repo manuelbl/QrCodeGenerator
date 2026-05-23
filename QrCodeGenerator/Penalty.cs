@@ -61,8 +61,8 @@ namespace Net.Codecrete.QrCodeGenerator
             return sum + CalcColorBalance(modules);
         }
 
-#if DEBUG
-        internal static int CalculatePenaltyDebug(BitMatrix modules, BitMatrix transposed, ref QrCodeBuilder.PenaltyInfo penaltyInfo)
+        // Calculates the total penalty score, fully evaluating all contributions and collecting the details in penaltyInfo.
+        internal static int CalculatePenaltyFully(BitMatrix modules, BitMatrix transposed, ref PenaltyScore penaltyInfo)
         {
             penaltyInfo.Blocks = Calc2By2Blocks(modules);
             penaltyInfo.VerticalStreaks = CalcSameColor(transposed);
@@ -77,7 +77,6 @@ namespace Net.Codecrete.QrCodeGenerator
                 + penaltyInfo.ColorBalance;
             return penaltyInfo.Total;
         }
-#endif
 
         internal static int CalcSameColor(BitMatrix modules)
         {

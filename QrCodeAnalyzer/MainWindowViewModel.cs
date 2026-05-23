@@ -24,26 +24,23 @@ public sealed record SegmentRow(string Mode, string Content);
 
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
-    private readonly QrCodeBuilder.DebugInfo _debugInfo = new QrCodeBuilder.DebugInfo();
-
     private string _text = "QR code text";
     private int _borderWidth = 4;
     private QrCode.Ecc _errorCorrection = QrCode.Ecc.Medium;
     private bool fixedEcc = false;
     private int _dataMaskPattern = -1;
-    private QrCodeBuilder.PenaltyInfo _penaltyDetails;
+    private PenaltyScore _penaltyScore;
     private ImageSource? _qrCodeImage;
     private int _selectedDataMaskPattern = -1;
     private QrCode? _currentQrCode;
     private HighlightKind _highlight = HighlightKind.None;
-    private IReadOnlyList<SegmentRow> _dataSegments = Array.Empty<SegmentRow>();
+    private IReadOnlyList<SegmentRow> _dataSegments = [];
     private int _qrCodeVersion;
     private string _qrCodeSize = string.Empty;
     private QrCode.Ecc _selectedEcc;
 
     public MainWindowViewModel()
     {
-        QrCodeBuilder.DebugAccess = _debugInfo;
         ErrorCorrectionLevels =
         [
             new Tuple<string, QrCode.Ecc>("Low", QrCode.Ecc.Low),
@@ -143,12 +140,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    public QrCodeBuilder.PenaltyInfo PenaltyDetails
+    public PenaltyScore PenaltyInfo
     {
-        get => _penaltyDetails;
+        get => _penaltyScore;
         private set
         {
-            _penaltyDetails = value;
+            _penaltyScore = value;
             OnPropertyChanged();
         }
     }
@@ -226,16 +223,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private void UpdateQrCode()
     {
-        _debugInfo.ForcedDataMask = _dataMaskPattern;
-        var qrCode = QrCode.EncodeTextAdvanced(_text, _errorCorrection, boostEcl: !fixedEcc);
+        EncodingInfo encodingInfo = new()
+        {
+            ForcedDataMask = _dataMaskPattern
+        };
+        var qrCode = QrCode.EncodeTextAdvanced(_text, _errorCorrection, boostEcl: !fixedEcc, encodingInfo: encodingInfo);
         _currentQrCode = qrCode;
         SelectedDataMaskPattern = qrCode.Mask;
-        PenaltyDetails = _debugInfo.Penalties[qrCode.Mask];
+        PenaltyInfo = encodingInfo.Penalties[qrCode.Mask];
         QrCodeVersion = qrCode.Version;
         QrCodeSize = $"{qrCode.Size}×{qrCode.Size}";
         SelectedEcc = qrCode.ErrorCorrectionLevel;
-        DataSegments = _debugInfo.DataSegments?.Select(BuildSegmentRow).ToArray()
-            ?? (IReadOnlyList<SegmentRow>)Array.Empty<SegmentRow>();
+        DataSegments = encodingInfo.DataSegments?.Select(BuildSegmentRow).ToArray()
+            ?? (IReadOnlyList<SegmentRow>)[];
         RenderQrCodeImage();
     }
 
@@ -258,7 +258,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         return data.Array == null ? string.Empty : Encoding.ASCII.GetString(data.Array, data.Offset, data.Count);
     }
 
-    private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, throwOnInvalidBytes: true);
+    private static readonly UTF8Encoding StrictUtf8 = new(false, throwOnInvalidBytes: true);
 
     private static string FormatByteContent(ArraySegment<byte> data)
     {

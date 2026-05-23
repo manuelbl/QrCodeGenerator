@@ -13,12 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
-#if DEBUG
-    public
-#else
-    internal
-#endif
-    static class QrCodeBuilder
+    internal static class QrCodeBuilder
     {
         #region Caches
 
@@ -31,28 +26,27 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #region Build
 
-        internal static QrCode Build(List<DataSegment> dataSegments, int ecc, int minVersion = 1, int maxVersion = 40, bool boostEcc = true)
+        internal static QrCode Build(List<DataSegment> dataSegments, int ecc, int minVersion = 1, int maxVersion = 40, bool boostEcc = true, EncodingInfo encodingInfo = null)
         {
-#if DEBUG
-            if (DebugAccess != null)
+            if (encodingInfo != null)
             {
-                DebugAccess.DataSegments = dataSegments;
+                encodingInfo.DataSegments = dataSegments;
             }
-#endif
+
             var result = FindVersionAndEcc(dataSegments, ecc, minVersion, maxVersion, boostEcc);
             var version = result.Item1;
             ecc = result.Item2;
 
             var codewords = BuildCodewords(dataSegments, version, ecc);
             codewords = AddErrorCorrection(codewords, version, ecc);
-            return Build(codewords, ecc, version);
+            return Build(codewords, ecc, version, encodingInfo);
         }
 
-        private static QrCode Build(byte[] codewords, int ecc, int version)
+        private static QrCode Build(byte[] codewords, int ecc, int version, EncodingInfo encodingInfo)
         {
             var modules = CreateWithFixedPatterns(version);
             FillPayload(modules, codewords, version);
-            var pattern = ApplyBestPattern(modules, version, ecc);
+            var pattern = ApplyBestPattern(modules, version, ecc, encodingInfo);
             return new QrCode(modules, (QrCode.Ecc)ecc, pattern);
         }
 
@@ -697,7 +691,7 @@ namespace Net.Codecrete.QrCodeGenerator
         // "Mask Pattern Selection".
         private static readonly int[] PatternEvaluationOrder = { 2, 3, 7, 4, 6, 5, 0, 1 };
 
-        private static int ApplyBestPattern(BitMatrix modules, int version, int ecc)
+        private static int ApplyBestPattern(BitMatrix modules, int version, int ecc, EncodingInfo encodingInfo = null)
         {
             var transposed = modules.Copy();
             transposed.Transpose();
@@ -714,18 +708,14 @@ namespace Net.Codecrete.QrCodeGenerator
                 modules.Xor(mask);
                 transposed.Xor(maskT);
 
-#if DEBUG
                 int penalty;
-                if (DebugAccess != null) {
-                    penalty = Penalty.CalculatePenaltyDebug(modules, transposed, ref DebugAccess.Penalties[pattern]);
+                if (encodingInfo != null) {
+                    penalty = Penalty.CalculatePenaltyFully(modules, transposed, ref encodingInfo.Penalties[pattern]);
                 }
                 else
                 {
                     penalty = Penalty.CalculatePenalty(modules, transposed, lowestPenalty);
                 }
-#else
-                var penalty = Penalty.CalculatePenalty(modules, transposed, lowestPenalty);
-#endif
 
                 // undo pattern
                 modules.Xor(mask);
@@ -737,12 +727,10 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-#if DEBUG
-            if (DebugAccess != null && DebugAccess.ForcedDataMask >= 0)
+            if (encodingInfo != null && encodingInfo.ForcedDataMask >= 0)
             {
-                bestPattern = DebugAccess.ForcedDataMask;
+                bestPattern = encodingInfo.ForcedDataMask;
             }
-#endif
 
             DrawFormatInformation(modules, ecc, bestPattern);
             var bestMask = GetDataMaskPattern(bestPattern, version);
@@ -993,31 +981,5 @@ namespace Net.Codecrete.QrCodeGenerator
         };
 
         #endregion
-
-#if DEBUG
-        #region Debugging
-
-        public struct PenaltyInfo
-        {
-            public int HorizontalStreaks { get; set; }
-            public int VerticalStreaks { get; set; }
-            public int Blocks { get; set; }
-            public int HorizontalFinderPatterns { get; set; }
-            public int VerticalFinderPatterns { get; set; }
-            public int ColorBalance { get; set; }
-            public int Total { get; set; }
-        }
-
-        public class DebugInfo
-        {
-            public PenaltyInfo[] Penalties { get; } = new PenaltyInfo[8];
-            public int ForcedDataMask { get; set; } = -1;
-            public List<DataSegment> DataSegments { get; set; }
-        }
-
-        public static DebugInfo DebugAccess { get; set; }
-
-        #endregion
-#endif
     }
 }

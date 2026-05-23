@@ -126,6 +126,8 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="encoding">The character set encoding to use,
         /// or <c>null</c> if it should be derived from the ECI.</param>
         /// <param name="kanjiStrategy">Controls if Kanji mode is used for data segments.</param>
+        /// <param name="encodingInfo">If an instance is provided, it will be filled with information about the QR code encoding.
+        /// Collecting the encoding information will slow down the QR code generation.</param>
         /// <returns>A QR code instance representing the specified text.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentOutOfRangeException">1 &#x2264; minVersion &#x2264; maxVersion &#x2264; 40 is violated.</exception>
@@ -145,7 +147,8 @@ namespace Net.Codecrete.QrCodeGenerator
             int maxVersion = MaxVersion,
             ECI eci = null,
             Encoding encoding = null,
-            KanjiStrategy kanjiStrategy = KanjiStrategy.Automatic
+            KanjiStrategy kanjiStrategy = KanjiStrategy.Automatic,
+            EncodingInfo encodingInfo = null
         )
         {
             Objects.RequireNonNull(text, nameof(text));
@@ -153,7 +156,7 @@ namespace Net.Codecrete.QrCodeGenerator
             
             var segments = DataSegment.FromText(text, eci: eci, encoding: encoding,
                 version: maxVersion, kanjiStrategy: kanjiStrategy);
-            return QrCodeBuilder.Build(segments, (int) minimumEcl, minVersion, maxVersion, boostEcl);
+            return QrCodeBuilder.Build(segments, (int) minimumEcl, minVersion, maxVersion, boostEcl, encodingInfo);
         }
 
         /// <summary>
