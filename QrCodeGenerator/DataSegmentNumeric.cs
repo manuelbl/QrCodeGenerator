@@ -46,7 +46,8 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             var bytes = DataBytes;
             Debug.Assert(bytes.Array != null);
-            for (var i = 0; i < bytes.Count; )
+            var i = 0;
+            while (i < bytes.Count)
             {
                 // 3 characters are encoded into 10 bits
                 var n = Math.Min(bytes.Count - i, 3);

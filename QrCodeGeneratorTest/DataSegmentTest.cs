@@ -217,7 +217,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var segments = DataSegment.FromText(text, ECI.ShiftJIS);
             Assert.Equal(numSegments, segments.Count);
             Assert.Equal(DataSegmentMode.ECI, segments[0].Mode);
-            Assert.Equal(ECI.ShiftJIS, (segments[0] as DataSegmentEci)?.Designator);
+            Assert.Equal(ECI.ShiftJIS, (segments[0] as DataSegmentEci)?.EciDesignator);
             Assert.Contains(segments, segment => segment.Mode == DataSegmentMode.Kanji);
             var decodedText = DataSegment.GetText(segments);
             Assert.Equal(text, decodedText);
@@ -293,7 +293,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             segments = DataSegment.FromText(text);
             Assert.Equal(2, segments.Count);
             Assert.Equal(DataSegmentMode.ECI, segments[0].Mode);
-            Assert.Equal(ECI.UTF8, (segments[0] as DataSegmentEci)?.Designator);
+            Assert.Equal(ECI.UTF8, (segments[0] as DataSegmentEci)?.EciDesignator);
             Assert.Equal(DataSegmentMode.Binary, segments[1].Mode);
             Assert.Equal(text, DataSegment.GetText(segments));
         }
@@ -305,7 +305,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.IsType<DataSegmentEci>(segment);
             var eciSegment = segment as DataSegmentEci;
             Debug.Assert(eciSegment != null);
-            Assert.Equal(ECI.Latin9, eciSegment.Designator);
+            Assert.Equal(ECI.Latin9, eciSegment.EciDesignator);
         }
     
         [Fact]
@@ -315,9 +315,9 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.IsType<DataSegmentStructuredAppend>(segment);
             var structuredAppendSegment = segment as DataSegmentStructuredAppend;
             Debug.Assert(structuredAppendSegment != null);
-            Assert.Equal(1, structuredAppendSegment.Position);
-            Assert.Equal(8, structuredAppendSegment.Total);
-            Assert.Equal(0x3f, structuredAppendSegment.Parity);
+            Assert.Equal(1, structuredAppendSegment.StructuredAppendPosition);
+            Assert.Equal(8, structuredAppendSegment.StructuredAppendTotal);
+            Assert.Equal(0x3f, structuredAppendSegment.StructuredAppendParity);
         }
     
         #endregion

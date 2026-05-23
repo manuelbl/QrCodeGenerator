@@ -17,7 +17,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <summary>
         /// Extended Channel Interpretation (ECI) designator.
         /// </summary>
-        internal ECI Designator { get;  }
+        override public ECI EciDesignator { get;  }
 
         internal DataSegmentEci(ECI eci)
             : base(DataSegmentMode.ECI, GetEciBitLength(eci.Value))
@@ -27,7 +27,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(eci), eci, "ECI value must be between 0 and 999999");
             }
             
-            Designator = eci;
+            EciDesignator = eci;
         }
         
         private static int GetEciBitLength(int value)
@@ -46,7 +46,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         internal override void WriteToBitStream(BitStream bitStream)
         {
-            var eciValue = (uint)Designator.Value;
+            var eciValue = (uint)EciDesignator.Value;
             if (eciValue <= 127)
             {
                 bitStream.AppendBits(eciValue, 8);

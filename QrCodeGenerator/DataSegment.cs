@@ -62,9 +62,43 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="version">The QR code version.</param>
         /// <returns>The segment length, in bits.</returns>
         public int GetTotalLength(int version) => GetHeaderLength(Mode, version) + EncodedLength;
-        
+
+        /// <summary>
+        /// Gets the extended character set indicator (ECI).
+        /// <para>
+        /// This value is only valid if this segment uses the segment mode <see cref="DataSegmentMode.ECI"/>.
+        /// </para>
+        /// </summary>
+        public virtual ECI EciDesignator => ECI.None;
+
+        /// <summary>
+        /// The position of the QR code within a structured append message.
+        /// <para>
+        /// Valid positions are between 1 and 16.
+        /// The value is only valuid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
+        /// </para>
+        /// </summary>
+        public virtual int StructuredAppendPosition => 0;
+
+        /// <summary>
+        /// The total number of QR codes used for the structured append message.
+        /// <para>
+        /// Valid numbers are between 1 and 16.
+        /// The value is only valuid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
+        /// </para>
+        /// </summary>
+        public virtual int StructuredAppendTotal => 0;
+
+        /// <summary>
+        /// The data parity in the structured append messages.
+        /// <para>
+        /// The value is only valuid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
+        /// </para>
+        /// </summary>
+        public virtual byte StructuredAppendParity => 0;
+
         #endregion
-        
+
         #region Factory methods
 
         /// <summary>
@@ -488,7 +522,7 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 if (segment is DataSegmentEci eci)
                 {
-                    encoding = eci.Designator.GetEncoding();
+                    encoding = eci.EciDesignator.GetEncoding();
                 }
                 else if (segment is DataSegmentStructuredAppend)
                 {

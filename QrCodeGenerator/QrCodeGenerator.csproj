@@ -67,6 +67,9 @@ Advanced features:
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
+    <!-- Build-time-only transitive dependency of SourceLink. Pin it and drop its build assets
+         so its .targets (which warns about net6.0 not being a supported TFM) isn't imported. -->
+    <PackageReference Include="System.IO.Hashing" Version="10.0.8" PrivateAssets="All" ExcludeAssets="build;buildTransitive" />
   </ItemGroup>
 
   <Target Name="ValidateNuGetPackage" AfterTargets="Pack">

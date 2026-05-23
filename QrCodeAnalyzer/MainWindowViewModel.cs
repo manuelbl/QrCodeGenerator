@@ -18,7 +18,7 @@ using System.Windows.Media.Imaging;
 
 namespace Net.Codecrete.QrCodeGenerator.Analyzer;
 
-public enum HighlightKind { None, Blocks, HorizontalStreaks, VerticalStreaks }
+public enum HighlightKind { None, Blocks, HorizontalStreaks, VerticalStreaks, HorizontalFinderPatterns, VerticalFinderPatterns }
 
 public sealed record SegmentRow(string Mode, string Content);
 
@@ -247,10 +247,28 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             DataSegmentMode.Alphanumeric => new SegmentRow("Alphanumeric", DecodeAscii(segment.DataBytes)),
             DataSegmentMode.Binary => new SegmentRow("Byte", FormatByteContent(segment.DataBytes)),
             DataSegmentMode.Kanji => new SegmentRow("Kanji", FormatHex(segment.DataBytes)),
-            DataSegmentMode.ECI => new SegmentRow("ECI", "TODO"),
-            DataSegmentMode.StructuredAppend => new SegmentRow("Structured Append", "TODO"),
+            DataSegmentMode.ECI => new SegmentRow("ECI", FormatEci(segment.EciDesignator)),
+            DataSegmentMode.StructuredAppend => new SegmentRow("Structured Append", FormatStructuredAppend(segment)),
             _ => new SegmentRow(segment.Mode.ToString(), FormatHex(segment.DataBytes)),
         };
+    }
+
+    private static string FormatEci(ECI eci)
+    {
+        try
+        {
+            return $"{eci.Value} ({eci.GetEncoding().WebName})";
+        }
+        catch (ECIException)
+        {
+            return eci.Value.ToString();
+        }
+    }
+
+    private static string FormatStructuredAppend(DataSegment segment)
+    {
+        return $"Part {segment.StructuredAppendPosition} of {segment.StructuredAppendTotal}, "
+            + $"parity 0x{segment.StructuredAppendParity:X2}";
     }
 
     private static string DecodeAscii(ArraySegment<byte> data)
@@ -301,6 +319,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             HighlightKind.Blocks => Penalty.GetBlocks(_currentQrCode),
             HighlightKind.HorizontalStreaks => Penalty.GetHorizontalStreaks(_currentQrCode),
             HighlightKind.VerticalStreaks => Penalty.GetVerticalStreaks(_currentQrCode),
+            HighlightKind.HorizontalFinderPatterns => Penalty.GetHorizontalFinderPatterns(_currentQrCode),
+            HighlightKind.VerticalFinderPatterns => Penalty.GetVerticalFinderPatterns(_currentQrCode),
             _ => null
         };
         QrCodeImage = QrCodeDrawing.CreateDrawing(_currentQrCode, 192, _borderWidth, highlights);

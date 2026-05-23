@@ -65,10 +65,14 @@
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
             <Label Content="{Binding Path=PenaltyInfo.Blocks}" Grid.Row="9" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="Blocks"
                     PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
-            <Label Content="Horz. Finder:" Grid.Row="10" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyInfo.HorizontalFinderPatterns}" Grid.Row="10" Grid.Column="1"/>
-            <Label Content="Vert. Finder:" Grid.Row="11" Grid.Column="0"/>
-            <Label Content="{Binding Path=PenaltyInfo.VerticalFinderPatterns}" Grid.Row="11" Grid.Column="1"/>
+            <Label Content="Horz. Finder:" Grid.Row="10" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="HorizontalFinderPatterns"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="{Binding Path=PenaltyInfo.HorizontalFinderPatterns}" Grid.Row="10" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="HorizontalFinderPatterns"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="Vert. Finder:" Grid.Row="11" Grid.Column="0" Background="Transparent" Cursor="Hand" Tag="VerticalFinderPatterns"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
+            <Label Content="{Binding Path=PenaltyInfo.VerticalFinderPatterns}" Grid.Row="11" Grid.Column="1" Background="Transparent" Cursor="Hand" Tag="VerticalFinderPatterns"
+                    PreviewMouseLeftButtonDown="HighlightLabel_MouseDown" PreviewMouseLeftButtonUp="HighlightLabel_MouseUp"/>
             <Label Content="Balance:" Grid.Row="12" Grid.Column="0"/>
             <Label Content="{Binding Path=PenaltyInfo.ColorBalance}" Grid.Row="12" Grid.Column="1"/>
             <Label Content="Total:" Grid.Row="13" Grid.Column="0"/>

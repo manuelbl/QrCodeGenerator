@@ -15,7 +15,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// Valid positions are between 1 and 16.
         /// </para>
         /// </summary>
-        internal readonly int Position;
+        public override int StructuredAppendPosition { get; }
 
         /// <summary>
         /// The total number of QR code used for the message.
@@ -23,12 +23,12 @@ namespace Net.Codecrete.QrCodeGenerator
         /// Valid numbers are between 1 and 16.
         /// </para>
         /// </summary>
-        internal readonly int Total;
-        
+        public override int StructuredAppendTotal { get; }
+
         /// <summary>
         /// The parity of the encoded data.
         /// </summary>
-        internal readonly byte Parity;
+        public override byte StructuredAppendParity { get; }
 
         /// <summary>
         /// Creates a new instance.
@@ -54,17 +54,17 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(position), position.ToString(), "position must be less or equal to total");
             }
 
-            Position = position;
-            Total = total;
-            Parity = parity;
+            StructuredAppendPosition = position;
+            StructuredAppendTotal = total;
+            StructuredAppendParity = parity;
         }
         
         /// <inheritdoc/>
         internal override void WriteToBitStream(BitStream bitStream)
         {
-            bitStream.AppendBits((uint)Position - 1, 4);
-            bitStream.AppendBits((uint)Total - 1, 4);
-            bitStream.AppendBits(Parity, 8);
+            bitStream.AppendBits((uint)StructuredAppendPosition - 1, 4);
+            bitStream.AppendBits((uint)StructuredAppendTotal - 1, 4);
+            bitStream.AppendBits(StructuredAppendParity, 8);
         }
     }
 }
