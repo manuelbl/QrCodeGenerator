@@ -29,47 +29,48 @@ namespace Net.Codecrete.QrCodeGenerator
         // some value >= lowestPenaltySoFar (the partial sum at the point of bailout).
         // Either way, comparing the result against lowestPenaltySoFar with strict
         // less-than yields the correct mask-selection decision.
-        internal static int CalculatePenalty(BitMatrix modules, BitMatrix transposed, int lowestPenaltySoFar)
+        internal static int CalculatePenalty(ScoringMatrix matrix, int lowestPenaltySoFar)
         {
             // Ordered by mean penalty contribution (descending) for early-stop
             // effectiveness; see QrCodeGeneratorProfiling/README.md "Penalty Contribution".
-            var sum = Calc2By2Blocks(modules);
+            // Rules that scan columns read the transpose (Columns) and reuse the row algorithm.
+            var sum = Calc2By2Blocks(matrix.Rows);
             if (sum >= lowestPenaltySoFar)
             {
                 return sum;
             }
-            sum += CalcSameColor(transposed);
+            sum += CalcSameColor(matrix.Columns);
             if (sum >= lowestPenaltySoFar)
             {
                 return sum;
             }
-            sum += CalcSameColor(modules);
+            sum += CalcSameColor(matrix.Rows);
             if (sum >= lowestPenaltySoFar)
             {
                 return sum;
             }
-            sum += CalcFinderPattern(modules);
+            sum += CalcFinderPattern(matrix.Rows);
             if (sum >= lowestPenaltySoFar)
             {
                 return sum;
             }
-            sum += CalcFinderPattern(transposed);
+            sum += CalcFinderPattern(matrix.Columns);
             if (sum >= lowestPenaltySoFar)
             {
                 return sum;
             }
-            return sum + CalcColorBalance(modules);
+            return sum + CalcColorBalance(matrix.Rows);
         }
 
         // Calculates the total penalty score, fully evaluating all contributions and collecting the details in penaltyInfo.
-        internal static int CalculatePenaltyFully(BitMatrix modules, BitMatrix transposed, ref PenaltyScore penaltyInfo)
+        internal static int CalculatePenaltyFully(ScoringMatrix matrix, ref PenaltyScore penaltyInfo)
         {
-            penaltyInfo.Blocks = Calc2By2Blocks(modules);
-            penaltyInfo.VerticalStreaks = CalcSameColor(transposed);
-            penaltyInfo.HorizontalStreaks = CalcSameColor(modules);
-            penaltyInfo.HorizontalFinderPatterns = CalcFinderPattern(modules);
-            penaltyInfo.VerticalFinderPatterns = CalcFinderPattern(transposed);
-            penaltyInfo.ColorBalance = CalcColorBalance(modules);
+            penaltyInfo.Blocks = Calc2By2Blocks(matrix.Rows);
+            penaltyInfo.VerticalStreaks = CalcSameColor(matrix.Columns);
+            penaltyInfo.HorizontalStreaks = CalcSameColor(matrix.Rows);
+            penaltyInfo.HorizontalFinderPatterns = CalcFinderPattern(matrix.Rows);
+            penaltyInfo.VerticalFinderPatterns = CalcFinderPattern(matrix.Columns);
+            penaltyInfo.ColorBalance = CalcColorBalance(matrix.Rows);
 
             penaltyInfo.Total = penaltyInfo.Blocks
                 + penaltyInfo.VerticalStreaks + penaltyInfo.HorizontalStreaks

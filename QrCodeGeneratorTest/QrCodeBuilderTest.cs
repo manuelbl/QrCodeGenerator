@@ -412,32 +412,34 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             [CombinatorialRange(0, 7, 1)] int pattern)
         {
             var modules = FixedPatterns.CreateWithFixedPatterns(version);
-            MatrixEncoder.DrawFormatInformation(modules, ecc, pattern);
+            var scoringMatrix = ScoringMatrix.From(modules);
+
+            MatrixEncoder.DrawFormatInformation(scoringMatrix, ecc, pattern);
 
             var expected = QrCodeParameters.GetFormatInformationBits(ecc, pattern);
-            Assert.Equal(expected, ExtractFormatInformationA(modules));
-            Assert.Equal(expected, ExtractFormatInformationB(modules));
+            Assert.Equal(expected, ExtractFormatInformationA(scoringMatrix.Rows));
+            Assert.Equal(expected, ExtractFormatInformationB(scoringMatrix.Rows));
         }
 
         [Theory, CombinatorialData]
-        public void DrawFormatInformationTransposed(
+        public void DrawFormatInformationKeepsColumnsInSync(
             [CombinatorialRange(1, 40)] int version,
             [CombinatorialRange(0, 3, 1)] int ecc,
             [CombinatorialRange(0, 7, 1)] int pattern)
         {
             var modules = FixedPatterns.CreateWithFixedPatterns(version);
-            var transposed = modules.Copy();
-            transposed.Transpose();
-            
-            MatrixEncoder.DrawFormatInformation(modules, transposed, ecc, pattern);
-            
-            transposed.Transpose();
-            
+            var scoringMatrix = ScoringMatrix.From(modules);
+
+            MatrixEncoder.DrawFormatInformation(scoringMatrix, ecc, pattern);
+
+            // The Columns view is the transpose; transposing it back must show the same
+            // format information as the Rows view.
+            var columnsAsRows = scoringMatrix.Columns.Copy();
+            columnsAsRows.Transpose();
+
             var expected = QrCodeParameters.GetFormatInformationBits(ecc, pattern);
-            Assert.Equal(expected, ExtractFormatInformationA(modules));
-            Assert.Equal(expected, ExtractFormatInformationB(modules));
-            Assert.Equal(expected, ExtractFormatInformationA(transposed));
-            Assert.Equal(expected, ExtractFormatInformationB(transposed));
+            Assert.Equal(expected, ExtractFormatInformationA(columnsAsRows));
+            Assert.Equal(expected, ExtractFormatInformationB(columnsAsRows));
         }
 
         private static int ExtractFormatInformationA(BitMatrix modules)

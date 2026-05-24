@@ -31,7 +31,7 @@ namespace Net.Codecrete.QrCodeGenerator
     /// <para>
     /// The format information is reserve-only here; its bits depend on the error
     /// correction level and the chosen mask pattern and are drawn later by
-    /// <see cref="MatrixEncoder.DrawFormatInformation(BitMatrix, int, int)"/>.
+    /// <see cref="MatrixEncoder.DrawFormatInformation(ScoringMatrix, int, int)"/>.
     /// </para>
     /// </summary>
     internal static class FixedPatterns

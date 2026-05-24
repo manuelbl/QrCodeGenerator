@@ -21,8 +21,7 @@ namespace Net.Codecrete.QrCodeGenerator
     {
         #region Caches
 
-        private static readonly ConcurrentDictionary<(int, int), BitMatrix> DataMaskPatternCache = new ConcurrentDictionary<(int, int), BitMatrix>();
-        private static readonly ConcurrentDictionary<(int, int), BitMatrix> DataMaskPatternTransposedCache = new ConcurrentDictionary<(int, int), BitMatrix>();
+        private static readonly ConcurrentDictionary<(int, int), MaskPair> MaskPatternCache = new ConcurrentDictionary<(int, int), MaskPair>();
 
         #endregion
 
@@ -101,46 +100,27 @@ namespace Net.Codecrete.QrCodeGenerator
         #region Mask patterns
 
         /// <summary>
-        /// Returns a <see cref="BitMatrix"/> for the given mask pattern.
+        /// Returns the <see cref="MaskPair"/> for the given mask pattern and version.
         /// It only affects the area where payload data goes.
         /// <para>
-        /// The returned matrix is shared and cached. Callers must not mutate it.
+        /// The returned mask pair is shared and cached. Callers must not mutate it.
         /// </para>
         /// </summary>
         /// <param name="patternIndex">The data mask pattern index.</param>
         /// <param name="version">The QR code version.</param>
-        /// <returns>A shared BitMatrix instance.</returns>
-        private static BitMatrix GetDataMaskPattern(int patternIndex, int version)
+        /// <returns>A shared mask pair.</returns>
+        private static MaskPair GetMaskPair(int patternIndex, int version)
         {
-            return DataMaskPatternCache.GetOrAdd((patternIndex, version), CreateDataMaskPattern);
+            return MaskPatternCache.GetOrAdd((patternIndex, version), CreateMaskPair);
         }
 
-        private static BitMatrix CreateDataMaskPattern((int patternIndex, int version) key)
+        private static MaskPair CreateMaskPair((int patternIndex, int version) key)
         {
-            var pattern = CreatePattern(key.patternIndex, key.version);
-            pattern.And(FixedPatterns.GetPayloadAreaMap(key.version));
-            return pattern;
-        }
-
-        /// <summary>
-        /// Returns the transpose of <see cref="GetDataMaskPattern"/> for the given mask pattern.
-        /// <para>
-        /// The returned matrix is shared and cached. Callers must not mutate it.
-        /// </para>
-        /// </summary>
-        /// <param name="patternIndex">The data mask pattern index.</param>
-        /// <param name="version">The QR code version.</param>
-        /// <returns>A shared BitMatrix instance.</returns>
-        private static BitMatrix GetDataMaskPatternTransposed(int patternIndex, int version)
-        {
-            return DataMaskPatternTransposedCache.GetOrAdd((patternIndex, version), CreateDataMaskPatternTransposed);
-        }
-
-        private static BitMatrix CreateDataMaskPatternTransposed((int patternIndex, int version) key)
-        {
-            var pattern = GetDataMaskPattern(key.patternIndex, key.version).Copy();
-            pattern.Transpose();
-            return pattern;
+            var rows = CreatePattern(key.patternIndex, key.version);
+            rows.And(FixedPatterns.GetPayloadAreaMap(key.version));
+            var columns = rows.Copy();
+            columns.Transpose();
+            return new MaskPair(rows, columns);
         }
 
         /// <summary>
@@ -200,28 +180,24 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static int ApplyBestPattern(BitMatrix modules, int version, int ecc, EncodingInfo encodingInfo = null)
         {
-            var transposed = modules.Copy();
-            transposed.Transpose();
+            var scoringMatrix = ScoringMatrix.From(modules);
 
             var bestPattern = -1;
             var lowestPenalty = int.MaxValue;
 
             foreach (var pattern in PatternEvaluationOrder)
             {
-                DrawFormatInformation(modules, transposed, ecc, pattern);
-                var mask = GetDataMaskPattern(pattern, version);
-                var maskT = GetDataMaskPatternTransposed(pattern, version);
+                DrawFormatInformation(scoringMatrix, ecc, pattern);
+                var mask = GetMaskPair(pattern, version);
                 // apply pattern
-                modules.Xor(mask);
-                transposed.Xor(maskT);
+                scoringMatrix.Xor(mask);
 
                 var penalty = encodingInfo == null
-                    ? Penalty.CalculatePenalty(modules, transposed, lowestPenalty)
-                    : Penalty.CalculatePenaltyFully(modules, transposed, ref encodingInfo.Penalties[pattern]);
+                    ? Penalty.CalculatePenalty(scoringMatrix, lowestPenalty)
+                    : Penalty.CalculatePenaltyFully(scoringMatrix, ref encodingInfo.Penalties[pattern]);
 
                 // undo pattern
-                modules.Xor(mask);
-                transposed.Xor(maskT);
+                scoringMatrix.Xor(mask);
                 if (penalty < lowestPenalty)
                 {
                     lowestPenalty = penalty;
@@ -234,9 +210,9 @@ namespace Net.Codecrete.QrCodeGenerator
                 bestPattern = encodingInfo.ForcedDataMask;
             }
 
-            DrawFormatInformation(modules, ecc, bestPattern);
-            var bestMask = GetDataMaskPattern(bestPattern, version);
-            modules.Xor(bestMask);
+            DrawFormatInformation(scoringMatrix, ecc, bestPattern);
+            // Finalize in place: Rows aliases `modules`, which the caller turns into the QrCode.
+            scoringMatrix.Finish(GetMaskPair(bestPattern, version));
             return bestPattern;
         }
 
@@ -244,17 +220,12 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #region Format information
 
-        internal static void DrawFormatInformation(BitMatrix modules, int ecc, int pattern)
+        internal static void DrawFormatInformation(ScoringMatrix modules, int ecc, int pattern)
         {
             DrawFormatBits(modules, QrCodeParameters.GetFormatInformationBits(ecc, pattern));
         }
 
-        internal static void DrawFormatInformation(BitMatrix modules, BitMatrix transposed, int ecc, int pattern)
-        {
-            DrawFormatBits(modules, transposed, QrCodeParameters.GetFormatInformationBits(ecc, pattern));
-        }
-
-        private static void DrawFormatBits(BitMatrix modules, int formatBits)
+        private static void DrawFormatBits(ScoringMatrix modules, int formatBits)
         {
             var size = modules.Size;
 
@@ -281,44 +252,9 @@ namespace Net.Codecrete.QrCodeGenerator
             }
         }
 
-        private static void DrawFormatBits(BitMatrix modules, BitMatrix transposed, int formatBits)
+        private static void SetFormatBit(ScoringMatrix modules, int x, int y, int bits, int bitIndex)
         {
-            var size = modules.Size;
-
-            for (var i = 0; i < 8; i += 1)
-            {
-                SetFormatBit(modules, transposed, size - 1 - i, 8, formatBits, i);
-            }
-            for (var i = 8; i < 15; i += 1)
-            {
-                SetFormatBit(modules, transposed, 8, size - 15 + i, formatBits, i);
-            }
-            for (var i = 0; i < 6; i += 1)
-            {
-                SetFormatBit(modules, transposed, 8, i, formatBits, i);
-            }
-
-            SetFormatBit(modules, transposed, 8, 7, formatBits, 6);
-            SetFormatBit(modules, transposed, 8, 8, formatBits, 7);
-            SetFormatBit(modules, transposed, 7, 8, formatBits, 8);
-
-            for (var i = 9; i < 15; i += 1)
-            {
-                SetFormatBit(modules, transposed, 14 - i, 8, formatBits, i);
-            }
-        }
-
-        private static void SetFormatBit(BitMatrix modules, int x, int y, int bits, int bitIndex)
-        {
-            modules.Set(x, y, (bits & (1 << bitIndex)) != 0);
-        }
-
-        [SuppressMessage("csharpsquid", "S2234")]
-        private static void SetFormatBit(BitMatrix modules, BitMatrix transposed, int x, int y, int bits, int bitIndex)
-        {
-            var value = (bits & (1 << bitIndex)) != 0;
-            modules.Set(x, y, value);
-            transposed.Set(y, x, value);
+            modules.SetFormatBit(x, y, (bits & (1 << bitIndex)) != 0);
         }
 
         #endregion

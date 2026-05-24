@@ -33,6 +33,19 @@ _Avoid_: "data mask" — see Flagged ambiguities.
 One of the 8 XOR patterns (index 0–7) applied to the payload area and chosen by
 lowest penalty score. Exposed as `QrCode.Mask`.
 
+**Scoring matrix**:
+A **module** matrix paired with its transpose, kept in sync, used while selecting
+the **mask pattern**. Its `Rows` view is the matrix as stored; its `Columns` view is
+the transpose. Penalty rules that scan rows read `Rows`; rules that scan columns read
+`Columns`, so the column rules reuse the row algorithm instead of duplicating it.
+Every mutation (mask XOR, format-information bit) updates both views together.
+_Avoid_: treating the transpose as a separate "transposed copy" the caller keeps in
+sync by hand — the two views are one value.
+
+**Mask pair**:
+The two views (a mask and its transpose) of a single **mask pattern**, cached per
+(mask pattern, **version**) and XORed into a **scoring matrix** as a unit.
+
 **Codewords**:
 The 8-bit symbols the payload becomes after a version and error correction level are
 chosen: data codewords (segment bits + terminator + padding) followed by Reed-Solomon
@@ -51,6 +64,9 @@ error correction codewords, interleaved per spec, ready to fill into the matrix.
   (the load-bearing invariant: drawn ⊆ reserved).
 - A **mask pattern** is XORed only over the **payload-area map**, never over
   **reserved modules**.
+- Choosing the **mask pattern** scores one **scoring matrix** per candidate; the
+  column penalty rules read its `Columns` view so they reuse the row algorithm, and
+  each candidate mask is applied as a **mask pair**.
 
 ## Example dialogue
 

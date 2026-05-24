@@ -338,12 +338,11 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void CalculatePenalty_EarlyStopHonorsContract(int size, double fillPercent)
         {
             var modules = Fill(size, fillPercent);
-            var transposed = modules.Copy();
-            Transpose(transposed);
+            var scoringMatrix = ScoringMatrix.From(modules);
 
             // Baseline: int.MaxValue threshold disables early-stop, so the function
             // runs to completion and returns the exact penalty.
-            var truePenalty = Penalty.CalculatePenalty(modules, transposed, int.MaxValue);
+            var truePenalty = Penalty.CalculatePenalty(scoringMatrix, int.MaxValue);
 
             // Contract: for any threshold T, the returned value is either the exact
             // penalty (no bailout) or some partial sum >= T (bailout fired). Either
@@ -351,7 +350,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             // same mask-selection decision as a full computation.
             for (var threshold = -10; threshold <= truePenalty + 50; threshold += 1)
             {
-                var result = Penalty.CalculatePenalty(modules, transposed, threshold);
+                var result = Penalty.CalculatePenalty(scoringMatrix, threshold);
                 Assert.True(result == truePenalty || result >= threshold,
                     $"threshold={threshold}, result={result}, truePenalty={truePenalty}");
             }
