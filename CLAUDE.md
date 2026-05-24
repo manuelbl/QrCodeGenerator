@@ -46,7 +46,7 @@ Version 3 is a complete rewrite (≈10x faster, more standard-compliant) of what
 
 ## Architecture
 
-`QrCode` is the only substantial public surface: immutable factory methods (`EncodeText`, `EncodeTextAdvanced`, `EncodeBinary`, `EncodeSegments`, `EncodeTextInMultipleCodes`) plus rendering (`ToSvgString`, `ToGraphicsPath`, `ToPngBitmap`, `ToBmpBitmap`, `GetModule`). It holds a single `BitMatrix` of modules. Almost all real work lives in `internal` types.
+`QrCode` is the only substantial public surface: immutable factory methods (`EncodeText`, `EncodeTextAdvanced`, `EncodeBinary`, `EncodeSegments`, `EncodeTextInMultipleCodes`) plus rendering (`ToSvgString`, `ToGraphicsPath`, `ToPngBitmap`, `ToBmpBitmap`, `ToRectangles`, `GetModule`). It holds a single `BitMatrix` of modules. Almost all real work lives in `internal` types. The one other public type is the `QrRectangle` value struct returned by `ToRectangles`.
 
 ### Encoding pipeline
 
@@ -78,7 +78,7 @@ Everything is keyed by `version` (1–40) and `ecc` (0–3 = L/M/Q/H). The large
 
 ### Rendering and diagnostics
 
-- `Graphics` (SVG/XAML path, BMP) and `PngBuilder` (PNG) take the finished modules; `QrCode` delegates to them. The SVG path merges adjacent dark modules into the largest rectangles to shrink output.
+- `RectangleBuilder` merges adjacent dark modules into the largest rectangles (greedy, non-overlapping, union == dark modules) to shrink output. It is the single source of truth for that geometry: `QrCode.ToRectangles` exposes the list publicly (as `QrRectangle`s, in `GetModule` coordinates with no border), and `SvgBuilder` (SVG document + SVG/XAML path) consumes the same list, adding the border at emit time. `BmpBuilder` (BMP) and `PngBuilder` (PNG) take the finished modules directly. `QrCode` delegates to all of them.
 - `StructuredAppend` splits long text across up to 16 linked QR codes (used by `EncodeTextInMultipleCodes`).
 - `EncodingInfo` / `PenaltyScore` are opt-in diagnostics: pass an `EncodingInfo` to capture per-mask penalty breakdowns and the chosen segments. This forces *full* penalty evaluation (disables early-stop), so it is slower — it exists for the `QrCodeAnalyzer` tool, not normal use.
 

@@ -387,7 +387,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="background">The background color. Defaults to white.</param>
         public string ToSvgString(int border, string foreground = "#000000", string background = "#ffffff")
         {
-            return AsGraphics().ToSvgString(border, foreground, background);
+            return SvgBuilder.ToSvgString(ToRectangles(), Size, border, foreground, background);
         }
 
         /// <summary>
@@ -413,7 +413,34 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentOutOfRangeException">Thrown if border is negative</exception>
         public string ToGraphicsPath(int border = 0)
         {
-            return AsGraphics().ToGraphicsPath(border);
+            return SvgBuilder.ToGraphicsPath(ToRectangles(), border);
+        }
+
+        /// <summary>
+        /// Gets the dark modules of this QR code as a list of rectangles.
+        /// <para>
+        /// Adjacent dark modules are merged into larger rectangles so that most rectangles
+        /// cover more than a single module, reducing the number of shapes to draw. This is
+        /// the same set of rectangles used internally to render SVG and XAML output.
+        /// </para>
+        /// <para>
+        /// The rectangles use the same coordinate system as <see cref="GetModule"/>: the
+        /// top-left module is at (x=0, y=0) and each unit is one module (no border is included).
+        /// </para>
+        /// <para>
+        /// The rectangles are non-overlapping and their union is exactly the set of dark modules.
+        /// The order in which the rectangles appear in the list is unspecified.
+        /// </para>
+        /// <para>
+        /// This method is intended for rendering the QR code to graphics formats that are not
+        /// directly supported by this library.
+        /// </para>
+        /// </summary>
+        /// <returns>The list of rectangles covering the dark modules.</returns>
+        /// <seealso cref="QrRectangle"/>
+        public IReadOnlyList<QrRectangle> ToRectangles()
+        {
+            return RectangleBuilder.Build(_modules);
         }
 
         /// <summary>
@@ -434,7 +461,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <paramref name="scale"/> is less than 1 or the resulting image is wider than 32,768 pixels.</exception>
         public byte[] ToBmpBitmap(int border = 0, int scale = 1, int foreground = 0x000000, int background = 0xffffff)
         {
-            return AsGraphics().ToBmpBitmap(border, scale, foreground, background);
+            return AsBmpBuilder().ToBmpBitmap(border, scale, foreground, background);
         }
 
         /// <summary>
@@ -467,9 +494,9 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #region Private helper methods
 
-        private Graphics AsGraphics()
+        private BmpBuilder AsBmpBuilder()
         {
-            return new Graphics(Size, _modules.ToBoolArray());
+            return new BmpBuilder(Size, _modules.ToBoolArray());
         }
 
         #endregion

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QR code generator library (.NET)
  *
  * Copyright (c) Manuel Bleichenbacher (MIT License)
@@ -7,14 +7,12 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
-    internal class Graphics
+    internal class BmpBuilder
     {
-        internal Graphics(int size, bool[,] modules)
+        internal BmpBuilder(int size, bool[,] modules)
         {
             _size = size;
             _modules = modules;
@@ -25,45 +23,6 @@ namespace Net.Codecrete.QrCodeGenerator
         // The modules of this QR code (false = light, true = dark).
         // Immutable after constructor finishes.
         private readonly bool[,] _modules;
-
-        internal string ToSvgString(int border, string foreground, string background)
-        {
-            if (border < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
-            }
-
-            var dim = _size + border * 2;
-            var sb = new StringBuilder()
-                .Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-                .Append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n")
-                .Append($"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 {dim} {dim}\" stroke=\"none\">\n")
-                .Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n")
-                .Append("\t<path d=\"");
-
-            // Work on copy as it is destructive
-            var modules = CopyModules();
-            CreatePath(sb, modules, border);
-
-            return sb
-                .Append($"\" fill=\"{foreground}\"/>\n")
-                .Append("</svg>\n")
-                .ToString();
-        }
-
-        internal string ToGraphicsPath(int border)
-        {
-            if (border < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
-            }
-
-            // Work on copy as it is destructive
-            var modules = CopyModules();
-            var path = new StringBuilder();
-            CreatePath(path, modules, border);
-            return path.ToString();
-        }
 
         [SuppressMessage("csharpsquid", "S3776")]
         internal byte[] ToBmpBitmap(int border, int scale, int foreground, int background)
@@ -226,95 +185,6 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             return buf;
-        }
-
-        // Append an SVG/XAML path for the QR code to the provided string builder
-        private static void CreatePath(StringBuilder path, bool[,] modules, int border)
-        {
-            // Simple algorithm to reduce the number of rectangles for drawing the QR code
-            // and reduce SVG/XAML size.
-            var size = modules.GetLength(0);
-            for (var y = 0; y < size; y++)
-            {
-                for (var x = 0; x < size; x++)
-                {
-                    if (modules[y, x])
-                    {
-                        DrawLargestRectangle(path, modules, x, y, border);
-                    }
-                }
-            }
-        }
-
-        // Find, draw and clear largest rectangle with (x, y) as the top left corner
-        private static void DrawLargestRectangle(StringBuilder path, bool[,] modules, int x, int y, int border)
-        {
-            var size = modules.GetLength(0);
-
-            var bestW = 1;
-            var bestH = 1;
-            var maxArea = 1;
-
-            var xLimit = size;
-            var iy = y;
-            while (iy < size && modules[iy, x])
-            {
-                var w = 0;
-                while (x + w < xLimit && modules[iy, x + w])
-                {
-                    w++;
-                }
-
-                var area = w * (iy - y + 1);
-                if (area > maxArea)
-                {
-                    maxArea = area;
-                    bestW = w;
-                    bestH = iy - y + 1;
-                }
-                xLimit = x + w;
-                iy++;
-            }
-
-            // append path command
-            if (x != 0 || y != 0)
-            {
-                path.Append(' ');
-            }
-
-            // Different locales use different minus signs.
-            FormattableString pathElement = $"M{x + border},{y + border}h{bestW}v{bestH}h{-bestW}z";
-            path.Append(pathElement.ToString(CultureInfo.InvariantCulture));
-
-            // clear processed modules
-            ClearRectangle(modules, x, y, bestW, bestH);
-        }
-
-        // Clear a rectangle of modules
-        private static void ClearRectangle(bool[,] modules, int x, int y, int width, int height)
-        {
-            for (var iy = y; iy < y + height; iy++)
-            {
-                for (var ix = x; ix < x + width; ix++)
-                {
-                    modules[iy, ix] = false;
-                }
-            }
-        }
-
-        // Create a copy of the modules (in row-major order)
-        private bool[,] CopyModules()
-        {
-            var modules = new bool[_size, _size];
-            for (var y = 0; y < _size; y++)
-            {
-                for (var x = 0; x < _size; x++)
-                {
-                    modules[y, x] = _modules[y, x];
-                }
-            }
-
-            return modules;
         }
     }
 }
