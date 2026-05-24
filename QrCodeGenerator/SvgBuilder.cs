@@ -18,15 +18,14 @@ namespace Net.Codecrete.QrCodeGenerator
     internal static class SvgBuilder
     {
         // Creates a complete SVG document for the given rectangles.
-        internal static string ToSvgString(IReadOnlyList<QrRectangle> rectangles, int size, int border,
-            string foreground, string background)
+        internal static string ToSvgString(QrCode qrCode, int border, string foreground, string background)
         {
             if (border < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
             }
 
-            var dim = size + border * 2;
+            var dim = qrCode.Size + border * 2;
             var sb = new StringBuilder()
                 .Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .Append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n")
@@ -34,7 +33,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 .Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n")
                 .Append("\t<path d=\"");
 
-            AppendPath(sb, rectangles, border);
+            AppendPath(sb, qrCode.ToRectangles(), border);
 
             return sb
                 .Append($"\" fill=\"{foreground}\"/>\n")
@@ -43,7 +42,7 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         // Creates an SVG/XAML graphics path for the given rectangles.
-        internal static string ToGraphicsPath(IReadOnlyList<QrRectangle> rectangles, int border)
+        internal static string ToGraphicsPath(QrCode qrCode, int border)
         {
             if (border < 0)
             {
@@ -51,7 +50,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             var path = new StringBuilder();
-            AppendPath(path, rectangles, border);
+            AppendPath(path, qrCode.ToRectangles(), border);
             return path.ToString();
         }
 

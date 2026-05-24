@@ -387,7 +387,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="background">The background color. Defaults to white.</param>
         public string ToSvgString(int border, string foreground = "#000000", string background = "#ffffff")
         {
-            return SvgBuilder.ToSvgString(ToRectangles(), Size, border, foreground, background);
+            return SvgBuilder.ToSvgString(this, border, foreground, background);
         }
 
         /// <summary>
@@ -413,7 +413,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentOutOfRangeException">Thrown if border is negative</exception>
         public string ToGraphicsPath(int border = 0)
         {
-            return SvgBuilder.ToGraphicsPath(ToRectangles(), border);
+            return SvgBuilder.ToGraphicsPath(this, border);
         }
 
         /// <summary>
@@ -461,7 +461,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <paramref name="scale"/> is less than 1 or the resulting image is wider than 32,768 pixels.</exception>
         public byte[] ToBmpBitmap(int border = 0, int scale = 1, int foreground = 0x000000, int background = 0xffffff)
         {
-            return AsBmpBuilder().ToBmpBitmap(border, scale, foreground, background);
+            return BmpBuilder.ToImage(this, border, scale, foreground, background);
         }
 
         /// <summary>
@@ -491,15 +491,6 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #endregion
 
-
-        #region Private helper methods
-
-        private BmpBuilder AsBmpBuilder()
-        {
-            return new BmpBuilder(Size, _modules.ToBoolArray());
-        }
-
-        #endregion
 
 
         #region Constants and tables

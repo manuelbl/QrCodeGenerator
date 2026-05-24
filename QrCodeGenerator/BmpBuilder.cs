@@ -10,22 +10,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
-    internal class BmpBuilder
+    internal static class BmpBuilder
     {
-        internal BmpBuilder(int size, bool[,] modules)
-        {
-            _size = size;
-            _modules = modules;
-        }
-
-        private readonly int _size;
-
-        // The modules of this QR code (false = light, true = dark).
-        // Immutable after constructor finishes.
-        private readonly bool[,] _modules;
-
         [SuppressMessage("csharpsquid", "S3776")]
-        internal byte[] ToBmpBitmap(int border, int scale, int foreground, int background)
+        internal static byte[] ToImage(QrCode qrCode, int border, int scale, int foreground, int background)
         {
             if (scale < 1)
             {
@@ -37,7 +25,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(border), border, "Border must be non-negative.");
             }
 
-            var dim = (_size + 2 * border) * scale;
+            var size = qrCode.Size;
+            var dim = (size + 2 * border) * scale;
 
             if (dim > short.MaxValue)
             {
@@ -121,7 +110,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
             if (border > 0)
             {
-                var scaledSize = _size * scale;
+                var scaledSize = size * scale;
 
                 for (i = 0; i < aligned; ++i)
                 {
@@ -144,7 +133,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-            for (y = 0; y < _size; ++y)
+            for (y = 0; y < size; ++y)
             {
                 int j;
                 var yOffset = y * scale + scaledBorder;
@@ -162,13 +151,13 @@ namespace Net.Codecrete.QrCodeGenerator
                             continue;
                         }
 
-                        if (x < border || x >= _size + border)
+                        if (x < border || x >= size + border)
                         {
                             px |= (byte)(1 << (7 - j));
                             continue;
                         }
 
-                        px |= (byte)(_modules[(_size - y - 1), x - border] ? 0 : 1 << (7 - j));
+                        px |= (byte)(qrCode.GetModule(x - border, size - y - 1) ? 0 : 1 << (7 - j));
                     }
 
                     buf[62 + i + yOffset * aligned] = px;

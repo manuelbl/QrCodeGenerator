@@ -29,7 +29,7 @@ namespace Net.Codecrete.QrCodeGenerator
         // some value >= lowestPenaltySoFar (the partial sum at the point of bailout).
         // Either way, comparing the result against lowestPenaltySoFar with strict
         // less-than yields the correct mask-selection decision.
-        internal static int CalculatePenalty(ScoringMatrix matrix, int lowestPenaltySoFar)
+        internal static int Calculate(ScoringMatrix matrix, int lowestPenaltySoFar)
         {
             // Ordered by mean penalty contribution (descending) for early-stop
             // effectiveness; see QrCodeGeneratorProfiling/README.md "Penalty Contribution".
@@ -63,7 +63,7 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         // Calculates the total penalty score, fully evaluating all contributions and collecting the details in penaltyInfo.
-        internal static int CalculatePenaltyFully(ScoringMatrix matrix, ref PenaltyScore penaltyInfo)
+        internal static int CalculateFully(ScoringMatrix matrix, ref PenaltyScore penaltyInfo)
         {
             penaltyInfo.Blocks = Calc2By2Blocks(matrix.Rows);
             penaltyInfo.VerticalStreaks = CalcSameColor(matrix.Columns);

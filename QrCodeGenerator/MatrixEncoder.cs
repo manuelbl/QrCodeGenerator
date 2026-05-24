@@ -162,7 +162,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         // Ordered by mask-selection frequency (descending) so low-penalty patterns
         // set a tight lowestPenalty early, maximizing early-stop bailouts in
-        // Penalty.CalculatePenalty(). See QrCodeGeneratorProfiling/README.md
+        // Penalty.Calculate(). See QrCodeGeneratorProfiling/README.md
         // "Mask Pattern Selection".
         private static readonly int[] PatternEvaluationOrder = { 2, 3, 7, 4, 6, 5, 0, 1 };
 
@@ -193,8 +193,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 scoringMatrix.Xor(mask);
 
                 var penalty = encodingInfo == null
-                    ? Penalty.CalculatePenalty(scoringMatrix, lowestPenalty)
-                    : Penalty.CalculatePenaltyFully(scoringMatrix, ref encodingInfo.Penalties[pattern]);
+                    ? Penalty.Calculate(scoringMatrix, lowestPenalty)
+                    : Penalty.CalculateFully(scoringMatrix, ref encodingInfo.Penalties[pattern]);
 
                 // undo pattern
                 scoringMatrix.Xor(mask);
