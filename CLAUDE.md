@@ -1,15 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Purpose
 
-QrCodeGenerator is library to generate QR code. It is designed to be easy to use and performant.
+QrCodeGenerator is a library to generate QR code. It is designed to be easy to use and performant.
 
 The library only supports limited graphics types and options in order to work without
-graphics libraries, which might not run all platforms.
-The library can provide the QR code as a two-dimensional array of pixels (called modules by the QR code standard).
-It is then up to the application to display the QR code based on this information.
+any graphics libraries, which might not run all platforms.
+The library can provide the QR code as a list of rectangles or as a two-dimensional array of pixels
+(called modules by the QR code standard). It is then up to the application to display the QR code.
 Many demo projects show how to use this approach for different graphics libraries and UI frameworks.
 
 The main target of the library is .NET Standard 2.0 so it runs in virtually any current .NET environment.
@@ -38,15 +36,16 @@ dotnet pack --no-build
 ## Build targets
 
 - **`QrCodeGenerator/`** (the library) targets `netstandard2.0;net6.0`. The `net6.0` target exists only to enable trimming (`IsTrimmable`). Keep public API and language usage compatible with netstandard2.0 — don't reach for newer BCL/`Span` APIs that aren't available there.
-- **`QrCodeGeneratorTest/`** targets `net8.0;net10.0`, plus `net481` on Windows. `dotnet test` runs every target framework.
+- **`QrCodeGeneratorTest/`** (the unit tests) targets `net8.0;net10.0`, plus `net481` on Windows. `dotnet test` runs every target framework.
 - **`QrCodeGeneratorProfiling/`** targets `net10.0` (BenchmarkDotNet).
 - **`QrCodeAnalyzer/`** is a separate WPF tool in its own solution (`QrCodeAnalyzer/QrCodeAnalyzer.sln`), not part of `QrCodeGenerator.sln`.
 
-Version 3 is a complete rewrite (≈10x faster, more standard-compliant) of what began as a port of Project Nayuki's Java library.
 
 ## Architecture
 
-`QrCode` is the only substantial public surface: immutable factory methods (`EncodeText`, `EncodeTextAdvanced`, `EncodeBinary`, `EncodeSegments`, `EncodeTextInMultipleCodes`) plus rendering (`ToSvgString`, `ToGraphicsPath`, `ToPngBitmap`, `ToBmpBitmap`, `ToRectangles`, `GetModule`). It holds a single `BitMatrix` of modules. Almost all real work lives in `internal` types. The one other public type is the `QrRectangle` value struct returned by `ToRectangles`.
+`QrCode` is the only substantial public surface: factory methods create immutable `QrCode` instances. They can be rendered to
+sVG, PNG, BMP or a list of rectangles. It holds a single `BitMatrix` of modules. Almost all real work lives in `internal` types.
+
 
 ### Encoding pipeline
 
@@ -59,7 +58,7 @@ Text/bytes → segments → codewords → matrix, in this order:
    - **`Codewords.BuildData`** — segments → `BitStream` → byte codewords + terminator + 0xEC/0x11 padding.
    - **`Codewords.AddErrorCorrection`** — splits into blocks, computes Reed-Solomon ECC (`ReedSolomon`), interleaves data and ECC codewords per spec.
    - **`MatrixEncoder.Encode`** — matrix layout then mask selection:
-     - `FixedPatterns.BuildFixedPatterns` is the single source of truth for the fixed-pattern geometry of a version: one walk emits both the *drawn* matrix (finder/timing/alignment/version) and the *reserved-module* mask, which cannot be derived from each other (a footprint reserves light modules too). Format info is reserve-only here. The reserved mask, inverted, is the *payload-area map* (`GetPayloadAreaMap`). Then `FillPayload` zig-zags the codewords into the free modules.
+     - `FixedPatterns.BuildFixedPatterns` deals with the fixed-pattern geometry of a version: one walk emits both the *drawn* matrix (finder/timing/alignment/version) and the *reserved-module* mask. The reserved mask, inverted, is the *payload-area map* (`GetPayloadAreaMap`). Then `FillPayload` zig-zags the codewords into the free modules.
      - `ApplyBestPattern` — XORs each of the 8 mask patterns, scores it (`Penalty`), keeps the lowest, and draws the format information. `EncodingInfo.ForcedDataMask` can override the choice.
 
    The ISO/IEC 18004 lookup tables these stages share live in **`QrCodeParameters`**.
