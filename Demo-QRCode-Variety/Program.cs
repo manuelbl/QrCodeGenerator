@@ -25,7 +25,6 @@
  * IN THE SOFTWARE.
  */
 
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -36,70 +35,86 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
         // The main application program.
         internal static void Main()
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Enable support for encodings like ShiftJIS
+            // Enable support for special encodings like Shift-JIS
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            DoBasicDemo();
-            DoVarietyDemo();
-            DoEncodingDemo();
-            DoEmojiDemo();
-            DoBinaryDemo();
+            BasicQrCode();
+            AlphanumericText();
+            LongerText();
+            KanjiText();
+            Emojis();
+            EmojisWithoutEci();
+            BinaryData();
+            GraphicsFormats();
         }
 
-        #region Demo suite
-
         // Creates a single QR code, then writes it to an SVG file.
-        private static void DoBasicDemo()
+        private static void BasicQrCode()
         {
             const string text = "Hello, world!"; // Payload text
             var errCorLvl = QrCode.Ecc.Low; // Minimal error correction level
 
-            var qr = QrCode.EncodeText(text, errCorLvl); // Make the QR code symbol
-            SaveAsSvg(qr, "hello-world-QR.svg", border: 4); // Save as SVG
+            var qrCode = QrCode.EncodeText(text, errCorLvl); // Create the QR code symbol
+            SaveAsSvg(qrCode, "hello-world-qr.svg"); // Save as SVG
         }
 
 
-        // Creates a variety of QR codes that exercise different features of the library, and writes each one to file.
-        private static void DoVarietyDemo()
+        // Creates QR code with digits and alphanumeric characters only.
+        private static void AlphanumericText()
         {
-            // Numeric mode encoding (3.33 bits per digit)
-            var qr = QrCode.EncodeText("314159265358979323846264338327950288419716939937510", QrCode.Ecc.Medium);
-            SaveAsSvg(qr, "pi-digits-QR.svg");
+            // For digits, a more compact representation will automatically be chosen (3.33 bits per digit)
+            var qrCode = QrCode.EncodeText("27182818284590452353602874713526624977572470936999595749669676277240766",
+                QrCode.Ecc.Medium);
+            SaveAsSvg(qrCode, "digits-qr.svg");
 
-            // Alphanumeric mode encoding (5.5 bits per character)
-            qr = QrCode.EncodeText("DOLLAR-AMOUNT:$39.87 PERCENTAGE:100.00% OPERATIONS:+-*/", QrCode.Ecc.High);
-            SaveAsSvg(qr, "alphanumeric-QR.svg", 4);
-
-            // Moderately large QR code using longer text (from Lewis Carroll's Alice in Wonderland)
-            qr = QrCode.EncodeText(
-                "Alice was beginning to get very tired of sitting by her sister on the bank, "
-                + "and of having nothing to do: once or twice she had peeped into the book her sister was reading, "
-                + "but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice "
-                + "'without pictures or conversations?' So she was considering in her own mind (as well as she could, "
-                + "for the hot day made her feel very sleepy and stupid), whether the pleasure of making a "
-                + "daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly "
-                + "a White Rabbit with pink eyes ran close by her.", QrCode.Ecc.High);
-            SaveAsSvg(qr, "alice-wonderland-QR.svg", 10);
+            // For an alphanumeric subset of characters (not including lower-case letters),
+            // a more compact representation will be automatically chosen (5.5 bits per character)
+            qrCode = QrCode.EncodeText("THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG $ * 0123456789", QrCode.Ecc.High);
+            SaveAsSvg(qrCode, "alphanumeric-qr.svg");
         }
 
-        private static void DoEncodingDemo()
+        private static void LongerText()
         {
-            // ShiftJIS encoding so Kanji characters are compactly encoded (13 bits per character)
-            var qr = QrCode.EncodeTextAdvanced("こんにちは", QrCode.Ecc.Medium, eci: ECI.ShiftJIS); // Japanese "Hello"
-            SaveAsSvg(qr, "kanji-QR.svg", 4);
+            // Moderately large QR code using longer text
+            var qrCode = QrCode.EncodeText(
+                "I was a Flower of the mountain yes when I put the rose in my hair like the Andalusian girls used " +
+                "or shall I wear a red yes and how he kissed me under the Moorish wall and I thought well as well " +
+                "him as another and then I asked him with my eyes to ask again yes and then he asked me would I " +
+                "yes to say yes my mountain flower and first I put my arms around him yes and drew him down to me " +
+                "so he could feel my breasts all perfume yes and his heart was going like mad and yes I said yes " +
+                "I will Yes.", QrCode.Ecc.High);
+            SaveAsSvg(qrCode, "joyce-qr.svg");
         }
 
-
-        private static void DoEmojiDemo()
+        private static void KanjiText()
         {
-            var qr = QrCode.EncodeText("🎲 😇 🤒 🏌 ⏭ 🚍", QrCode.Ecc.Quartile);
-            SaveAsSvg(qr, "emojis-QR.svg", 4);
+            // Select Shift-JIS encoding so Kanji characters are compactly encoded (13 bits per character)
+            var qrCode = QrCode.EncodeTextAdvanced("こんにちは", QrCode.Ecc.Medium, eci: ECI.ShiftJIS);
+            SaveAsSvg(qrCode, "kanji-qr.svg");
         }
 
-
-
-        private static void DoBinaryDemo()
+        private static void Emojis()
         {
-            // create binary data
+            // The full Unicode character set is supported.
+            // By default, the library uses UTF-8 encoding and indicates this with an ECI designator.
+            var qrCode = QrCode.EncodeText("🎲 😇 🤒 🏌 ⏭ 🚍", QrCode.Ecc.Quartile);
+            SaveAsSvg(qrCode, "emojis-qr.svg");
+        }
+
+        private static void EmojisWithoutEci()
+        {
+            // Suppress the ECI designator.
+            // Most QR code readers will correctly guess the encoding.
+            // Some readers always ignore the ECI designator.
+            var qrCode = QrCode.EncodeTextAdvanced("🎲 😇 🤒 🏌 ⏭ 🚍", QrCode.Ecc.Quartile,
+                encoding: Encoding.UTF8, eci: ECI.None);
+            SaveAsSvg(qrCode, "emojis-qr.svg");
+        }
+
+        private static void BinaryData()
+        {
+            // Encode binary data. An ECI designator will be added to indicate it.
+            // Exchanging binary data with QR codes usually works in closed systems only.
             byte[] data = {
                 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00,
                 0x01, 0x00, 0x80, 0x01, 0x00, 0xff, 0xff, 0xff,
@@ -112,11 +127,23 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             SaveAsSvg(qr, "binary.svg");
         }
 
-        #endregion
-
-        private static void SaveAsSvg(QrCode qrCode, string filname, int border = 3)
+        private static void GraphicsFormats()
         {
-            string svg = qrCode.ToSvgString(border); // Convert to SVG XML code
+            // Save the QR code in various graphics formats, directly supported by the library.
+            // See the demo applications for further graphics format and displaying options.
+            var qrCode = QrCode.EncodeText(
+                "Ineluctable modality of the visible: at least that if no more, thought through my eyes. Signatures " +
+                "of all things I am here to read, seapawn and searack, the nearing tide, that rusty boot. Snotgreen, " +
+                "bluesilver, rust: colored signs. Limits of the diaphane.", QrCode.Ecc.Medium);
+
+            File.WriteAllBytes("qr-code.png", qrCode.ToPngBitmap(border: 4));
+
+            File.WriteAllBytes("qr-code.bmp", qrCode.ToBmpBitmap(border: 4));
+        }
+
+        private static void SaveAsSvg(QrCode qrCode, string filname)
+        {
+            string svg = qrCode.ToSvgString(4); // Convert to SVG XML code
             File.WriteAllText(filname, svg, Encoding.UTF8); // Write image to file
         }
 
