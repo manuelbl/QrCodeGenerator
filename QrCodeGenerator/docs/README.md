@@ -14,12 +14,12 @@ and about 10x faster than the original implementation.
 Core features:
 
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see [below](#raster-images--bitmaps).
+- Output formats: List of rectangles, raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see [below](#raster-images--bitmaps).
 - Computes optimal segment modes for smallest possible QR code.
 - High speed: 10x faster than comparable libraries
 - Open source code under the permissive *MIT License*
 - Built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.).
- * Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
+- Available as a [NuGet package](https://www.nuget.org/packages/Net.Codecrete.QrCodeGenerator/) (named *Net.Codecrete.QrCodeGenerator*)
 - Example code for WinForms, WPF, ASP.NET, ImageSharp, SkiaSharp and many more
 
 Advanced features:

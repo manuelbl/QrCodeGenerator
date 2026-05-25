@@ -36,8 +36,9 @@ namespace Net.Codecrete.QrCodeGenerator
     /// <para>
     /// A QR code instance can be converted to a PNG (<see cref="ToPngBitmap"/>),
     /// SVG (<see cref="ToSvgString"/>) or BMP <see cref="ToBmpBitmap"/>) image.
-    /// Or the QR code can be drawn or printed with custom code. The individual
-    /// pixels can be queried with <see cref="GetModule"/>.
+    /// Or the QR code can be drawn or printed with custom code by either
+    /// processing a list of rectangles covering the dark modules (<see cref="ToRectangles"/>),
+    /// or by querying the color of individual modules with <see cref="GetModule"/>.
     /// </para>
     /// </summary>
     /// <remarks>
