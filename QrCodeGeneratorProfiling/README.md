@@ -253,6 +253,34 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 | EncodeAll | 17.08 ms | 0.082 ms | 0.072 ms | 625.0000 |    5.2 MB |
 
 
+# Latest Measurements
+
+
+## Profiling
+
+```
+Profile loop: 500 iterations × 200 payloads × 4 ECC levels
+Total EncodeText calls: 400'000
+Elapsed: 00:00:08.1933755 (checksum=14696000)
+```
+
+## Benchmark
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.4.1 (25E253) [Darwin 25.4.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
+|---------- |---------:|---------:|---------:|---------:|----------:|
+| EncodeAll | 15.98 ms | 0.131 ms | 0.109 ms | 593.7500 |   4.77 MB |
+
+
+
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=6,400)
