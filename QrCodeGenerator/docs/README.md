@@ -48,16 +48,18 @@ Install-Package Net.Codecrete.QrCodeGenerator -Version 3.0.0
 4. Run it
 
 
-## API Documention
+## API Documentation
 
 See [API Documentation](https://codecrete.net/QrCodeGenerator/api/index.html)
 
 
-## Examples
+## Code Examples
 
 **Simple operation**
 
-```cslang
+```csharp
+using System.IO;
+using System.Text;
 using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
@@ -76,7 +78,7 @@ namespace Examples
 
 **Manual operation**
 
-```cslang
+```csharp
 using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
@@ -85,7 +87,6 @@ namespace Examples
     {
         static void Main()
         {
-            var segments = QrSegment.MakeSegments("3141592653589793238462643383");
             var qr = QrCode.EncodeTextAdvanced("3141592653589793238462643383",
                 QrCode.Ecc.High, eci: ECI.Latin9, minVersion: 5, maxVersion: 5);
             for (int y = 0; y < qr.Size; y++)
@@ -135,7 +136,7 @@ For more advanced and more efficient ways to generate different raster image for
 
 Using these extension methods, generating PNG images is straight-forward:
 
-```cslang
+```csharp
 using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
@@ -151,7 +152,7 @@ namespace Examples
 }
 ```
 
-## Examples
+## Demo Projects
 
 Several example projects demonstrate how to generate QR code with different frameworks and libraries:
 
@@ -178,18 +179,18 @@ Several example projects demonstrate how to generate QR code with different fram
 
 ## Upgrade from version 2.x to version 3.x
 
-If your code uses `QrCode.EncodeText()` for generating QR codes, recompling the code should be sufficient.
+If your code uses `QrCode.EncodeText()` for generating QR codes, recompiling the code should be sufficient.
 
-The generated QR code will not be an exact 1-to-1 match. Version 3 optmizes the
+The generated QR code will not be an exact 1-to-1 match. Version 3 optimizes the
 data segments and thus can achieve a smaller QR code or a higher error correction
 level for the same text. Furthermore, if the text cannot be encoded in Latin-1,
 it will be encoded in UTF-8 together with an ECI designator indicating it.
-This is more standard-compliant than the previous version. Futher differences
+This is more standard-compliant than the previous version. Further differences
 can arise from a different data mask selection. In most cases, the differences
-will be irrelvant.
+will be irrelevant.
 
 If your code uses `QrSegment.MakeSegments()` or other advanced methods,
-you might first want to look at `QrCode.EncodeAdvanced()`. If this is not
+you might first want to look at `QrCode.EncodeTextAdvanced()`. If this is not
 sufficient for your use case, it is still possible to create the data segments
 manually. The class is now called `DataSegment` instead of `QrSegment`.
 

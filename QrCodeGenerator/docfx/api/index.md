@@ -3,7 +3,7 @@
 Open-source library for generating QR codes from text strings and byte arrays.
 
 
-## .NET API Documention
+## .NET API Documentation
 
 * [QrCode](xref:Net.Codecrete.QrCodeGenerator.QrCode): Creates and represents QR codes
 
@@ -40,7 +40,9 @@ Advanced features:
 Simple operation:
 
 <pre>
-<code class="lang-csharp hljs">using Net.Codecrete.QrCodeGenerator;
+<code class="lang-csharp hljs">using System.IO;
+using System.Text;
+using Net.Codecrete.QrCodeGenerator;
 
 namespace Examples
 {
@@ -67,7 +69,6 @@ namespace Examples
     {
         static void Main()
         {
-            var segments = QrSegment.MakeSegments("3141592653589793238462643383");
             var qr = QrCode.EncodeTextAdvanced("3141592653589793238462643383",
                 QrCode.Ecc.High, eci: ECI.Latin9, minVersion: 5, maxVersion: 5);
             for (int y = 0; y < qr.Size; y++)
