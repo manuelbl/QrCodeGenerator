@@ -20,7 +20,11 @@
         </Grid.RowDefinitions>
         <Image Source="{Binding Path=QrCodeImage}" Grid.Row="0" Grid.Column="0" Margin="0,0,0,16"
             RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased"/>
-        <Grid Grid.Row="0" Grid.Column="1">
+        <TextBlock Text="{Binding Path=ErrorMessage}" Visibility="{Binding Path=ErrorVisibility}"
+            Grid.Row="0" Grid.Column="0" Margin="0,0,0,16"
+            Foreground="Red" FontSize="14" TextWrapping="Wrap" TextAlignment="Center"
+            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Grid Grid.Row="0" Grid.Column="1" Visibility="{Binding Path=InfoVisibility}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="1*"/>
@@ -83,19 +87,23 @@
                  Padding="5,3" Margin="0,6"/>
         <StackPanel Grid.Row="2" Grid.Column="0">
             <WrapPanel>
-                <Label Content="Error Correction:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
-                <ComboBox x:Name="ErrorCorrectionCombo" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="0,6,24,6"
-                  ItemsSource="{Binding Path=ErrorCorrectionLevels, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=ErrorCorrection}"/>
-                <CheckBox x:Name="BoostEccCheckBox" Content="Fixed ECC" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,6,24,6"
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <Label Content="Error Correction:" VerticalAlignment="Center" Padding="0,5,12,5"/>
+                    <ComboBox x:Name="ErrorCorrectionCombo" VerticalAlignment="Center" Width="100" Margin="0,6"
+                      ItemsSource="{Binding Path=ErrorCorrectionLevels, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=ErrorCorrection}"/>
+                </StackPanel>
+                <CheckBox x:Name="BoostEccCheckBox" Content="Fixed ECC" VerticalAlignment="Center" Margin="0,6,24,6"
                   IsChecked="{Binding Path=FixedEcc, UpdateSourceTrigger=PropertyChanged}"/>
-                <Label Content="Border Width:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
-                <TextBox x:Name="BorderWidthTextBox" Text="{Binding Path=BorderWidth, UpdateSourceTrigger=PropertyChanged}"
-                 HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Margin="0,6" Padding="5,3"/>
-            </WrapPanel>
-            <WrapPanel>
-                <Label Content="Data Mask:" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0,5,12,5"/>
-                <ComboBox x:Name="DataMaskCombo" HorizontalAlignment="Left" VerticalAlignment="Center" Width="100" Margin="0,6,24,6"
-                  ItemsSource="{Binding Path=DataMasks, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=DataMaskPattern}"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <Label Content="ECI:" VerticalAlignment="Center" Padding="0,5,12,5"/>
+                    <ComboBox x:Name="EciCombo" VerticalAlignment="Center" Width="180" Margin="0,6"
+                      ItemsSource="{Binding Path=EciOptions, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=Eci}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <Label Content="Data Mask:" VerticalAlignment="Center" Padding="0,5,12,5"/>
+                    <ComboBox x:Name="DataMaskCombo" VerticalAlignment="Center" Width="100" Margin="0,6"
+                      ItemsSource="{Binding Path=DataMasks, Mode=OneTime}" DisplayMemberPath="Item1" SelectedValuePath="Item2" SelectedValue="{Binding Path=DataMaskPattern}"/>
+                </StackPanel>
             </WrapPanel>
         </StackPanel>
         <Button x:Name="CopyButton" Content="Copy QR Code" Margin="0,6,0,0"

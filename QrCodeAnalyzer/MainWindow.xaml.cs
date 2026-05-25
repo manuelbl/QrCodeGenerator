@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
         var bitmap = _viewModel.CreateClipboardBitmap();
+        if (bitmap == null) return;
         var dataObject = new DataObject();
         dataObject.SetData(DataFormats.Bitmap, bitmap);
         Clipboard.SetDataObject(dataObject);
