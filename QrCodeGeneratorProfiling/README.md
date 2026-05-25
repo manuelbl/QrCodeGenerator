@@ -255,29 +255,29 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Penalty Contribution
 
-Penalty contribution statistics (samples=3,200,000)
+Penalty contribution statistics (samples=6,400)
 
-| Bucket        | Min | Max  |   Mean | StdDev | Share% |
+| Bucket        | Min |  Max |   Mean | StdDev | Share% |
 |---------------|----:|-----:|-------:|-------:|-------:|
-| 2x2Blocks     |  81 | 1797 | 480.56 | 270.35 |  48.25 |
-| SameColorCols |  74 |  751 | 226.60 | 106.04 |  22.75 |
-| SameColorRows |  70 |  688 | 218.13 |  99.71 |  21.90 |
-| FinderRows    |   0 |  280 |  36.25 |  41.23 |   3.64 |
-| FinderCols    |   0 |  320 |  34.44 |  40.11 |   3.46 |
+| 2x2Blocks     |  45 | 1761 | 444.56 | 270.35 |  53.69 |
+| SameColorCols |   8 |  685 | 160.60 | 106.04 |  19.40 |
+| SameColorRows |   4 |  622 | 152.13 |  99.71 |  18.37 |
+| FinderRows    |   0 |  280 |  36.25 |  41.23 |   4.38 |
+| FinderCols    |   0 |  320 |  34.44 |  40.11 |   4.16 |
 | ColorBalance  |   0 |   10 |   0.05 |   0.71 |   0.01 |
 
 
 # Mask Pattern Selection
 
-Mask pattern selection (samples=400,000)
+Mask pattern selection (samples=800)
 
-|  Pattern   |    Count |   Share% |
-|------------|---------:|---------:|
-|  2         |  125,000 |    31.25 |
-|  3         |   58,500 |    14.62 |
-|  7         |   53,500 |    13.38 |
-|  4         |   49,500 |    12.38 |
-|  6         |   43,500 |    10.88 |
-|  5         |   32,500 |     8.12 |
-|  0         |   20,000 |     5.00 |
-|  1         |   17,500 |     4.38 |
+| Pattern | Count | Share% |
+|--------:|------:|-------:|
+|       2 |   250 |  31.25 |
+|       3 |   117 |  14.62 |
+|       7 |   109 |  13.63 |
+|       4 |   100 |  12.50 |
+|       6 |    91 |  11.38 |
+|       5 |    62 |   7.75 |
+|       0 |    37 |   4.62 |
+|       1 |    34 |   4.25 |
