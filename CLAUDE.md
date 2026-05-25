@@ -42,7 +42,7 @@ dotnet pack --no-build
 - **`QrCodeGeneratorProfiling/`** targets `net10.0` (BenchmarkDotNet).
 - **`QrCodeAnalyzer/`** is a separate WPF tool in its own solution (`QrCodeAnalyzer/QrCodeAnalyzer.sln`), not part of `QrCodeGenerator.sln`.
 
-Version 3 is a complete rewrite (≈10x faster, more standard-compliant) of what began as a port of Project Nayuki's Java library. The previous public type `QrSegment` is now `DataSegment`.
+Version 3 is a complete rewrite (≈10x faster, more standard-compliant) of what began as a port of Project Nayuki's Java library.
 
 ## Architecture
 

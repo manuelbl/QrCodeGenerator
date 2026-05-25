@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo-QRCode-Variety", "Demo-QRCode-Variety.csproj", "{CE334406-7A4A-4455-889B-200DEBB6C08C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basic-Example", "Basic-Example.csproj", "{CE334406-7A4A-4455-889B-200DEBB6C08C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>Demo_Basic</RootNamespace>
+    <RootNamespace>Net.Codecrete.QrCodeGenerator.Demo</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

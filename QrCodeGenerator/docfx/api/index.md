@@ -110,9 +110,9 @@ For more advanced and more efficient ways to generate different raster image for
 
 | Library | Recommendation | NuGet dependencies | Extension file |
 | ------- | -------------- | ------------------ | -------------- |
-| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v2.1.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
-| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v2.1.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
-| **ImageSharp** | Alternative for multi-platform projects. Might require a commercial license. | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v2.1.0/QrCodeBitmapExtensions.cs) |
+| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **ImageSharp** | Alternative for multi-platform projects. Might require a commercial license. | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/QrCodeBitmapExtensions.cs) |
 
 Using these extension methods, generating PNG images is straight-forward:
 

@@ -4,9 +4,9 @@ Open-source library for generating QR codes from text strings and byte arrays.
 
 The library is built for .NET Standard 2.0 and therefore runs on most modern .NET platforms (.NET Core, .NET Framework, Mono etc.) including .NET 6 on all platforms.
 
-It started as a translation of [Project Nayuki's](https://www.nayuki.io/page/qr-code-generator-library) Java version.
+It started as a C# port of [Project Nayuki's](https://www.nayuki.io/page/qr-code-generator-library) Java version.
 Version 3 is a complete rewrite of the library, and it is more standard compliant
-and at least 10x faster than the original implementation.
+and about 10x faster than the original implementation.
 
 
 ## Features
@@ -153,7 +153,7 @@ namespace Examples
 
 Several example projects demonstrate how to generate QR code with different frameworks and libraries:
 
-- [Demo-QRCode-Variety](Demo-QRCode-Variety): Demonstrates how QR codes with different encodings, error correction and masks can be generated. All QR codes are saved as SVG files.
+- [Basic-Example](Basic-Example): Demonstrates the basic use of the libraries (different texts, error correction level). All QR codes are saved as either SVG, PNG or BMP files.
 
 - [Demo-WinUI](Demo-WinUI): Demonstrates how QR codes can be used in WinUI 3 applications and/or using [Win2D](https://github.com/microsoft/Win2D) (incl. copying to the clipboard).
 

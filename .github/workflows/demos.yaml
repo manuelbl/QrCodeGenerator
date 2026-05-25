@@ -43,6 +43,9 @@ jobs:
           $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
           nuget push $pkg -Source Local
 
+      - name: Build Basic-Example
+        run: dotnet build
+        working-directory: Basic-Example
       - name: Build Demo-ImageSharp
         run: dotnet build
         working-directory: Demo-ImageSharp
@@ -52,9 +55,6 @@ jobs:
       - name: Build Demo-ImageMagick
         run: dotnet build
         working-directory: Demo-ImageMagick
-      - name: Build Demo-QRCode-Variety
-        run: dotnet build
-        working-directory: Demo-QRCode-Variety
       - name: Build Demo-SkiaSharp
         run: dotnet build
         working-directory: Demo-SkiaSharp
