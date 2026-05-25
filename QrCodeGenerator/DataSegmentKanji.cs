@@ -18,8 +18,8 @@ namespace Net.Codecrete.QrCodeGenerator
         internal DataSegmentKanji(ArraySegment<byte> bytes)
             : base(DataSegmentMode.Kanji, GetKanjiBitLength(bytes.Count))
         {
-            Debug.Assert(bytes.Array != null);
-            Debug.Assert(bytes.Count % 2 == 0);
+            Trace.Assert(bytes.Array != null);
+            Trace.Assert(bytes.Count % 2 == 0);
             DataBytes = bytes;
         }
         
@@ -56,7 +56,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal override void WriteToBitStream(BitStream bitStream)
         {
             var bytes = DataBytes;
-            Debug.Assert(bytes.Array != null);
+            Trace.Assert(bytes.Array != null);
             
             for (var i = 0; i < bytes.Count; i += 2)
             {

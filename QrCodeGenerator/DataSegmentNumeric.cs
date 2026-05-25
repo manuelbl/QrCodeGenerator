@@ -18,7 +18,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal DataSegmentNumeric(ArraySegment<byte> bytes)
             : base(DataSegmentMode.Numeric, GetNumericBitLength(bytes.Count))
         {
-            Debug.Assert(bytes.Array != null);
+            Trace.Assert(bytes.Array != null);
             DataBytes = bytes;
         }
         
@@ -45,7 +45,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal override void WriteToBitStream(BitStream bitStream)
         {
             var bytes = DataBytes;
-            Debug.Assert(bytes.Array != null);
+            Trace.Assert(bytes.Array != null);
             var i = 0;
             while (i < bytes.Count)
             {

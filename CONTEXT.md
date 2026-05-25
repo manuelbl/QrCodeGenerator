@@ -51,6 +51,15 @@ The 8-bit symbols the payload becomes after a version and error correction level
 chosen: data codewords (segment bits + terminator + padding) followed by Reed-Solomon
 error correction codewords, interleaved per spec, ready to fill into the matrix.
 
+**Data segment mode info**:
+The per-mode rules of a `DataSegmentMode` — mode indicator, count-indicator widths, and
+(for the data modes: numeric, alphanumeric, Kanji, binary) the bit-length/byte-count
+formulas and the segment factory — held in one internal descriptor per mode and looked
+up by mode value. The public `DataSegmentMode` enum stays a plain enum; the behavior
+keyed off it lives in the descriptor.
+_Avoid_: putting per-mode logic on the public enum, or re-deriving it via `switch`/
+`(int)mode` arithmetic at each call site.
+
 ## Relationships
 
 - The encode pipeline is: text → data segments → **codewords** → **module** matrix.

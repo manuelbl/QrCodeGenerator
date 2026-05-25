@@ -23,7 +23,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// needed as the struct includes an indexer.</remarks>
         internal static T At<T>(this ArraySegment<T> segment, int index)
         {
-            Debug.Assert(segment.Array != null);
+            Trace.Assert(segment.Array != null);
             return segment.Array[segment.Offset + index];
         }
 
@@ -31,7 +31,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// Forms a slice of the specified length out of the current array segment starting at the specified index.
         /// </summary>
         /// <param name="segment">The array segment.</param>
-        /// <param name="startIndex">The index at which the slices starts.</param>
+        /// <param name="startIndex">The index at which the slice starts.</param>
         /// <param name="length">The length of the slice.</param>
         /// <typeparam name="T">The type of the elements in the array segment.</typeparam>
         /// <returns>An array segment.</returns>
@@ -39,7 +39,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// needed as it was added to the struct.</remarks>
         internal static ArraySegment<T> MakeSlice<T>(this ArraySegment<T> segment, int startIndex, int length)
         {
-            Debug.Assert(segment.Array != null);
+            Trace.Assert(segment.Array != null);
             return new ArraySegment<T>(segment.Array, segment.Offset + startIndex, length);
         }
     }

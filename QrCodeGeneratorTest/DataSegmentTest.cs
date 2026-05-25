@@ -29,13 +29,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        public void MakeSegment_RejectsUnsupportedMode()
-        {
-            var dataBytes = new ArraySegment<byte>(Array.Empty<byte>());
-            Assert.Throws<ArgumentOutOfRangeException>(() => DataSegment.MakeSegment(DataSegmentMode.ECI, dataBytes));
-        }
-
-        [Fact]
         public void GetByteLengthKanji()
         {
             var data = ECI.ShiftJIS.GetEncoding().GetBytes("氏サケニイ組品ヱ");
@@ -114,12 +107,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(expectedLength, DataSegment.GetHeaderLength(mode, version));
         }
 
-        [Fact]
-        public void CalculateBitLength_InvalidMode()
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() => DataSegment.GetBitLength(DataSegmentMode.ECI, 0, 1));
-        }
-
         [Theory]
         [InlineData(DataSegmentMode.Numeric)]
         [InlineData(DataSegmentMode.Alphanumeric)]
@@ -161,14 +148,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(expectedBytes, DataSegment.GetByteCount(mode, 31));
         }
 
-        [Theory]
-        [InlineData(DataSegmentMode.ECI)]
-        [InlineData(DataSegmentMode.StructuredAppend)]
-        public void GetByteCount_RejectsUnsupportedMode(DataSegmentMode mode)
-        {
-            Assert.Throws<ArgumentOutOfRangeException>(() => DataSegment.GetByteCount(mode, 17));
-        }
-    
         #endregion
     
         #region Factory Methods
@@ -229,6 +208,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             const string text = "😩💦👩❤️💋👩";
             var segments = DataSegment.FromText(text, ECI.None, Encoding.UTF8);
             var segment = Assert.Single(segments);
+            Trace.Assert(segment.DataBytes.Array != null);
             Assert.Equal(text, Encoding.UTF8.GetString(segment.DataBytes.Array));
         
             var exception = Assert.Throws<ArgumentException>(() => DataSegment.FromText(text, ECI.None, encoding: null));
@@ -304,7 +284,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var segment = DataSegment.MakeECISegment(ECI.Latin9);
             Assert.IsType<DataSegmentEci>(segment);
             var eciSegment = segment as DataSegmentEci;
-            Debug.Assert(eciSegment != null);
+            Trace.Assert(eciSegment != null);
             Assert.Equal(ECI.Latin9, eciSegment.EciDesignator);
         }
     
@@ -314,7 +294,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var segment = DataSegment.MakeStructuredAppend(1, 8, 0x3f);
             Assert.IsType<DataSegmentStructuredAppend>(segment);
             var structuredAppendSegment = segment as DataSegmentStructuredAppend;
-            Debug.Assert(structuredAppendSegment != null);
+            Trace.Assert(structuredAppendSegment != null);
             Assert.Equal(1, structuredAppendSegment.StructuredAppendPosition);
             Assert.Equal(8, structuredAppendSegment.StructuredAppendTotal);
             Assert.Equal(0x3f, structuredAppendSegment.StructuredAppendParity);

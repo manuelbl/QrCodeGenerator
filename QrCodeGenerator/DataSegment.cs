@@ -75,7 +75,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// The position of the QR code within a structured append message.
         /// <para>
         /// Valid positions are between 1 and 16.
-        /// The value is only valuid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
+        /// The value is only valid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
         /// </para>
         /// </summary>
         public virtual int StructuredAppendPosition => 0;
@@ -84,7 +84,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// The total number of QR codes used for the structured append message.
         /// <para>
         /// Valid numbers are between 1 and 16.
-        /// The value is only valuid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
+        /// The value is only valid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
         /// </para>
         /// </summary>
         public virtual int StructuredAppendTotal => 0;
@@ -92,7 +92,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <summary>
         /// The data parity in the structured append messages.
         /// <para>
-        /// The value is only valuid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
+        /// The value is only valid if this segment uses the segment mode <see cref="DataSegmentMode.StructuredAppend"/>.
         /// </para>
         /// </summary>
         public virtual byte StructuredAppendParity => 0;
@@ -274,19 +274,20 @@ namespace Net.Codecrete.QrCodeGenerator
             var bitStream = new BitStream(capacity);
             foreach (var segment in segments)
             {
+                var modeInfo = DataSegmentModeInfo.For(segment.Mode);
                 // mode indicator
-                bitStream.AppendBits(GetModeIndicator(segment.Mode), 4);
+                bitStream.AppendBits((uint)modeInfo.ModeIndicator, 4);
                 // character count indicator
-                if (segment.Mode >= DataSegmentMode.Numeric && segment.Mode <= DataSegmentMode.Binary)
+                if (modeInfo.HasCountIndicator)
                 {
                     bitStream.AppendBits((uint)segment.DataBytes.Count,
-                        GetCountIndicatorLength(segment.Mode, version));
+                        modeInfo.GetCountIndicatorLength(version));
                 }
                 // data bit stream
                 segment.WriteToBitStream(bitStream);
             }
             
-            Debug.Assert(bitStream.Length <= 8 * capacity);
+            Trace.Assert(bitStream.Length <= 8 * capacity);
             
             // terminator
             var terminatorLength = Math.Min(4, capacity * 8 - bitStream.Length);
@@ -309,17 +310,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         internal static uint GetModeIndicator(DataSegmentMode mode)
         {
-            uint symbol = 0;
-            switch (mode)
-            {
-                case DataSegmentMode.Numeric: symbol = 1; break;
-                case DataSegmentMode.Alphanumeric: symbol = 2; break;
-                case DataSegmentMode.Kanji: symbol = 8; break;
-                case DataSegmentMode.Binary: symbol = 4; break;
-                case DataSegmentMode.ECI: symbol = 7; break;
-                case DataSegmentMode.StructuredAppend: symbol = 3; break;
-            }
-            return symbol;
+            return (uint)DataSegmentModeInfo.For(mode).ModeIndicator;
         }
         
         #endregion
@@ -353,20 +344,10 @@ namespace Net.Codecrete.QrCodeGenerator
         public static DataSegment MakeSegment(DataSegmentMode dataSegmentMode, ArraySegment<byte> dataBytes)
         {
             Objects.RequireNonNull(dataBytes.Array, "dataBytes.Array");
-            
-            switch (dataSegmentMode)
-            {
-                case DataSegmentMode.Numeric:
-                    return new DataSegmentNumeric(dataBytes);
-                case DataSegmentMode.Alphanumeric:
-                    return new DataSegmentAlphanumeric(dataBytes);
-                case DataSegmentMode.Kanji:
-                    return new DataSegmentKanji(dataBytes);
-                case DataSegmentMode.Binary:
-                    return new DataSegmentByte(dataBytes);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(dataSegmentMode), dataSegmentMode, "This mode is not supported by this function.");
-            }
+
+            var create = DataSegmentModeInfo.For(dataSegmentMode).Create;
+            Trace.Assert(create != null);
+            return create(dataBytes);
         }
 
         /// <summary>
@@ -398,35 +379,6 @@ namespace Net.Codecrete.QrCodeGenerator
         #region Length Calculation
 
         /// <summary>
-        /// Calculates the encoded length of the payload.
-        /// <para>
-        /// The length does not include the mode indicator and  the count indicator.
-        /// </para>
-        /// <para>
-        /// This function only supports the encoding modes <em>Numeric</em>,
-        /// <em>AlphaNumeric</em>, <em>Kanji</em> and <em>Binary</em>.
-        /// </para>
-        /// </summary>
-        /// <param name="mode">The encoding mode.</param>
-        /// <param name="length">The number of bytes to encode.</param>
-        /// <returns>The payload length, in bits.</returns>
-        private static int GetDataBitLength(DataSegmentMode mode, int length)
-        {
-            switch (mode)
-            {
-                case DataSegmentMode.Numeric:
-                    return DataSegmentNumeric.GetNumericBitLength(length);
-                case DataSegmentMode.Alphanumeric:
-                    return DataSegmentAlphanumeric.GetAlphanumericBitLength(length);
-                case DataSegmentMode.Kanji:
-                    return DataSegmentKanji.GetKanjiBitLength(length);
-                case DataSegmentMode.Binary:
-                    return DataSegmentByte.GetByteBitLength(length);
-                default: throw new ArgumentOutOfRangeException(nameof(mode), mode, "This mode is not supported by this function.");
-            }
-        }
-        
-        /// <summary>
         /// Calculates the segment length.
         /// <para>
         /// The segment length includes the mode indicator, the count indicator, and the data bits.
@@ -442,7 +394,9 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>The segment length, in bits.</returns>
         internal static int GetBitLength(DataSegmentMode mode, int length, int version)
         {
-            return GetHeaderLength(mode, version) + GetDataBitLength(mode, length);
+            var info = DataSegmentModeInfo.For(mode);
+            Trace.Assert(info.EncodedBitLength != null);
+            return info.GetHeaderLength(version) + info.EncodedBitLength(length);
         }
 
         internal static int GetBitLength(IEnumerable<DataSegment> segments, int version)
@@ -462,18 +416,9 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentOutOfRangeException">Thrown if an unsupported mode is specified.</exception>
         internal static int GetByteCount(DataSegmentMode mode, int bitLength)
         {
-            switch (mode)
-            {
-                case DataSegmentMode.Numeric:
-                    return DataSegmentNumeric.GetNumericByteCount(bitLength);
-                case DataSegmentMode.Alphanumeric:
-                    return DataSegmentAlphanumeric.GetAlphanumericByteCount(bitLength);
-                case DataSegmentMode.Kanji:
-                    return DataSegmentKanji.GetKanjiByteCount(bitLength);
-                case DataSegmentMode.Binary:
-                    return DataSegmentByte.GetByteByteCount(bitLength);
-                default: throw new ArgumentOutOfRangeException(nameof(mode), mode, "This mode is not supported by this function.");
-            }
+            var info = DataSegmentModeInfo.For(mode);
+            Trace.Assert(info.ByteCount != null);
+            return info.ByteCount(bitLength);
         }
         
         /// <summary>
@@ -484,25 +429,8 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>The header length, in bits.</returns>
         internal static int GetHeaderLength(DataSegmentMode mode, int version)
         {
-            return 4 + GetCountIndicatorLength(mode, version);
+            return DataSegmentModeInfo.For(mode).GetHeaderLength(version);
         }
-
-        private static int GetCountIndicatorLength(DataSegmentMode mode, int version)
-        {
-            // Groups are: 1 to 9, 10 to 26, 27 to 40
-            var versionGroup = (version + 7) / 17;
-            return CountIndicatorLength[(int)mode * 3 - 3 + versionGroup];
-        }
-
-        private static readonly int[] CountIndicatorLength =
-        {
-            10, 12, 14, // numeric
-            9, 11, 13,  // alphanumeric
-            8, 10, 12,  // Kanji
-            8, 16, 16,  // binary
-            0, 0, 0,    // ECI designator
-            0, 0, 0     // structured append
-        };
         
         #endregion
         
@@ -531,7 +459,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 else
                 {
                     var dataBytes = segment.DataBytes;
-                    Debug.Assert(dataBytes.Array != null);
+                    Trace.Assert(dataBytes.Array != null);
                     text.Append(encoding.GetString(dataBytes.Array, dataBytes.Offset, dataBytes.Count));
                 }
             }

@@ -92,7 +92,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-            Debug.Assert(bitIndex >= bitLength && bitIndex <= bitLength + 7);
+            Trace.Assert(bitIndex >= bitLength && bitIndex <= bitLength + 7);
         }
 
         #endregion

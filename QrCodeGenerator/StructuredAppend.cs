@@ -43,7 +43,7 @@ namespace Net.Codecrete.QrCodeGenerator
         
         internal static List<List<DataSegment>> BuildSegments(byte[] data, int version, QrCode.Ecc ecl, ECI eci, bool isUtf8)
         {
-            Debug.Assert(!eci.Equals(ECI.Automatic));
+            Trace.Assert(!eci.Equals(ECI.Automatic));
 
             var qrCodes = Split(data, version, ecl, eci, isUtf8);
             var parity = CalculateParity(data);

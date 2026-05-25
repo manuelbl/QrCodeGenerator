@@ -18,10 +18,6 @@ namespace Net.Codecrete.QrCodeGenerator
     {
         #region Optimal Segments
 
-        private const int Numeric = (int) DataSegmentMode.Numeric;
-        private const int Alphanumeric = (int) DataSegmentMode.Alphanumeric;
-        private const int Byte = (int) DataSegmentMode.Binary;
-
         /// <summary>
         /// Builds optimal segments encoding the given byte array.
         /// <para>
@@ -54,15 +50,15 @@ namespace Net.Codecrete.QrCodeGenerator
             // In the first step, short numeric blocks are merged with alphanumeric blocks.
             // In the second step, all types of blocks are merged into byte blocks.
             MergeBlocks(blocks, version, DataSegmentMode.Alphanumeric,
-                (mode0, mode1, mode2) => mode0 == Alphanumeric
-                                         && mode1 == Numeric && mode2 == mode0,
-                (mode0, mode1) => (mode0 == Alphanumeric && mode1 == Numeric)
-                                  || (mode0 == Numeric && mode1 == Alphanumeric)
+                (mode0, mode1, mode2) => mode0 == DataSegmentMode.Alphanumeric
+                                         && mode1 == DataSegmentMode.Numeric && mode2 == mode0,
+                (mode0, mode1) => (mode0 == DataSegmentMode.Alphanumeric && mode1 == DataSegmentMode.Numeric)
+                                  || (mode0 == DataSegmentMode.Numeric && mode1 == DataSegmentMode.Alphanumeric)
             );
             MergeBlocks(blocks, version, DataSegmentMode.Binary,
-                (mode0, mode1, mode2) => mode1 != Byte && mode2 == mode0,
-                (mode0, mode1) => (mode0 == Byte && mode1 != Byte)
-                                  || (mode0 != Byte && mode1 == Byte)
+                (mode0, mode1, mode2) => mode1 != DataSegmentMode.Binary && mode2 == mode0,
+                (mode0, mode1) => (mode0 == DataSegmentMode.Binary && mode1 != DataSegmentMode.Binary)
+                                  || (mode0 != DataSegmentMode.Binary && mode1 == DataSegmentMode.Binary)
             );
 
             var offset = 0;
@@ -84,8 +80,8 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="merge2Condition">Condition for testing 2 consecutive blocks.</param>
         [SuppressMessage("csharpsquid", "S3776")]
         private static void MergeBlocks(List<Block> blocks, int version, DataSegmentMode mergedMode,
-            Func<int, int, int, bool> merge3Condition,
-            Func<int, int, bool> merge2Condition)
+            Func<DataSegmentMode, DataSegmentMode, DataSegmentMode, bool> merge3Condition,
+            Func<DataSegmentMode, DataSegmentMode, bool> merge2Condition)
         {
             var previousCount = -1;
             while (blocks.Count > 1 && previousCount != blocks.Count)
@@ -96,13 +92,13 @@ namespace Net.Codecrete.QrCodeGenerator
                 var index = blocks.Count - 1;
                 while (index > 0)
                 {
-                    var mode0 = (int) blocks[index].Mode;
-                    var mode1 = (int) blocks[index - 1].Mode;
-                    var mode2 = index >= 2 ? (int) blocks[index - 2].Mode : 0;
+                    var mode0 = blocks[index].Mode;
+                    var mode1 = blocks[index - 1].Mode;
+                    DataSegmentMode? mode2 = index >= 2 ? blocks[index - 2].Mode : (DataSegmentMode?) null;
 
                     // Case 1: merge 3 blocks
                     // Test if the bit stream is shorter if all 3 blocks are merged (using the specified merged mode).
-                    if (mode2 != 0 && merge3Condition(mode0, mode1, mode2))
+                    if (mode2 != null && merge3Condition(mode0, mode1, mode2.Value))
                     {
                         var mergedPayloadLength =
                             blocks[index - 2].Length + blocks[index - 1].Length + blocks[index].Length;

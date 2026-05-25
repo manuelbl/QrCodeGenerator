@@ -19,7 +19,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal DataSegmentAlphanumeric(ArraySegment<byte> bytes)
             : base(DataSegmentMode.Alphanumeric, GetAlphanumericBitLength(bytes.Count))
         {
-            Debug.Assert(bytes.Array != null);
+            Trace.Assert(bytes.Array != null);
             DataBytes = bytes;
         }
         
@@ -51,7 +51,7 @@ namespace Net.Codecrete.QrCodeGenerator
 
         internal override void WriteToBitStream(BitStream bitStream)
         {
-            Debug.Assert(DataBytes.Array != null);
+            Trace.Assert(DataBytes.Array != null);
             for (var i = 0; i + 1 < DataBytes.Count; i += 2)
             {
                 // 2 letters are encoded into 11 bits

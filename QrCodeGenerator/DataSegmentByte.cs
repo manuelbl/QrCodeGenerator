@@ -18,7 +18,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal DataSegmentByte(ArraySegment<byte> bytes)
             : base(DataSegmentMode.Binary, GetByteBitLength(bytes.Count))
         {
-            Debug.Assert(bytes.Array != null);
+            Trace.Assert(bytes.Array != null);
             DataBytes = bytes;
         }
 
