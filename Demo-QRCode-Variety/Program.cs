@@ -108,7 +108,7 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             // Some readers always ignore the ECI designator.
             var qrCode = QrCode.EncodeTextAdvanced("🎲 😇 🤒 🏌 ⏭ 🚍", QrCode.Ecc.Quartile,
                 encoding: Encoding.UTF8, eci: ECI.None);
-            SaveAsSvg(qrCode, "emojis-qr.svg");
+            SaveAsSvg(qrCode, "emojis-no-eci-qr.svg");
         }
 
         private static void BinaryData()

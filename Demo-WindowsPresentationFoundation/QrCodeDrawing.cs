@@ -77,16 +77,10 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             }
 
             // draw the modules
-            for (int y = 0; y < size; y++)
+            foreach (var r in qrCode.ToRectangles())
             {
-                for (int x = 0; x < size; x++)
-                {
-                    if (qrCode.GetModule(x, y))
-                    {
-                        var rect = new Rect(x + borderWidth, y + borderWidth, 1, 1);
-                        drawingContext.DrawRectangle(foreground, null, rect);
-                    }
-                }
+                var rect = new Rect(r.X + borderWidth, r.Y + borderWidth, r.Width, r.Height);
+                drawingContext.DrawRectangle(foreground, null, rect);
             }
         }
 

@@ -69,14 +69,11 @@ namespace Examples
     {
         static void Main()
         {
-            var qr = QrCode.EncodeTextAdvanced("3141592653589793238462643383",
+            var qrCode = QrCode.EncodeTextAdvanced("3141592653589793238462643383",
                 QrCode.Ecc.High, eci: ECI.Latin9, minVersion: 5, maxVersion: 5);
-            for (int y = 0; y < qr.Size; y++)
+            foreach (var rect in qrCode.ToRectangles())
             {
-                for (int x = 0; x < qr.Size; x++)
-                {
-                    ... paint qr.GetModule(x,y) ...
-                }
+                ... paint rectangle rect.X, rect.Y, rect.Width, rect.Height
             }
         }
     }

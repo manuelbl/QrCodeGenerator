@@ -34,6 +34,9 @@ public static class QrCodeDrawing
     /// <param name="background"></param>
     public static void Draw(QrCode qrCode, CanvasDrawingSession drawingSession, int borderWidth, Color foreground, Color? background)
     {
+        // turn off anti-aliasing to get crisp edges and avoid gray lines between modules
+        drawingSession.Antialiasing = CanvasAntialiasing.Aliased;
+
         int size = qrCode.Size;
 
         // draw the background
@@ -43,16 +46,10 @@ public static class QrCodeDrawing
         }
 
         // draw the modules
-        for (int y = 0; y < size; y++)
+        foreach (var rect in qrCode.ToRectangles())
         {
-            for (int x = 0; x < size; x++)
-            {
-                if (qrCode.GetModule(x, y))
-                {
-                    var rect = new Rect(x + borderWidth, y + borderWidth, 1, 1);
-                    drawingSession.FillRectangle(rect, foreground);
-                }
-            }
+            var r = new Rect(rect.X + borderWidth, rect.Y + borderWidth, rect.Width, rect.Height);
+            drawingSession.FillRectangle(r, foreground);
         }
     }
 

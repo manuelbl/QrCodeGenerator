@@ -130,15 +130,9 @@ namespace Net.Codecrete.QrCodeGenerator
             // draw modules
             using (SolidBrush brush = new SolidBrush(foreground))
             {
-                for (int y = 0; y < size; y++)
+                foreach (var rect in qrCode.ToRectangles())
                 {
-                    for (int x = 0; x < size; x++)
-                    {
-                        if (qrCode.GetModule(x, y))
-                        {
-                            graphics.FillRectangle(brush, (x + border) * scale, (y + border) * scale, scale, scale);
-                        }
-                    }
+                    graphics.FillRectangle(brush, (rect.X + border) * scale, (rect.Y + border) * scale, rect.Width * scale, rect.Height * scale);
                 }
             }
         }
