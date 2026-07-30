@@ -10,29 +10,6 @@ The library can provide the QR code as a list of rectangles or as a two-dimensio
 (called modules by the QR code standard). It is then up to the application to display the QR code.
 Many demo projects show how to use this approach for different graphics libraries and UI frameworks.
 
-The main target of the library is .NET Standard 2.0 so it runs in virtually any current .NET environment.
-
-
-## Commands
-
-```bash
-# Build
-dotnet build
-dotnet build --configuration Release
-
-# Test (all)
-dotnet test
-
-# Test (single class)
-dotnet test --filter "FullyQualifiedName~QrCodeTest"
-
-# Test (single method)
-dotnet test --filter "FullyQualifiedName=Net.Codecrete.QrCodeGenerator.Test.QrCodeTest.Constants"
-
-# Pack NuGet
-dotnet pack --no-build
-```
-
 ## Build targets
 
 - **`QrCodeGenerator/`** (the library) targets `netstandard2.0;net6.0`. The `net6.0` target exists only to enable trimming (`IsTrimmable`). Keep public API and language usage compatible with netstandard2.0 — don't reach for newer BCL/`Span` APIs that aren't available there.
