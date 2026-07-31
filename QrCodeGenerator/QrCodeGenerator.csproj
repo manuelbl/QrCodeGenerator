@@ -6,8 +6,8 @@
     <LangVersion>7.3</LangVersion>
     <RootNamespace>Net.Codecrete.QrCodeGenerator</RootNamespace>
     <PackageId>Net.Codecrete.QrCodeGenerator</PackageId>
-    <Version>3.1.0-dev</Version>
-    <PackageVersion>3.1.0-dev</PackageVersion>
+    <Version>3.1.0</Version>
+    <PackageVersion>3.1.0</PackageVersion>
     <FileVersion>3.1.0.0</FileVersion>
     <Authors>Manuel Bleichenbacher</Authors>
     <Product>QR Code Generator for .NET</Product>
@@ -34,14 +34,13 @@ Advanced features:
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>logo.png</PackageIcon>
     <PackageTags>qr code, qrcode, kanji, qrcode generator, svg</PackageTags>
-    <PackageReleaseNotes>New in releases 3.0:
-- Complete rewrite of library: 10x faster
-- Better standard compliance for text encoding and ECI designators
+    <PackageReleaseNotes>New in releases 3.1:
+- Structured Append: When splitting a long text into multiple linked QR codes, the QR code size can be balanced for a more uniform appearance. 
 </PackageReleaseNotes>
     <Company>Codecrete</Company>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <AssemblyVersion>3.1.0.0</AssemblyVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <EnablePackageValidation>true</EnablePackageValidation>

@@ -1,8 +1,8 @@
 # Release process
 
-The library's version lives in four properties in
+The library's version lives in three properties in
 [QrCodeGenerator/QrCodeGenerator.csproj](QrCodeGenerator/QrCodeGenerator.csproj):
-`Version`, `PackageVersion`, `FileVersion`, `AssemblyVersion`. Between releases it
+`Version`, `PackageVersion`, `FileVersion`. Between releases it
 carries a `-dev` prerelease suffix (e.g. `3.1.0-dev`) so it's always ordered above the
 last release but never resolved by a floating `3.*` `PackageReference` (NuGet excludes
 prereleases from floating ranges by default). `README.md`, `QrCodeGenerator/docs/README.md`,

@@ -41,7 +41,7 @@ Advanced features:
    Or by running a command in the Package Manager Console
 
 ```
-Install-Package Net.Codecrete.QrCodeGenerator -Version 3.0.0
+Install-Package Net.Codecrete.QrCodeGenerator -Version 3.1.0
 ```
 3. Add the code from the example below
 
@@ -127,9 +127,9 @@ For more advanced and more efficient ways to generate different raster image for
 
 | Imaging library | Recommendation | NuGet dependencies | Extension file |
 | ------- | -------------- | ------------------ | -------------- |
-| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-System-Drawing/QrCodeBitmapExtensions.cs) |
-| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
-| **ImageSharp** | Alternative for multi-platform projects. Might require a commercial license. | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-ImageSharp/QrCodeBitmapExtensions.cs) |
+| **System.Drawing** | For Windows only projects | `System.Drawing.Common` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-System-Drawing/QrCodeBitmapExtensions.cs) |
+| **SkiaSharp** | For macOS, Linux, iOS, Android and multi-platform projects | `SkiaSharp` and `SkiaSharp.NativeAssets.Linux` (for Linux only) | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-SkiaSharp/QrCodeBitmapExtensions.cs) |
+| **ImageSharp** | Alternative for multi-platform projects. Might require a commercial license. | `SixLabors.ImageSharp.Drawing` | [QrCodeBitmapExtensions.cs](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-ImageSharp/QrCodeBitmapExtensions.cs) |
 
 Using these extension methods, generating PNG images is straightforward:
 
@@ -153,25 +153,25 @@ namespace Examples
 
 Several example projects demonstrate how to generate QR code with different frameworks and libraries:
 
-- [Basic-Example](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Basic-Example): Demonstrates the basic use of the libraries (different texts, error correction level). All QR codes are saved as either SVG, PNG or BMP files.
+- [Basic-Example](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Basic-Example): Demonstrates the basic use of the libraries (different texts, error correction level). All QR codes are saved as either SVG, PNG or BMP files.
 
-- [Demo-WinUI](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-WinUI): Demonstrates how QR codes can be used in WinUI 3 applications and/or using [Win2D](https://github.com/microsoft/Win2D) (incl. copying to the clipboard).
+- [Demo-WinUI](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-WinUI): Demonstrates how QR codes can be used in WinUI 3 applications and/or using [Win2D](https://github.com/microsoft/Win2D) (incl. copying to the clipboard).
 
-- [Demo-WindowsPresentationFoundation](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-WindowsPresentationFoundation): Demonstrates how QR codes can be used in WPF applications (incl. copying to the clipboard).
+- [Demo-WindowsPresentationFoundation](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-WindowsPresentationFoundation): Demonstrates how QR codes can be used in WPF applications (incl. copying to the clipboard).
 
-- [Demo-WinForms](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-WinForms): Demonstrates how QR codes can be used in Windows Forms applications (incl. copying to the clipboard).
+- [Demo-WinForms](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-WinForms): Demonstrates how QR codes can be used in Windows Forms applications (incl. copying to the clipboard).
 
-- [Demo-ASP.NET-Core](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-ASP.NET-Core): Demonstrates how to create QR codes in a web application implemented using ASP.NET Core.
+- [Demo-ASP.NET-Core](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-ASP.NET-Core): Demonstrates how to create QR codes in a web application implemented using ASP.NET Core.
 
-- [Demo-VCard](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-VCard): Demonstrates how contact data (similar to business cards) can be saved in a QR Code using the VCard standard.
+- [Demo-VCard](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-VCard): Demonstrates how contact data (similar to business cards) can be saved in a QR Code using the VCard standard.
 
-- [Demo-System-Drawing](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-System-Drawing): Demonstrates how a QR code can be saved as a PNG file, using the *System.Drawing* classes, which have become a Windows-only technology starting with .NET 6.
+- [Demo-System-Drawing](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-System-Drawing): Demonstrates how a QR code can be saved as a PNG file, using the *System.Drawing* classes, which have become a Windows-only technology starting with .NET 6.
 
-- [Demo-SkiaSharp](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-SkiaSharp): Demonstrates how a QR code can be saved as a PNG file, using the SkiaSharp multi-platform raster image library.
+- [Demo-SkiaSharp](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-SkiaSharp): Demonstrates how a QR code can be saved as a PNG file, using the SkiaSharp multi-platform raster image library.
 
-- [Demo-ImageSharp](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-ImageSharp): Demonstrates how a QR code can be saved as a PNG file, using the ImageSharp raster image library. Additionally, a QR code with an image in the center is created.
+- [Demo-ImageSharp](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-ImageSharp): Demonstrates how a QR code can be saved as a PNG file, using the ImageSharp raster image library. Additionally, a QR code with an image in the center is created.
 
-- [Demo-ImageMagick](https://github.com/manuelbl/QrCodeGenerator/blob/v3.0.0/Demo-ImageMagick): Demonstrates how a QR code can be saved as a PNG file, using the Magick.NET image manipulation library (based on ImageMagick).
+- [Demo-ImageMagick](https://github.com/manuelbl/QrCodeGenerator/blob/v3.1.0/Demo-ImageMagick): Demonstrates how a QR code can be saved as a PNG file, using the Magick.NET image manipulation library (based on ImageMagick).
 
 
 ## Upgrade from version 2.x to version 3.x
