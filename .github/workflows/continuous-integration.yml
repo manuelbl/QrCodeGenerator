@@ -29,6 +29,7 @@ jobs:
           dotnet-version: |
             6.x
             8.x
+            10.x
 
       - name: Restore NuGet packages
         run: dotnet restore
@@ -51,3 +52,10 @@ jobs:
           dotnet tool restore
           dotnet pack --no-build --verbosity normal
         if: startsWith(matrix.os,'windows')
+
+      - name: Generate API documentation
+        run: |
+          dotnet tool restore
+          dotnet docfx docfx/docfx.json --warningsAsErrors
+        working-directory: QrCodeGenerator
+        if: startsWith(matrix.os,'ubuntu')
