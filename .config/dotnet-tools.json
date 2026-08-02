@@ -3,18 +3,18 @@
   "isRoot": true,
   "tools": {
     "dotnet-validate": {
-      "version": "0.0.1-preview.304",
+      "version": "0.0.1-preview.537",
       "commands": [
         "dotnet-validate"
       ],
-      "rollForward": false
+      "rollForward": true
     },
     "docfx": {
       "version": "2.78.5",
       "commands": [
         "docfx"
       ],
-      "rollForward": false
+      "rollForward": true
     }
   }
 }

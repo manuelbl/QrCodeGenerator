@@ -20,7 +20,7 @@ jobs:
     name: Publish to NuGet
     environment: nuget
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - name: Checkout git repository
@@ -47,10 +47,20 @@ jobs:
       - name: Run tests
         run: dotnet test --verbosity normal
 
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
       - name: Create and validate NuGet package
+        run: dotnet pack QrCodeGenerator/QrCodeGenerator.csproj --verbosity normal
+
+      - name: Create API documentation
+        run: dotnet docfx docfx/docfx.json --warningsAsErrors
+        working-directory: QrCodeGenerator
+
+      - name: Zip API documentation
+        shell: pwsh
         run: |
-          dotnet tool restore
-          dotnet pack QrCodeGenerator/QrCodeGenerator.csproj --verbosity normal
+          Compress-Archive -Path QrCodeGenerator/bin/_site/* -DestinationPath API.Documentation.zip -Force
 
       - name: NuGet login (OIDC to temporary API key)
         uses: NuGet/login@v1
@@ -65,3 +75,35 @@ jobs:
           --source https://api.nuget.org/v3/index.json
           --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
           --skip-duplicate
+
+      - name: Create and push release tag
+        shell: pwsh
+        run: |
+          $tag = "v${{ steps.version.outputs.version }}"
+          if (git ls-remote --tags origin "refs/tags/$tag") {
+            Write-Host "Tag $tag already exists - skipping"
+            exit 0
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a $tag -m "Release $tag"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git push origin "refs/tags/$tag"
+
+      - name: Create draft GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $tag = "v$version"
+          $assets = @(
+            "QrCodeGenerator/bin/Release/Net.Codecrete.QrCodeGenerator.$version.nupkg",
+            "API.Documentation.zip"
+          )
+          if (gh release view $tag 2>$null) {
+            gh release upload $tag $assets --clobber
+          } else {
+            gh release create $tag $assets --draft --title "$tag" --generate-notes
+          }
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
