@@ -43,6 +43,16 @@ namespace Net.Codecrete.QrCodeGenerator
             return b2 >= 0x40 && b2 <= 0xfc;
         }
 
+        /// <summary>
+        /// The number of Kanji characters, which is half the number of data bytes.
+        /// <para>
+        /// Each Kanji character is a Shift JIS double-byte code, encoded into 13 bits. The
+        /// character count indicator counts the characters, not the bytes they occupy.
+        /// </para>
+        /// </summary>
+        /// <value>The character count.</value>
+        internal override int CharacterCount => DataBytes.Count / 2;
+
         internal static int GetKanjiBitLength(int length)
         {
             return length * 13 / 2;

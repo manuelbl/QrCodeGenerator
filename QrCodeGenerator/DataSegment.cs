@@ -45,6 +45,16 @@ namespace Net.Codecrete.QrCodeGenerator
         public int DataLength => DataBytes.Count;
 
         /// <summary>
+        /// The value written into the character count indicator of this segment.
+        /// <para>
+        /// The indicator counts the characters the segment encodes. That is the number of data
+        /// bytes for all modes but Kanji, where a character occupies two bytes.
+        /// </para>
+        /// </summary>
+        /// <value>The character count.</value>
+        internal virtual int CharacterCount => DataBytes.Count;
+
+        /// <summary>
         /// The length of the encoded segment, in bits.
         /// <para>
         /// The length is without the header (mode indicator and count indicator).
@@ -280,7 +290,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 // character count indicator
                 if (modeInfo.HasCountIndicator)
                 {
-                    bitStream.AppendBits((uint)segment.DataBytes.Count,
+                    bitStream.AppendBits((uint)segment.CharacterCount,
                         modeInfo.GetCountIndicatorLength(version));
                 }
                 // data bit stream

@@ -49,16 +49,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [ClassData(typeof(QrCodeDataProvider))]
         public void VerifyWithZXing(QrCodeTestCase testCase)
         {
-            // ZXing.Net 0.16.x cannot decode a QR that combines an ECI=20 (Shift-JIS) marker
-            // with a Kanji-mode segment: DecodedBitStreamParser.decode returns null and
-            // Decoder.decode then NREs assigning ErrorsCorrected. The QR itself is valid
-            // (TestQrCode passes for these cases). Skip until ZXing fixes the path.
-            if (testCase.Segments.Any(s => s.Mode == DataSegmentMode.ECI)
-                && testCase.Segments.Any(s => s.Mode == DataSegmentMode.Kanji))
-            {
-                return;
-            }
-
             var qrCode = EncodeSegments(testCase.Segments, testCase.RequestedEcc, testCase.MinVersion, testCase.MaxVersion, testCase.BoostEcl);
             var expectedBytes = Codewords.BuildData(testCase.Segments, qrCode.Version, (int)qrCode.ErrorCorrectionLevel);
 

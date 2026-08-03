@@ -65,6 +65,6 @@ Uses **xUnit v3** with **Verify.XunitV3** for snapshot/approval testing and **Xu
 The test strategy is characterization + cross-validation, not just unit tests:
 
 - **`QrCodeDataProvider.cs`** is a large generated `[ClassData]` source feeding `QrCodeTest`. `TestQrCode` asserts the exact module layout, version, ECC, and mask for each case (golden tests).
-- **`VerifyWithZXing`** decodes every generated QR code with **ZXing.Net** and asserts the text round-trips with *zero* errors corrected. `CorruptedModule_IsCorrected_AndReportsErrorsCorrected` is a negative control that flips one module to prove that assertion has teeth. (Some ECI+Kanji combinations are skipped due to a ZXing 0.16.x decode bug — the QR is still valid.)
+- **`VerifyWithZXing`** decodes every generated QR code with **ZXing.Net** and asserts the text round-trips with *zero* errors corrected. `CorruptedModule_IsCorrected_AndReportsErrorsCorrected` is a negative control that flips one module to prove that assertion has teeth.
 - **`ReedSolomonTest`** cross-checks ECC against the **STH1123.ReedSolomon** package.
 - **Verify** snapshot tests cover rendered output (SVG/PNG/BMP). Snapshot `.verified.*` files live alongside the test source in `QrCodeGeneratorTest/`. When a snapshot changes intentionally, run `dotnet test` once — Verify fails and writes the new `.verified.*` file; accept it by replacing the old one (or via the Verify tooling).
