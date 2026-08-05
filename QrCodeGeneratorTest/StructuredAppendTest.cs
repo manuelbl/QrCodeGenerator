@@ -50,6 +50,19 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
+        public void StructuredAppendHeadersCarryDataParity()
+        {
+            var text = RandomData.MakeAlphanumericString(3000, seed: 1001);
+            var data = Encoding.GetEncoding("ISO-8859-1").GetBytes(text);
+            var expectedParity = data.Aggregate<byte, byte>(0, (current, value) => (byte)(current ^ value));
+
+            var qrCodes = StructuredAppend.BuildSegments(data, 29, QrCode.Ecc.Medium, ECI.Latin1, false);
+
+            Assert.NotEqual(0, expectedParity);
+            Assert.All(qrCodes, segments => Assert.Equal(expectedParity, segments[0].StructuredAppendParity));
+        }
+
+        [Fact]
         public void RejectTooLongString()
         {
             var text = RandomData.MakeString(10017, seed: 7543);

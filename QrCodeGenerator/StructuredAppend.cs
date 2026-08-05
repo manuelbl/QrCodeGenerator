@@ -296,9 +296,16 @@ namespace Net.Codecrete.QrCodeGenerator
             );
         }
         
+        /// <summary>
+        /// Calculates the parity of the data, i.e. the XOR of all its bytes.
+        /// <para>
+        /// Every QR code of the sequence carries it, so that a scanner can tell whether the codes
+        /// it has collected belong together (see ISO/IEC 18004, section 8.4.1).
+        /// </para>
+        /// </summary>
         private static byte CalculateParity(byte[] data)
         {
-            return data.Aggregate<byte, byte>(0, (current, value) => (byte)(current ^ (byte)(value >> 8)));
+            return data.Aggregate<byte, byte>(0, (current, value) => (byte)(current ^ value));
         }
 
     }
