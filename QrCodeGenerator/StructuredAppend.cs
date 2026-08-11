@@ -280,6 +280,14 @@ namespace Net.Codecrete.QrCodeGenerator
 
                     // continue splitting the remainder, which may fill further codes
                     segment = splitSegments.Item2;
+
+                    // The split consumed the segment entirely. Adding the empty remainder would
+                    // waste a header (and would not even fit if the capacity is smaller than a
+                    // header, as it can be while searching for the balanced capacity).
+                    if (segment.DataLength == 0)
+                    {
+                        break;
+                    }
                 }
             }
 

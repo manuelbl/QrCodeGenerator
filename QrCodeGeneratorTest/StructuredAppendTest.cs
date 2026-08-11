@@ -150,6 +150,53 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Single(qrCodes);
         }
 
+        [Theory]
+        [InlineData("")]
+        [InlineData("A")]
+        [InlineData("AB")]
+        [InlineData("1")]
+        [InlineData("12")]
+        [InlineData("\u00e9")]
+        [InlineData("\u4e2d")]
+        public void CreateBalancedQrCode_ForVeryShortText(string text)
+        {
+            var qrCodes = QrCode.EncodeTextInMultipleBalancedCodes(text, QrCode.Ecc.Medium, minVersion: 10, maxVersion: 29);
+
+            Assert.Single(qrCodes);
+            Assert.Equal(10, qrCodes[0].Version);
+        }
+
+        [Theory, CombinatorialData]
+        public void CreateBalancedQrCode_ForVeryShortTextAtSmallVersions(
+            [CombinatorialValues("", "A", "AB", "1", "12", "\u00e9", "\u4e2d")] string text,
+            QrCode.Ecc ecl)
+        {
+            var qrCodes = QrCode.EncodeTextInMultipleBalancedCodes(text, ecl, minVersion: 1, maxVersion: 4);
+
+            Assert.Single(qrCodes);
+            Assert.Equal(1, qrCodes[0].Version);
+        }
+
+        [Fact]
+        public void BalancedCodes_ShortTextsOfAnyLength_RoundTrip()
+        {
+            // Short texts exercise the balancing search at very small per-code capacities,
+            // where a segment can be split exactly at its last character.
+            for (var length = 0; length <= 40; length += 1)
+            {
+                var text = RandomData.MakeAlphanumericString(length, seed: 6100 + length);
+                var data = Encoding.GetEncoding("ISO-8859-1").GetBytes(text);
+                var (qrCodes, version) = StructuredAppend.BuildBalancedSegments(data, 1, 2, QrCode.Ecc.Medium, ECI.Latin1, false);
+
+                Assert.Equal(text, DataSegment.GetText(qrCodes.SelectMany(it => it)));
+                // every code must actually fit at the shared version
+                foreach (var code in qrCodes)
+                {
+                    QrCode.EncodeSegments(code, QrCode.Ecc.Medium, minVersion: version, maxVersion: version);
+                }
+            }
+        }
+
         [Fact]
         public void RejectTooLongBalanced()
         {
