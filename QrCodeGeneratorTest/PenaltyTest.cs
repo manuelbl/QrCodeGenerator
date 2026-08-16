@@ -5,6 +5,7 @@
  * https://github.com/manuelbl/QrCodeGenerator
  */
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
@@ -322,6 +323,33 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Theory, CombinatorialData]
+        public void CalcColorBalance_MatchesPercentageRule([CombinatorialValues(21, 29, 37, 65, 129, 177)] int size)
+        {
+            var totalNumber = size * size;
+
+            for (var darkModules = 0; darkModules <= totalNumber; darkModules += 1)
+            {
+                var percent = darkModules * 100.0 / totalNumber;
+                var expectedPenalty = 10 * (int)Math.Floor(Math.Abs(percent - 50.0) / 5.0);
+
+                Assert.Equal(expectedPenalty, Penalty.CalcColorBalance(WithDarkCount(size, darkModules)));
+            }
+        }
+
+        [Theory, CombinatorialData]
+        public void CalcColorBalance_IsSymmetricUnderInversion([CombinatorialValues(21, 29, 37, 65, 129, 177)] int size)
+        {
+            var totalNumber = size * size;
+
+            for (var darkModules = 0; darkModules <= totalNumber / 2; darkModules += 1)
+            {
+                var penalty = Penalty.CalcColorBalance(WithDarkCount(size, darkModules));
+
+                Assert.Equal(penalty, Penalty.CalcColorBalance(WithDarkCount(size, totalNumber - darkModules)));
+            }
+        }
+
+        [Theory, CombinatorialData]
         public void CalcColorBalance_BasePenalty([CombinatorialValues(21, 29, 37, 65, 129, 177)]int size)
         {
             var modules = CreateCheckerboardWithFinders(size);
@@ -437,6 +465,17 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             
             modules.Transpose();
             Assert.Equal(0, Penalty.CalcFinderPattern(modules));
+        }
+
+        // Creates a matrix with exactly the given number of dark modules.
+        private static BitMatrix WithDarkCount(int size, int darkModules)
+        {
+            var result = new BitMatrix(size);
+            for (var i = 0; i < darkModules; i += 1)
+            {
+                result.Set(i % size, i / size, true);
+            }
+            return result;
         }
 
         private static BitMatrix Fill(int size, double percent)

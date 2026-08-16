@@ -251,11 +251,12 @@ namespace Net.Codecrete.QrCodeGenerator
 
             var size = modules.Size;
             var totalNumber = size * size;
-            var deviation = Math.Abs(darkModules - totalNumber / 2);
-            var step = totalNumber / 20;
-            // The integer division rounds down such that a proportion between 45% and 55%
-            // does not lead to any penalty points (as per specification).
-            var deviationSteps = deviation / step;
+            // The deviation in percent is |darkModules / totalNumber - 1/2| * 100, and a step is
+            // 5% of it. Scaled by 2 * totalNumber, the whole expression stays exact in integers:
+            // the numerator is |2 * darkModules - totalNumber| * 10, the denominator is
+            // totalNumber. The integer division rounds down such that a proportion between 45%
+            // and 55% does not lead to any penalty points (as per specification).
+            var deviationSteps = Math.Abs(2 * darkModules - totalNumber) * 10 / totalNumber;
             return 10 * deviationSteps;
         }
 
