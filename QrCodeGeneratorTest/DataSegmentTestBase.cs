@@ -13,21 +13,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class DataSegmentTestBase
     {
-        #region Test initialization
-    
-        protected DataSegmentTestBase()
-        {
-        }
-    
-        static DataSegmentTestBase()
-        {
-#if NET
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-        }
-    
-#endregion
-    
         #region Test Helper
 
         /// <summary>

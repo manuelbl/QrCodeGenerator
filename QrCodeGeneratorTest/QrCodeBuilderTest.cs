@@ -15,17 +15,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class QrCodeBuilderTest
     {
-        #region Test initialization
-    
-        static QrCodeBuilderTest()
-        {
-#if NET
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-        }
-    
-#endregion
-
         [Theory]
         [InlineData(10, 1, 1, 0, false, 0)]
         [InlineData(10, 1, 1, 1, false, 1)]

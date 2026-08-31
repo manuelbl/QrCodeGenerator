@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using Xunit.Internal;
 
@@ -36,10 +35,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
         private static IEnumerable<TestCase> GenerateTestCases()
         {
-#if NET
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-
             yield return new TestCase("ABC", 10, ECI.UTF8, 32);
             yield return new TestCase("カリ12ゼーシ", 10, ECI.ShiftJIS, 116);
             yield return new TestCase("カリ123456ゼーシ", 10, ECI.ShiftJIS, 129);

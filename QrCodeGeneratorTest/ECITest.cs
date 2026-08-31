@@ -14,13 +14,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class ECITest
     {
-        static ECITest()
-        {
-#if NET
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-        }
-
         #region Encoding
 
         public static TheoryData<ECI, string> EciToEncodingMap => new TheoryData<ECI, string>

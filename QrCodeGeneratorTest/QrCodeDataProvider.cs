@@ -9,24 +9,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using static Net.Codecrete.QrCodeGenerator.QrCode;
 
 namespace Net.Codecrete.QrCodeGenerator.Test
 {
     public class QrCodeDataProvider : IEnumerable<object[]>
     {
-        // Must run before Segment12 (Shift-JIS) is initialized, hence the field-initializer placement.
-        private static readonly bool _encodingsRegistered = RegisterEncodings();
-
-        private static bool RegisterEncodings()
-        {
-#if NET
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-            return true;
-        }
-
         private static readonly string Text0 = "";
         private static readonly string Text1 = "A";
         private static readonly string Text2 = "Hello, world!";

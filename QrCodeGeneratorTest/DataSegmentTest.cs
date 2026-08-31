@@ -316,9 +316,6 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public static TheoryData<List<DataSegment>, int, int> DataSegmentsTheoryData {
             get
             {
-#if NET
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
                 var data = new TheoryData<List<DataSegment>, int, int>();
                 var segments = new List<DataSegment> {
                     new DataSegmentByte(new ArraySegment<byte>(Encoding.UTF8.GetBytes("abc")))
