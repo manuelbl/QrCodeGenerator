@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters;
 using System.Text;
 using Xunit;
 using Xunit.Internal;
@@ -25,6 +24,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var data = new TheoryData<string, int, ECI, int>();
             GenerateTestCases().ForEach(testCase => data.Add(testCase.Text, testCase.Version, testCase.Eci, testCase.ExpectedLength));
             return data;
+        }
+
+        [Theory, CombinatorialData]
+        public static void TestBlockGetSegmentLength([CombinatorialRange(1, 4)] int modeIndex, [CombinatorialRange(0, 7)] int length, [CombinatorialRange(1, 40)] int version)
+        {
+            var mode = (DataSegmentMode)modeIndex;
+            var block = new SegmentCompaction.Block { Mode = mode, Length = length };
+            Assert.Equal(DataSegment.GetBitLength(mode, length, version), block.GetSegmentLength(version));
         }
 
         private static IEnumerable<TestCase> GenerateTestCases()
