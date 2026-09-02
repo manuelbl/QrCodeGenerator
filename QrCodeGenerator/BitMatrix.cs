@@ -7,6 +7,10 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+#if NET6_0_OR_GREATER
+using System.Numerics;
+#endif
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -344,7 +348,7 @@ namespace Net.Codecrete.QrCodeGenerator
             }
             return sum;
         }
-        
+
         /// <summary>
         /// Returns the number of bits set in this value
         /// (aka population count).
@@ -352,6 +356,15 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>The value.</returns>
         internal static int PopCount(ulong i)
         {
+#if NET6_0_OR_GREATER
+            // Test for X64. ARM has no scalar popcount instruction,
+            // and the SIMD instruction CNT involves too much overhead
+            // going from the general purpose registers to SIMD and back.
+            // The JIT treats Popcnt.X64.IsSupported as a compile-time constant
+            // and eliminates the dead branch entirely.
+            if (System.Runtime.Intrinsics.X86.Popcnt.X64.IsSupported)
+                return BitOperations.PopCount(i);
+#endif
             i = i - ((i >> 1) & 0x5555555555555555UL);
             i = (i & 0x3333333333333333UL) + ((i >> 2) & 0x3333333333333333UL);
             return (int)(unchecked(((i + (i >> 4)) & 0xF0F0F0F0F0F0F0FUL) * 0x101010101010101UL) >> 56);

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "QrCodeGeneratorProfiling": {
+      "commandName": "Project",
+      "commandLineArgs": "benchmark"
+    }
+  }
+}
