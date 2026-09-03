@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -51,17 +50,8 @@ namespace Net.Codecrete.QrCodeGenerator
             // from using a more efficient mode. If this is the case, two or three blocks are merged.
             // In the first step, short numeric blocks are merged with alphanumeric blocks.
             // In the second step, all types of blocks are merged into byte blocks.
-            blockCount = MergeBlocks(blocks, blockCount, version, DataSegmentMode.Alphanumeric,
-                (mode0, mode1, mode2) => mode0 == DataSegmentMode.Alphanumeric
-                                         && mode1 == DataSegmentMode.Numeric && mode2 == mode0,
-                (mode0, mode1) => (mode0 == DataSegmentMode.Alphanumeric && mode1 == DataSegmentMode.Numeric)
-                                  || (mode0 == DataSegmentMode.Numeric && mode1 == DataSegmentMode.Alphanumeric)
-            );
-            blockCount = MergeBlocks(blocks, blockCount, version, DataSegmentMode.Binary,
-                (mode0, mode1, mode2) => mode1 != DataSegmentMode.Binary && mode2 == mode0,
-                (mode0, mode1) => (mode0 == DataSegmentMode.Binary && mode1 != DataSegmentMode.Binary)
-                                  || (mode0 != DataSegmentMode.Binary && mode1 == DataSegmentMode.Binary)
-            );
+            blockCount = MergeBlocks<AlphanumericRule>(blocks, blockCount, version);
+            blockCount = MergeBlocks<BinaryRule>(blocks, blockCount, version);
 
             var segments = new List<DataSegment>(blockCount);
             var offset = 0;
@@ -77,81 +67,123 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
-        /// Merges blocks if the length can be reduced.
+        /// Merges blocks according to the merge rule until no further merge is possible.
         /// </summary>
+        /// <typeparam name="TRule">The merge rule.</typeparam>
         /// <param name="blocks">The array of blocks to process.</param>
         /// <param name="blockCount">The number of active blocks in the array.</param>
         /// <param name="version">The QR code version.</param>
-        /// <param name="mergedMode">The data segment mode of the merged block.</param>
-        /// <param name="merge3Condition">Condition for testing 3 consecutive blocks.</param>
-        /// <param name="merge2Condition">Condition for testing 2 consecutive blocks.</param>
         /// <returns>Number of remaining blocks in array</returns>
-        [SuppressMessage("csharpsquid", "S3776")]
-        private static int MergeBlocks(Block[] blocks, int blockCount, int version, DataSegmentMode mergedMode,
-            Func<DataSegmentMode, DataSegmentMode, DataSegmentMode, bool> merge3Condition,
-            Func<DataSegmentMode, DataSegmentMode, bool> merge2Condition)
+        private static int MergeBlocks<TRule>(Block[] blocks, int blockCount, int version)
+            where TRule : struct, IMergeRule
         {
+            // A pass can create new merge opportunities, so repeat until nothing changes anymore.
             var previousCount = -1;
-            while (blockCount > 1 && previousCount != blockCount)
+            while (blockCount > 1 && blockCount != previousCount)
             {
                 previousCount = blockCount;
-                
-                var targetIndex = 1;
-                var sourceIndex = 1;
-                while (sourceIndex < blockCount)
-                {
-                    var merged = false;
-                    var mode0 = blocks[targetIndex - 1].Mode;
-                    var mode1 = blocks[sourceIndex].Mode;
-
-                    // Case 1: merge 3 blocks (last processed one plus 2 unprocessed ones)
-                    // Test if the bit stream is shorter if all 3 blocks are merged (using the specified merged mode).
-                    if (sourceIndex + 1 < blockCount && merge3Condition(mode0, mode1, blocks[sourceIndex + 1].Mode))
-                    {
-                        var mergedPayloadLength =
-                            blocks[targetIndex - 1].Length + blocks[sourceIndex].Length + blocks[sourceIndex + 1].Length;
-                        var mergedBlock = new Block { Mode = mergedMode, Length = mergedPayloadLength };
-                        var mergedLength = mergedBlock.GetSegmentLength(version);
-                        var separateLength = blocks[targetIndex - 1].GetSegmentLength(version)
-                                             + blocks[sourceIndex].GetSegmentLength(version)
-                                             + blocks[sourceIndex + 1].GetSegmentLength(version);
-                        if (mergedLength <= separateLength)
-                        {
-                            blocks[targetIndex - 1] = mergedBlock;
-                            sourceIndex += 2;
-                            merged = true;
-                        }
-                    }
-
-                    // Case 2: merge 2 blocks (last processed one and the current unprocessed one)
-                    // Test if the bit stream is shorter if the 2 blocks are merged (using the specified merged mode).
-                    else if (merge2Condition(mode0, mode1))
-                    {
-                        var mergedPayloadLength = blocks[targetIndex - 1].Length + blocks[sourceIndex].Length;
-                        var mergedBlock = new Block { Mode = mergedMode, Length = mergedPayloadLength };
-                        var mergedLength = mergedBlock.GetSegmentLength(version);
-                        var separateLength = blocks[targetIndex - 1].GetSegmentLength(version) +
-                                             blocks[sourceIndex].GetSegmentLength(version);
-                        if (mergedLength <= separateLength)
-                        {
-                            blocks[targetIndex - 1] = mergedBlock;
-                            sourceIndex += 1;
-                            merged = true;
-                        }
-                    }
-                    
-                    if (!merged)
-                    {
-                        blocks[targetIndex] = blocks[sourceIndex];
-                        targetIndex += 1;
-                        sourceIndex += 1;
-                    }
-                }
-                
-                blockCount = targetIndex;
+                blockCount = MergePass<TRule>(blocks, blockCount, version);
             }
-            
+
             return blockCount;
+        }
+
+        /// <summary>
+        /// Runs a single merge pass, compacting the blocks in place.
+        /// </summary>
+        /// <typeparam name="TRule">The merge rule.</typeparam>
+        /// <param name="blocks">The array of blocks to process.</param>
+        /// <param name="blockCount">The number of active blocks in the array.</param>
+        /// <param name="version">The QR code version.</param>
+        /// <returns>Number of remaining blocks in array</returns>
+        private static int MergePass<TRule>(Block[] blocks, int blockCount, int version)
+            where TRule : struct, IMergeRule
+        {
+            var processedBlocks = 1; // number of processed blocks
+            var sourceIndex = 1; // blocks from this index have yet to be processed
+            while (sourceIndex < blockCount)
+            {
+                var consumed = TryMergeAt<TRule>(blocks, processedBlocks - 1, sourceIndex, blockCount, version);
+                if (consumed > 0)
+                {
+                    sourceIndex += consumed;
+                }
+                else
+                {
+                    blocks[processedBlocks] = blocks[sourceIndex];
+                    processedBlocks += 1;
+                    sourceIndex += 1;
+                }
+            }
+
+            return processedBlocks;
+        }
+
+        /// <summary>
+        /// Tries to merge the block at <paramref name="targetIndex"/> with the 2 or 1 blocks
+        /// starting at <paramref name="sourceIndex"/>, replacing the target block if successful.
+        /// </summary>
+        /// <typeparam name="TRule">The merge rule.</typeparam>
+        /// <param name="blocks">The array of blocks to process.</param>
+        /// <param name="targetIndex">The index of the last processed block.</param>
+        /// <param name="sourceIndex">The index of the first unprocessed block.</param>
+        /// <param name="blockCount">The number of active blocks in the array.</param>
+        /// <param name="version">The QR code version.</param>
+        /// <returns>Number of source blocks consumed (0 if the blocks have not been merged)</returns>
+        private static int TryMergeAt<TRule>(Block[] blocks, int targetIndex, int sourceIndex, int blockCount,
+            int version)
+            where TRule : struct, IMergeRule
+        {
+            var rule = default(TRule);
+            ref var target = ref blocks[targetIndex];
+            var first = blocks[sourceIndex];
+
+            // Case 1: merge 3 blocks (last processed one plus 2 unprocessed ones)
+            // Test if the bit stream is shorter if all 3 blocks are merged (using the rule's merged mode).
+            if (sourceIndex + 1 < blockCount)
+            {
+                var second = blocks[sourceIndex + 1];
+                if (rule.CanMerge3(target.Mode, first.Mode, second.Mode))
+                {
+                    var separateLength = target.GetSegmentLength(version) + first.GetSegmentLength(version)
+                                         + second.GetSegmentLength(version);
+                    return TryReplaceWithMerged(ref target, first.Length + second.Length, separateLength,
+                        rule.MergedMode, version) ? 2 : 0;
+                }
+            }
+
+            // Case 2: merge 2 blocks (last processed one and the current unprocessed one)
+            // Test if the bit stream is shorter if the 2 blocks are merged (using the rule's merged mode).
+            if (rule.CanMerge2(target.Mode, first.Mode))
+            {
+                var separateLength = target.GetSegmentLength(version) + first.GetSegmentLength(version);
+                return TryReplaceWithMerged(ref target, first.Length, separateLength, rule.MergedMode, version) ? 1 : 0;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Replaces the target block with the merged block unless the merged block
+        /// results in a longer bit stream.
+        /// </summary>
+        /// <param name="target">The block to replace, and the first block of the merged block.</param>
+        /// <param name="addedLength">The number of payload bytes of the further blocks to merge.</param>
+        /// <param name="separateLength">The bit stream length of the blocks if they are not merged.</param>
+        /// <param name="mergedMode">The data segment mode of the merged block.</param>
+        /// <param name="version">The QR code version.</param>
+        /// <returns><c>true</c> if the blocks have been merged</returns>
+        private static bool TryReplaceWithMerged(ref Block target, int addedLength, int separateLength,
+            DataSegmentMode mergedMode, int version)
+        {
+            var merged = new Block { Mode = mergedMode, Length = target.Length + addedLength };
+            if (merged.GetSegmentLength(version) > separateLength)
+            {
+                return false;
+            }
+
+            target = merged;
+            return true;
         }
 
         /// <summary>
@@ -261,6 +293,66 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #endregion
 
+        #region Merge Rules
+
+        /// <summary>
+        /// Rule deciding which consecutive blocks are candidates for merging,
+        /// and what the data segment mode of the merged block is.
+        /// </summary>
+        /// <remarks>
+        /// The rule is implemented as a struct and used as a generic type argument. The JIT compiler
+        /// therefore specializes the merge code per rule and inlines the checks (no delegate calls,
+        /// no allocation).
+        /// </remarks>
+        private interface IMergeRule
+        {
+            /// <summary>
+            /// Data segment mode of the merged block.
+            /// </summary>
+            DataSegmentMode MergedMode { get; }
+
+            /// <summary>
+            /// Tests if 3 consecutive blocks with the given modes are candidates for merging.
+            /// </summary>
+            bool CanMerge3(DataSegmentMode mode0, DataSegmentMode mode1, DataSegmentMode mode2);
+
+            /// <summary>
+            /// Tests if 2 consecutive blocks with the given modes are candidates for merging.
+            /// </summary>
+            bool CanMerge2(DataSegmentMode mode0, DataSegmentMode mode1);
+        }
+
+        /// <summary>
+        /// Rule merging short numeric blocks with adjacent alphanumeric blocks.
+        /// </summary>
+        private readonly struct AlphanumericRule : IMergeRule
+        {
+            public DataSegmentMode MergedMode => DataSegmentMode.Alphanumeric;
+
+            public bool CanMerge3(DataSegmentMode mode0, DataSegmentMode mode1, DataSegmentMode mode2)
+                => mode0 == DataSegmentMode.Alphanumeric && mode1 == DataSegmentMode.Numeric && mode2 == mode0;
+
+            public bool CanMerge2(DataSegmentMode mode0, DataSegmentMode mode1)
+                => (mode0 == DataSegmentMode.Alphanumeric && mode1 == DataSegmentMode.Numeric)
+                   || (mode0 == DataSegmentMode.Numeric && mode1 == DataSegmentMode.Alphanumeric);
+        }
+
+        /// <summary>
+        /// Rule merging blocks of any mode into binary blocks.
+        /// </summary>
+        private readonly struct BinaryRule : IMergeRule
+        {
+            public DataSegmentMode MergedMode => DataSegmentMode.Binary;
+
+            public bool CanMerge3(DataSegmentMode mode0, DataSegmentMode mode1, DataSegmentMode mode2)
+                => mode1 != DataSegmentMode.Binary && mode2 == mode0;
+
+            public bool CanMerge2(DataSegmentMode mode0, DataSegmentMode mode1)
+                => (mode0 == DataSegmentMode.Binary) != (mode1 == DataSegmentMode.Binary);
+        }
+
+        #endregion
+
         #region Block
 
         /// <summary>
@@ -296,10 +388,10 @@ namespace Net.Codecrete.QrCodeGenerator
                         return 13 + (version + 7) / 17 * 2 + (Length * 11 + 1) / 2;
                     case DataSegmentMode.Kanji:
                         return 12 + (version + 7) / 17 * 2 + Length * 13 / 2;
+                    default:
+                        Debug.Assert(false, "data segment mode not supported by this function");
+                        return 0;
                 }
-
-                Debug.Assert(false);
-                return 0;
             }
 
             public override string ToString()
