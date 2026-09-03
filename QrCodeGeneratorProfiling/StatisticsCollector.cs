@@ -14,12 +14,12 @@ using System.Text;
 namespace Net.Codecrete.QrCodeGenerator.Profiling;
 
 /// <summary>
-/// Collects statistics about penalty contributions and data mask pattern selection
-/// across the sample payloads.
+/// Collects statistics about penalty contributions, data mask pattern selection and QR code
+/// versions across the sample payloads.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The penalty score and the selected mask pattern are a deterministic function of
+/// The penalty score, the selected mask pattern and the version are a deterministic function of
 /// (payload, ECC level), so a single pass over the sample data is sufficient — repeating
 /// it would only duplicate identical samples without adding information.
 /// </para>
@@ -45,6 +45,7 @@ internal static class StatisticsCollector
         var colorBalance = new Bucket("ColorBalance");
 
         var maskCounts = new long[8];
+        var versionCounts = new long[41];
 
         foreach (var payload in payloads)
         {
@@ -64,8 +65,9 @@ internal static class StatisticsCollector
                     colorBalance.Add(penalty.ColorBalance);
                 }
 
-                // Mask statistics cover the actually selected pattern.
+                // Mask and version statistics cover the generated QR code.
                 maskCounts[qr.Mask] += 1;
+                versionCounts[qr.Version] += 1;
             }
         }
 
@@ -73,6 +75,54 @@ internal static class StatisticsCollector
         PrintPenaltyTable(buckets);
         Console.WriteLine();
         PrintMaskTable(maskCounts);
+        Console.WriteLine();
+        PrintVersionTable(versionCounts);
+    }
+
+    private static void PrintVersionTable(long[] versionCounts)
+    {
+        var total = versionCounts.Sum();
+
+        Console.WriteLine("# Version Distribution");
+        Console.WriteLine();
+        Console.WriteLine($"Version distribution (samples={total.ToString("N0", CultureInfo.InvariantCulture)})");
+        Console.WriteLine();
+
+        var headers = new[] { "Version", "Count", "Share%" };
+        var rightAlign = new[] { true, true, true };
+        var rows = Enumerable.Range(1, 40)
+            .Where(v => versionCounts[v] > 0)
+            .Select(v => new[]
+            {
+                v.ToString(CultureInfo.InvariantCulture),
+                versionCounts[v].ToString("N0", CultureInfo.InvariantCulture),
+                Share(versionCounts[v], total)
+            })
+            .ToList();
+
+        PrintTable(headers, rightAlign, rows);
+
+        // Grouped by BitMatrix row layout: the versions in each group use one, two or three
+        // 64-bit words per row.
+        Console.WriteLine();
+        PrintRowLayoutShare("1-11 (one word per row)", versionCounts, 1, 11, total);
+        PrintRowLayoutShare("12-27 (two words per row)", versionCounts, 12, 27, total);
+        PrintRowLayoutShare("28-40 (three words per row)", versionCounts, 28, 40, total);
+    }
+
+    private static void PrintRowLayoutShare(string label, long[] versionCounts, int firstVersion, int lastVersion, long total)
+    {
+        var count = 0L;
+        for (var v = firstVersion; v <= lastVersion; v += 1)
+        {
+            count += versionCounts[v];
+        }
+        Console.WriteLine($"- Versions {label}: {count.ToString("N0", CultureInfo.InvariantCulture)} ({Share(count, total)}%)");
+    }
+
+    private static string Share(long count, long total)
+    {
+        return (total > 0 ? (double)count / total * 100 : 0).ToString("F2", CultureInfo.InvariantCulture);
     }
 
     private static void PrintPenaltyTable(IReadOnlyList<Bucket> buckets)
@@ -120,7 +170,7 @@ internal static class StatisticsCollector
             {
                 p.ToString(CultureInfo.InvariantCulture),
                 maskCounts[p].ToString("N0", CultureInfo.InvariantCulture),
-                (total > 0 ? (double)maskCounts[p] / total * 100 : 0).ToString("F2", CultureInfo.InvariantCulture)
+                Share(maskCounts[p], total)
             })
             .ToList();
 

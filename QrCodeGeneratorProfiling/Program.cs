@@ -22,8 +22,8 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling;
 ///   <item><c>benchmark</c> — runs BenchmarkDotNet for statistically sound measurements.</item>
 ///   <item><c>profile [iterations]</c> — runs a plain loop suitable for attaching
 ///   JetBrains Rider's dotTrace or dotMemory to identify hotspots in <see cref="QrCode.EncodeText"/>.</item>
-///   <item><c>stats</c> — collects penalty-contribution and mask-pattern-selection statistics
-///   over the sample data and prints them as Markdown tables.</item>
+///   <item><c>stats</c> — collects penalty-contribution, mask-pattern-selection and QR code
+///   version statistics over the sample data and prints them as Markdown tables.</item>
 /// </list>
 /// </remarks>
 public static class Program
@@ -111,7 +111,7 @@ public static class Program
         Console.WriteLine("Usage:");
         Console.WriteLine("  dotnet run -c Release -- benchmark           Run BenchmarkDotNet.");
         Console.WriteLine("  dotnet run -c Release -- profile [N]         Run a plain loop (N iterations, default {0}) suitable for Rider profiling.", DefaultProfileIterations);
-        Console.WriteLine("  dotnet run -c Release -- stats               Collect penalty and mask-pattern statistics (Markdown tables).");
+        Console.WriteLine("  dotnet run -c Release -- stats               Collect penalty, mask-pattern and version statistics (Markdown tables).");
         Console.WriteLine();
         Console.WriteLine("Tip: attach Rider's dotTrace / dotMemory to the 'profile' process to inspect QrCode.EncodeText hotspots.");
     }

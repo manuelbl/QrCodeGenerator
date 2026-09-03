@@ -19,7 +19,17 @@ internal static class SampleData
 {
     private const int Seed = 0x53f0cc2b;
 
-    private const int PayloadCount = 200;
+    private const int PayloadCount = 400;
+
+    // Share of payloads composed as long text. Long payloads land in QR code versions 12 and
+    // above, short ones almost always in versions 1 to 11.
+    private const double LongPayloadProbability = 0.2;
+
+    // Character range of the long payloads. The lower bound exceeds the byte-mode capacity of
+    // version 11; the upper bound stays below the capacity of version 40 at ECC level High,
+    // including the multi-byte characters the fragments can contribute.
+    private const int MinLongPayloadLength = 400;
+    private const int MaxLongPayloadLength = 900;
 
     [SuppressMessage("csharpsquid", "S1075")]
     private static readonly string[] BaseUrls =
@@ -152,13 +162,69 @@ internal static class SampleData
 
     private static void ComposePayload(StringBuilder builder, Random random)
     {
-        if (random.NextDouble() < 0.5)
+        if (random.NextDouble() < LongPayloadProbability)
+        {
+            ComposeLongText(builder, random);
+        }
+        else if (random.NextDouble() < 0.5)
         {
             ComposeUrl(builder, random);
         }
         else
         {
             ComposeData(builder, random);
+        }
+    }
+
+    /// <summary>
+    /// Composes a long payload by appending fragments until a target length is reached.
+    /// </summary>
+    /// <remarks>
+    /// The fragments mix numeric, alphanumeric and byte mode content so that segment compaction
+    /// has work to do at these sizes as well.
+    /// </remarks>
+    private static void ComposeLongText(StringBuilder builder, Random random)
+    {
+        var targetLength = random.Next(MinLongPayloadLength, MaxLongPayloadLength + 1);
+
+        while (builder.Length < targetLength)
+        {
+            if (builder.Length > 0)
+            {
+                builder.Append(' ');
+            }
+            AppendFragment(builder, random);
+        }
+    }
+
+    private static void AppendFragment(StringBuilder builder, Random random)
+    {
+        var rnd = random.NextDouble();
+        if (rnd < 0.35)
+        {
+            builder.Append(Pick(Sentences, random));
+        }
+        else if (rnd < 0.55)
+        {
+            builder.Append(Pick(Names, random));
+            builder.Append(", ");
+            builder.Append(Pick(Towns, random));
+        }
+        else if (rnd < 0.70)
+        {
+            ComposeUrl(builder, random);
+        }
+        else if (rnd < 0.80)
+        {
+            builder.Append(Pick(Messages, random));
+        }
+        else if (rnd < 0.90)
+        {
+            builder.Append(random.Next(1, 100_000_000));
+        }
+        else
+        {
+            builder.Append(Pick(QueryValues, random));
         }
     }
 

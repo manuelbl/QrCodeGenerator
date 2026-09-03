@@ -362,31 +362,114 @@ The matrices of the smaller versions are a quarter of their former size, which i
 in allocation comes from.
 
 
+# Larger Sample Data
+
+The sample data covered versions 1 to 13 only, so the two- and three-word row layouts of
+`BitMatrix` were barely measured. It now holds 400 payloads instead of 200, and one in five of
+them is a long text of 400 to 900 characters assembled from the same fragments (sentences, names,
+towns, URLs, numbers, messages). Long payloads reach versions 12 to 36, the short ones stay in
+versions 1 to 11.
+
+The measurements below are the new baseline; they are not comparable to the sections above, which
+all used the 200 short payloads.
+
+## Profiling
+
+```
+Profile loop: 500 iterations × 400 payloads × 4 ECC levels
+Total EncodeText calls: 800'000
+Elapsed: 00:00:15.9592118 (checksum=41052000)
+```
+
+## Benchmark
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method             | Mean     | Error     | StdDev    | Gen0      | Allocated |
+|------------------- |---------:|----------:|----------:|----------:|----------:|
+| EncodeAll          | 31.17 ms | 0.052 ms  | 0.043 ms  | 1187.5000 |   9.57 MB |
+
+Twice the payloads, and the long ones cost far more than a short one: the penalty rules scan a
+matrix that grows with the square of the version, and eight mask patterns are scored per code.
+
+
 # Penalty Contribution
 
-Penalty contribution statistics (samples=6,400)
+Penalty contribution statistics (samples=12,800)
 
-| Bucket        | Min |  Max |   Mean | StdDev | Share% |
-|---------------|----:|-----:|-------:|-------:|-------:|
-| 2x2Blocks     |  45 | 1761 | 444.56 | 270.35 |  53.69 |
-| SameColorCols |   8 |  685 | 160.60 | 106.04 |  19.40 |
-| SameColorRows |   4 |  622 | 152.13 |  99.71 |  18.37 |
-| FinderRows    |   0 |  280 |  36.25 |  41.23 |   4.38 |
-| FinderCols    |   0 |  320 |  34.44 |  40.11 |   4.16 |
-| ColorBalance  |   0 |   10 |   0.05 |   0.71 |   0.01 |
-
+| Bucket        | Min |  Max |    Mean |  StdDev | Share% |
+|---------------|----:|-----:|--------:|--------:|-------:|
+| 2x2Blocks     |  42 | 9996 | 1238.85 | 1778.31 |  54.55 |
+| SameColorCols |   6 | 3800 |  451.46 |  652.02 |  19.88 |
+| SameColorRows |   4 | 3470 |  430.62 |  625.21 |  18.96 |
+| FinderRows    |   0 |  840 |   77.55 |  107.26 |   3.41 |
+| FinderCols    |   0 |  800 |   72.62 |  102.40 |   3.20 |
+| ColorBalance  |   0 |   10 |    0.02 |    0.47 |   0.00 |
 
 # Mask Pattern Selection
 
-Mask pattern selection (samples=800)
+Mask pattern selection (samples=1,600)
 
 | Pattern | Count | Share% |
 |--------:|------:|-------:|
-|       2 |   250 |  31.25 |
-|       3 |   117 |  14.62 |
-|       7 |   109 |  13.63 |
-|       4 |   100 |  12.50 |
-|       6 |    91 |  11.38 |
-|       5 |    62 |   7.75 |
-|       0 |    37 |   4.62 |
-|       1 |    34 |   4.25 |
+|       2 |   724 |  45.25 |
+|       4 |   175 |  10.94 |
+|       6 |   164 |  10.25 |
+|       3 |   162 |  10.12 |
+|       7 |   145 |   9.06 |
+|       5 |   103 |   6.44 |
+|       1 |    77 |   4.81 |
+|       0 |    50 |   3.12 |
+
+# Version Distribution
+
+Version distribution (samples=1,600)
+
+| Version | Count | Share% |
+|--------:|------:|-------:|
+|       1 |    84 |   5.25 |
+|       2 |   105 |   6.56 |
+|       3 |   175 |  10.94 |
+|       4 |   191 |  11.94 |
+|       5 |   228 |  14.25 |
+|       6 |   165 |  10.31 |
+|       7 |    83 |   5.19 |
+|       8 |   136 |   8.50 |
+|       9 |    67 |   4.19 |
+|      10 |    36 |   2.25 |
+|      11 |    14 |   0.88 |
+|      12 |     7 |   0.44 |
+|      13 |     2 |   0.12 |
+|      14 |     5 |   0.31 |
+|      15 |    11 |   0.69 |
+|      16 |    10 |   0.62 |
+|      17 |    19 |   1.19 |
+|      18 |    15 |   0.94 |
+|      19 |    25 |   1.56 |
+|      20 |    21 |   1.31 |
+|      21 |    21 |   1.31 |
+|      22 |    24 |   1.50 |
+|      23 |    23 |   1.44 |
+|      24 |    24 |   1.50 |
+|      25 |    11 |   0.69 |
+|      26 |    15 |   0.94 |
+|      27 |    15 |   0.94 |
+|      28 |    12 |   0.75 |
+|      29 |    12 |   0.75 |
+|      30 |    12 |   0.75 |
+|      31 |     7 |   0.44 |
+|      32 |     9 |   0.56 |
+|      33 |     7 |   0.44 |
+|      34 |     6 |   0.38 |
+|      35 |     2 |   0.12 |
+|      36 |     1 |   0.06 |
+
+- Versions 1-11 (one word per row): 1,284 (80.25%)
+- Versions 12-27 (two words per row): 248 (15.50%)
+- Versions 28-40 (three words per row): 68 (4.25%)
