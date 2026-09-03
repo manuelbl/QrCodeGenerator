@@ -79,16 +79,15 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 var dataLength = block < numSmallBlocks ? smallBlockDataLength : smallBlockDataLength + 1;
 
-                // compute the error correction codewords
-                var eccCodewords = reedSolomon.ComputeErrorCorrection(new ArraySegment<byte>(codewords, dataOffset, dataLength));
+                // compute the error correction codewords, directly interleaved into the result
+                reedSolomon.ComputeErrorCorrection(new ArraySegment<byte>(codewords, dataOffset, dataLength),
+                    result, numDataCodewords + block, numBlocks);
 
-                // copy the data and error correction codewords to the transposed result
+                // copy the data codewords to the transposed result
                 for (var i = 0; i < smallBlockDataLength; i += 1)
                     result[i * numBlocks + block] = codewords[dataOffset + i];
                 if (block >= numSmallBlocks)
                     result[numBlocks * smallBlockDataLength + block - numSmallBlocks] = codewords[dataOffset + dataLength - 1];
-                for (var i = 0; i < eccBlockLength; i += 1)
-                    result[numDataCodewords + i * numBlocks + block] = eccCodewords[i];
 
                 dataOffset += dataLength;
             }

@@ -253,7 +253,11 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 | EncodeAll | 17.08 ms | 0.082 ms | 0.072 ms | 625.0000 |    5.2 MB |
 
 
-# Latest Measurements
+# Data Segment Compaction
+
+Use a fixed array for the blocks and merge them in-place in order
+to reduce the multiple memory allocations required for a dynamically
+growing list.
 
 
 ## Profiling
@@ -279,6 +283,39 @@ DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
 | EncodeAll | 15.98 ms | 0.131 ms | 0.109 ms | 593.7500 |   4.77 MB |
 
 
+
+
+# Reed-Solomon Product Table
+
+Cache the generator polynomial multiplied by every element of the field instead of the polynomial
+alone. The division is then a shift and an exclusive or per data codeword, eight coefficients at a
+time, with no field arithmetic left in the loop. The codewords are written straight into the
+interleaved result, at a stride, so no block needs a buffer of its own.
+
+## Profiling
+
+```
+Profile loop: 500 iterations × 200 payloads × 4 ECC levels
+Total EncodeText calls: 400'000
+Elapsed: 00:00:07.4715698 (checksum=14696000)   [before: 00:00:08.1384139]
+```
+
+## Benchmark
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method             | Mean     | Error    | StdDev   | Gen0     | Allocated |
+|------------------- |---------:|---------:|---------:|---------:|----------:|
+| EncodeAll          | 14.65 ms | 0.044 ms | 0.039 ms | 546.8750 |    4.4 MB |
+
+The 0.02 MB that remain are the packed `ulong[]` holding the remainder, which is a little larger
+than the `byte[]` it replaces.
 
 
 # Penalty Contribution

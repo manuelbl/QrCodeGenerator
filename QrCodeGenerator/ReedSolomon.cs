@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -19,8 +18,13 @@ namespace Net.Codecrete.QrCodeGenerator
     /// the Galois field GF(256).
     /// </para>
     /// <para>
-    /// The implementation uses a generator polynomial approach with configurable
-    /// error correction capacity.
+    /// The error correction codewords are the remainder of dividing the data codewords, as a
+    /// polynomial over GF(256), by the generator polynomial ∏(x − α^i) for i = 0…capacity − 1.
+    /// </para>
+    /// <para>
+    /// The division multiplies the generator polynomial by one field element per data codeword.
+    /// Every such multiple is precomputed, so the division itself is a shift and an exclusive or,
+    /// with no field arithmetic left in the loop.
     /// </para>
     /// <para>
     /// Instances of this class are immutable and thread-safe.
@@ -33,14 +37,32 @@ namespace Net.Codecrete.QrCodeGenerator
         #region Fields
 
         /// <summary>
-        /// The generator polynomial for the Reed-Solomon code.
-        /// </summary>
-        private readonly int[] _generatorPolynomial;
-
-        /// <summary>
         /// The error correction capacity (number of error correction codewords).
         /// </summary>
         private readonly int _capacity;
+
+        /// <summary>
+        /// The number of 64-bit words a row of <see cref="_products"/> occupies:
+        /// the capacity rounded up to a multiple of 8 coefficients.
+        /// </summary>
+        private readonly int _wordCount;
+
+        /// <summary>
+        /// The generator polynomial multiplied by every element of the field: row <i>f</i> holds
+        /// <i>f</i> times the coefficients, from the highest to the lowest power and without the
+        /// leading coefficient of 1, padded with zeros to <see cref="_wordCount"/> words.
+        /// Row 0 is all zeros, so the factor 0 needs no case of its own.
+        /// <para>
+        /// Eight coefficients are packed into a word: word <i>k</i>, bits 8<i>i</i> to 8<i>i</i> + 7,
+        /// hold the coefficient at index 8<i>k</i> + <i>i</i>.
+        /// </para>
+        /// </summary>
+        private readonly ulong[] _products;
+
+        /// <summary>
+        /// The largest number of error correction codewords a block can carry.
+        /// </summary>
+        private const int MaxCapacity = 255;
 
         /// <summary>
         /// Cache of instances for different ECC counts.
@@ -48,24 +70,24 @@ namespace Net.Codecrete.QrCodeGenerator
         private static readonly ConcurrentDictionary<int, ReedSolomon> GeneratorCache = new ConcurrentDictionary<int, ReedSolomon>();
 
         #endregion
-        
+
         #region Constructors
 
         /// <summary>
         /// Returns an instance of <see cref="ReedSolomon"/> for the specified number of error correction codewords.
         /// <para>
         /// If possible, an existing instance from the cache is returned
-        /// to reuse the already computed generator polynomial.
+        /// to reuse the already computed products of the generator polynomial.
         /// </para>
         /// </summary>
         /// <param name="capacity">The error correction capacity (number of error correction codewords).</param>
         /// <returns>A <see cref="ReedSolomon"/> instance.</returns>
         internal static ReedSolomon GeneratorForCapacity(int capacity)
         {
-            if (capacity < 1 || capacity > 255)
+            if (capacity < 1 || capacity > MaxCapacity)
             {
                 throw new ArgumentOutOfRangeException(nameof(capacity),
-                    "Error correction capacity must be between 1 and 255");
+                    "Error correction capacity must be between 1 and " + MaxCapacity);
             }
 
             return GeneratorCache.GetOrAdd(capacity, CreateForCapacity);
@@ -73,14 +95,14 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static ReedSolomon CreateForCapacity(int capacity)
         {
-            var poly = ComputeGeneratorPolynomial(capacity);
-            return new ReedSolomon(capacity, poly);
+            return new ReedSolomon(capacity);
         }
 
-        private ReedSolomon(int capacity, int[] generatorPolynomial)
+        private ReedSolomon(int capacity)
         {
             _capacity = capacity;
-            _generatorPolynomial = generatorPolynomial;
+            _wordCount = (capacity + 7) / 8;
+            _products = ComputeProducts(capacity, _wordCount);
         }
 
         #endregion
@@ -88,33 +110,75 @@ namespace Net.Codecrete.QrCodeGenerator
         #region Main Methods
 
         /// <summary>
-        /// Computes the error correction codewords for the specified data.
+        /// Computes the error correction codewords for the specified data codewords
+        /// and writes them into the specified array.
+        /// <para>
+        /// The codewords are written at a regular distance from each other rather than
+        /// consecutively, so that the caller can interleave the blocks without a buffer per block.
+        /// </para>
         /// </summary>
-        /// <param name="data">The data codewords.</param>
-        /// <returns>The error correction codewords.</returns>
-        internal byte[] ComputeErrorCorrection(ArraySegment<byte> data)
+        /// <param name="data">The data codewords of a single block.</param>
+        /// <param name="target">The array the error correction codewords are written to.</param>
+        /// <param name="offset">The index of the first error correction codeword.</param>
+        /// <param name="stride">The distance between two consecutive error correction codewords.</param>
+        internal void ComputeErrorCorrection(ArraySegment<byte> data, byte[] target, int offset, int stride)
         {
-            // Initialize the remainder with zeros
-            var remainder = new byte[_capacity];
+            // The remainder is held in the same packed layout as a row of the product table, with
+            // one additional word. That word is never written and thus stays zero: it only ever
+            // provides the coefficients shifted into the last word of the remainder proper, which
+            // must be zero as the rows of the product table are padded with zeros as well.
+            var remainder = new ulong[_wordCount + 1];
 
-            // Perform polynomial division
-            foreach (var cw in data) {
-                var coefficient = (byte)(cw ^ remainder[0]);
+            // Long division, one data codeword per step: the remainder shifts up by one coefficient,
+            // and a multiple of the generator polynomial is added to cancel the coefficient shifted
+            // out. Addition in GF(256) is XOR, so nothing has to be subtracted and eight
+            // coefficients are handled in a single word.
+            var array = data.Array;
+            var end = data.Offset + data.Count;
+            for (var index = data.Offset; index < end; index += 1)
+            {
+                var row = (array[index] ^ (byte)remainder[0]) * _wordCount;
 
-                // Multiply and add
-                for (var j = 0; j < _capacity - 1; j += 1)
+                for (var k = 0; k < _wordCount; k += 1)
                 {
-                    remainder[j] = (byte)(remainder[j + 1] ^ GfMultiply(coefficient, _generatorPolynomial[j]));
+                    remainder[k] = ((remainder[k] >> 8) | (remainder[k + 1] << 56)) ^ _products[row + k];
                 }
-                remainder[_capacity - 1] = GfMultiply(coefficient, _generatorPolynomial[_capacity - 1]);
             }
 
-            return remainder;
+            // Unpack the coefficients, from the highest to the lowest power
+            for (var i = 0; i < _capacity; i += 1)
+            {
+                target[offset + i * stride] = (byte)(remainder[i >> 3] >> ((i & 7) * 8));
+            }
         }
 
         #endregion
 
         #region Private Methods - Generator Polynomial
+
+        /// <summary>
+        /// Computes the generator polynomial for the specified capacity, multiplied by every
+        /// element of the field.
+        /// </summary>
+        /// <param name="capacity">The number of error correction codewords.</param>
+        /// <param name="wordCount">The number of words a row of the result occupies.</param>
+        /// <returns>The products, as 256 rows of the specified length.</returns>
+        private static ulong[] ComputeProducts(int capacity, int wordCount)
+        {
+            var generatorPolynomial = ComputeGeneratorPolynomial(capacity);
+            var products = new ulong[256 * wordCount];
+
+            for (var factor = 1; factor < 256; factor += 1)
+            {
+                for (var i = 0; i < capacity; i += 1)
+                {
+                    products[factor * wordCount + (i >> 3)] |=
+                        (ulong)GfMultiply(factor, generatorPolynomial[i]) << ((i & 7) * 8);
+                }
+            }
+
+            return products;
+        }
 
         /// <summary>
         /// Computes the generator polynomial for Reed-Solomon encoding.
@@ -154,7 +218,7 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         #endregion
-        
+
         #region Private Methods - Galois Field Operations
 
         /// <summary>
@@ -166,7 +230,6 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="a">First operand (0-255).</param>
         /// <param name="b">Second operand (0-255).</param>
         /// <returns>The product a × b in GF(256).</returns>
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         private static byte GfMultiply(int a, int b)
         {
             if (a == 0 || b == 0)
@@ -200,7 +263,7 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         #endregion
-        
+
         #region Galois Field Tables
 
         /// <summary>
@@ -254,4 +317,3 @@ namespace Net.Codecrete.QrCodeGenerator
         #endregion
     }
 }
-

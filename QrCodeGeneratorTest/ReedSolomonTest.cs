@@ -101,7 +101,8 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var payloadData = RandomData.MakeRandomBytes(dataLength, 7392201);
 
             var reedSolomon = ReedSolomon.GeneratorForCapacity(degree);
-            var eccData = reedSolomon.ComputeErrorCorrection(new ArraySegment<byte>(payloadData));
+            var eccData = new byte[degree];
+            reedSolomon.ComputeErrorCorrection(new ArraySegment<byte>(payloadData), eccData, 0, 1);
 
             var alternativeEcc = ComputeAlternative(degree, payloadData);
         
