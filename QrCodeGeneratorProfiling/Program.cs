@@ -16,10 +16,12 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The same executable serves two scenarios:
+/// The same executable serves several scenarios:
 /// </para>
 /// <list type="bullet">
 ///   <item><c>benchmark</c> — runs BenchmarkDotNet for statistically sound measurements.</item>
+///   <item><c>compare</c> — runs BenchmarkDotNet to compare QR code generation with other .NET libraries,
+///   then prints the average QR code version per library.</item>
 ///   <item><c>profile [iterations]</c> — runs a plain loop suitable for attaching
 ///   JetBrains Rider's dotTrace or dotMemory to identify hotspots in <see cref="QrCode.EncodeText"/>.</item>
 ///   <item><c>stats</c> — collects penalty-contribution, mask-pattern-selection and QR code
@@ -38,6 +40,11 @@ public static class Program
         {
             case "benchmark":
                 BenchmarkRunner.Run<EncodeTextBenchmarks>();
+                return 0;
+
+            case "compare":
+                BenchmarkRunner.Run<CompareBenchmarks>();
+                CompareBenchmarks.PrintAverageVersions();
                 return 0;
 
             case "profile":
@@ -110,6 +117,7 @@ public static class Program
         Console.WriteLine();
         Console.WriteLine("Usage:");
         Console.WriteLine("  dotnet run -c Release -- benchmark           Run BenchmarkDotNet.");
+        Console.WriteLine("  dotnet run -c Release -- compare             Compare QR code generation speed and version with other .NET libraries (BenchmarkDotNet).");
         Console.WriteLine("  dotnet run -c Release -- profile [N]         Run a plain loop (N iterations, default {0}) suitable for Rider profiling.", DefaultProfileIterations);
         Console.WriteLine("  dotnet run -c Release -- stats               Collect penalty, mask-pattern and version statistics (Markdown tables).");
         Console.WriteLine();

@@ -499,3 +499,37 @@ Version distribution (samples=1,600)
 - Versions 1-11 (one word per row): 1,284 (80.25%)
 - Versions 12-27 (two words per row): 248 (15.50%)
 - Versions 28-40 (three words per row): 68 (4.25%)
+
+
+# Comparison with other libraries
+
+`compare` mode: QR code generation only (no rendering), 400 payloads × 4 ECC levels per invocation,
+library defaults except that ZXing.Net is told to use UTF-8.
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
+|---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
+| QrCodeGenerator |    31.92 ms | 0.029 ms | 0.023 ms |  1.00 |    0.00 |  1187.5000 |         - |  10052.68 KB |        1.00 |
+| QRCoder         | 1,719.10 ms | 1.779 ms | 1.577 ms | 53.85 |    0.06 |  1000.0000 |         - |  15181.69 KB |        1.51 |
+| SkiaSharpQrCode |    22.53 ms | 0.032 ms | 0.030 ms |  0.71 |    0.00 |    93.7500 |         - |     815.7 KB |        0.08 |
+| ZXingNet        | 1,076.54 ms | 2.910 ms | 2.722 ms | 33.72 |    0.09 | 54000.0000 | 1000.0000 | 441372.72 KB |       43.91 |
+
+The average version shows how compactly each library encodes the payloads. The version is
+compared instead of the size because QRCoder and SkiaSharp.QrCode include the quiet zone in
+the reported size.
+
+Average QR code version (samples=1'600)
+
+| Library          | Avg. version |
+|----------------- |-------------:|
+| QrCodeGenerator  |         8.58 |
+| QRCoder          |         8.57 |
+| SkiaSharp.QrCode |         8.63 |
+| ZXing.Net        |         8.67 |

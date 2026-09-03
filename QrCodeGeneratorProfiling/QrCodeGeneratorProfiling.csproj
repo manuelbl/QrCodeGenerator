@@ -8,6 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+    <PackageReference Include="SkiaSharp.QrCode" Version="1.1.1" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
 
   <ItemGroup>
