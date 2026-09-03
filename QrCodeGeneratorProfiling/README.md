@@ -506,6 +506,10 @@ Version distribution (samples=1,600)
 `compare` mode: QR code generation only (no rendering), 400 payloads × 4 ECC levels per invocation,
 library defaults except that ZXing.Net is told to use UTF-8.
 
+## Performance 
+
+### MacBook Pro M5
+
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -520,6 +524,27 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 | QRCoder         | 1,719.10 ms | 1.779 ms | 1.577 ms | 53.85 |    0.06 |  1000.0000 |         - |  15181.69 KB |        1.51 |
 | SkiaSharpQrCode |    22.53 ms | 0.032 ms | 0.030 ms |  0.71 |    0.00 |    93.7500 |         - |     815.7 KB |        0.08 |
 | ZXingNet        | 1,076.54 ms | 2.910 ms | 2.722 ms | 33.72 |    0.09 | 54000.0000 | 1000.0000 | 441372.72 KB |       43.91 |
+
+### Dell Core Ultra 5
+
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
+Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
+.NET SDK 10.0.400
+  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+```
+
+| Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Allocated    | Alloc Ratio |
+|---------------- |------------:|---------:|---------:|------:|--------:|-----------:|-------------:|------------:|
+| QrCodeGenerator |    40.95 ms | 0.434 ms | 0.406 ms |  1.00 |    0.01 |   769.2308 |  10052.68 KB |        1.00 |
+| QRCoder         | 2,174.83 ms | 7.653 ms | 7.158 ms | 53.11 |    0.54 |  1000.0000 |  15181.69 KB |        1.51 |
+| SkiaSharpQrCode |    20.44 ms | 0.027 ms | 0.025 ms |  0.50 |    0.00 |    62.5000 |    816.26 KB |        0.08 |
+| ZXingNet        | 1,291.49 ms | 5.552 ms | 4.922 ms | 31.54 |    0.32 | 36000.0000 | 441372.72 KB |       43.91 |
+
+
+
+## Versions
 
 The average version shows how compactly each library encodes the payloads. The version is
 compared instead of the size because QRCoder and SkiaSharp.QrCode include the quiet zone in
