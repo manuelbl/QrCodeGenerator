@@ -48,6 +48,14 @@ namespace Net.Codecrete.QrCodeGenerator
             return (version, ecc);
         }
 
+        /// <summary>
+        /// Tests if the data segments fit into a QR code of the given version and error correction level.
+        /// </summary>
+        internal static bool Fits(List<DataSegment> dataSegments, int ecc, int version)
+        {
+            return Fits(DataSegment.GetBitLength(dataSegments, version), version, ecc);
+        }
+
         private static (int Version, int BitLength) FindSmallestVersion(List<DataSegment> dataSegments, int ecc, int minVersion, int maxVersion)
         {
             var bitLength = 0;
@@ -89,7 +97,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="version">The version of the QR code.</param>
         /// <param name="ecc">The error correction level.</param>
         /// <returns>True if the data fits, false otherwise.</returns>
-        private static bool Fits(int bitLength, int version, int ecc)
+        internal static bool Fits(int bitLength, int version, int ecc)
         {
             return bitLength <= 8 * QrCodeParameters.GetCodewordDataCapacity(version, ecc);
         }

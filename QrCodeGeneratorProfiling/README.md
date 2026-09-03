@@ -425,6 +425,41 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
 | EncodeAll | 35.19 ms | 0.103 ms | 0.092 ms | 800.0000 |   9.57 MB |
 
 
+# Optimal Segment Compaction
+
+The segment compaction now assigns the segment modes by a dynamic programme over the blocks
+instead of two greedy merge passes, and the compaction runs per version group (1–9, 10–26, 27–40)
+instead of once for the maximum version. The result is the shortest possible bit stream for the
+chosen version; the `compaction` mode reports no case where QRCoder's segments are shorter.
+The checksum differs from the sections above because some QR codes got smaller.
+
+## Profiling
+
+### MacBook Pro M5
+
+```
+Profile loop: 500 iterations × 400 payloads × 4 ECC levels
+Total EncodeText calls: 800'000
+Elapsed: 00:00:16.4908988 (checksum=40992000)
+```
+
+## Benchmark
+
+### MacBook Pro M5
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0      | Allocated |
+|---------- |---------:|---------:|---------:|----------:|----------:|
+| EncodeAll | 32.17 ms | 0.051 ms | 0.040 ms | 1312.5000 |  10.68 MB |
+
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=12,800)
@@ -504,7 +539,21 @@ Version distribution (samples=1,600)
 # Comparison with other libraries
 
 `compare` mode: QR code generation only (no rendering), 400 payloads × 4 ECC levels per invocation,
-library defaults except that ZXing.Net is told to use UTF-8.
+library defaults (except ZXing.Net, see below).
+
+## Differences between libraries
+
+- *QrCodeGenerator* (this library) will always compact the data segments and generate to smallest possible QR code.
+- *ZXing.NET* is run without segment compaction. So several generated QR codes are bigger than they need to be.
+Segment compaction could be enabled but the ZXing.NET implementation is expensive.
+The library is told to use UTF-8. Otherwise, it uses ISO-8859-1 and replaces characters that cannot be represented with `?`.
+The other libraries prefer ISO-8859-1 but automatically fall back to UTF-8 if needed. 
+- *SkiaSharp.QrCode* does not compact data segments and produces bigger QR codes than needed.
+The library also depends on *SkiaSharp*. Thus, it is big and depends on native architecture specific DLLs.
+- *QrCoder* compacts data segments but does not generate the smallest QR code in all cases. But it is close.
+
+The libraries have also different strategies determining if they insert an ECI segment to indicate the character set.
+
 
 ## Performance 
 
@@ -520,10 +569,10 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 | Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
 |---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
-| QrCodeGenerator |    31.92 ms | 0.029 ms | 0.023 ms |  1.00 |    0.00 |  1187.5000 |         - |  10052.68 KB |        1.00 |
-| QRCoder         | 1,719.10 ms | 1.779 ms | 1.577 ms | 53.85 |    0.06 |  1000.0000 |         - |  15181.69 KB |        1.51 |
-| SkiaSharpQrCode |    22.53 ms | 0.032 ms | 0.030 ms |  0.71 |    0.00 |    93.7500 |         - |     815.7 KB |        0.08 |
-| ZXingNet        | 1,076.54 ms | 2.910 ms | 2.722 ms | 33.72 |    0.09 | 54000.0000 | 1000.0000 | 441372.72 KB |       43.91 |
+| QrCodeGenerator |    32.96 ms | 0.239 ms | 0.212 ms |  1.00 |    0.01 |  1312.5000 |         - |  11127.98 KB |        1.00 |
+| QRCoder         | 1,696.62 ms | 1.367 ms | 1.067 ms | 51.48 |    0.32 |  1000.0000 |         - |  15181.69 KB |        1.36 |
+| SkiaSharpQrCode |    22.41 ms | 0.066 ms | 0.058 ms |  0.68 |    0.00 |    93.7500 |         - |     815.7 KB |        0.07 |
+| ZXingNet        | 1,076.99 ms | 1.552 ms | 1.296 ms | 32.68 |    0.21 | 54000.0000 | 1000.0000 | 441372.72 KB |       39.66 |
 
 ### Dell Core Ultra 5
 
@@ -546,15 +595,13 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
 
 ## Versions
 
-The average version shows how compactly each library encodes the payloads. The version is
-compared instead of the size because QRCoder and SkiaSharp.QrCode include the quiet zone in
-the reported size.
+The average version shows how compactly each library encodes the payloads (data segment compaction).
 
 Average QR code version (samples=1'600)
 
 | Library          | Avg. version |
 |----------------- |-------------:|
-| QrCodeGenerator  |         8.58 |
+| QrCodeGenerator  |         8.56 |
 | QRCoder          |         8.57 |
 | SkiaSharp.QrCode |         8.63 |
 | ZXing.Net        |         8.67 |

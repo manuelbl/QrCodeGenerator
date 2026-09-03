@@ -115,10 +115,11 @@ namespace Net.Codecrete.QrCodeGenerator
         /// Creates optimal data segments for the specified text string.
         /// <para>
         /// The optimal segments are the segments resulting in the smallest
-        /// number of bits. For a given text, they slightly differ depending
-        /// on the QR code version. If the QR code version is not known, the
-        /// default value (20) will produce the optimal result except for rare
-        /// cases.
+        /// number of bits. They depend on the QR code version only through the
+        /// count-indicator widths, so the result is the same for all versions of
+        /// a group (1 to 9, 10 to 26, 27 to 40). If the QR code version is not
+        /// known, the default value (20) will produce the optimal result for
+        /// versions 10 to 26 and a close approximation for the others.
         /// </para>
         /// <para>
         /// If <paramref name="eci"/> is <c>null</c> or <see cref="ECI.Automatic"/>,
@@ -155,7 +156,8 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="text">The text to encode.</param>
         /// <param name="eci">The extended character set indicator segment to add.</param>
         /// <param name="encoding">The character set encoding to use, or <c>null</c> if it should be derived from the ECI.</param>
-        /// <param name="version">The QR code version.</param>
+        /// <param name="version">The QR code version. It affects the count-indicator widths and thus the optimal
+        /// segments; the result is the same for all versions of a group (1 to 9, 10 to 26, 27 to 40).</param>
         /// <param name="kanjiStrategy">Controls if Kanji mode is used for data segments.</param>
         /// <returns>List of QR data segments representing the text.</returns>
         public static List<DataSegment> FromText(
@@ -165,6 +167,14 @@ namespace Net.Codecrete.QrCodeGenerator
             int version = 20,
             KanjiStrategy kanjiStrategy = KanjiStrategy.Automatic
         )
+        {
+            return PrepareText(text, eci, encoding, kanjiStrategy).ToSegments(version);
+        }
+
+        /// <summary>
+        /// Encodes the text and prepares it for segment compaction (see <see cref="FromText"/> for the parameters).
+        /// </summary>
+        internal static SegmentSource PrepareText(string text, ECI eci, Encoding encoding, KanjiStrategy kanjiStrategy)
         {
             Objects.RequireNonNull(text, nameof(text));
             eci = eci ?? ECI.Automatic;
@@ -217,17 +227,18 @@ namespace Net.Codecrete.QrCodeGenerator
                     break;
             }
             
-            return FromBinaryData(data, eci, version, considerKanjiMode);
+            return new SegmentSource(new ArraySegment<byte>(data), eci, considerKanjiMode);
         }
 
         /// <summary>
         /// Creates optimal data segments for the specified binary data.
         /// <para>
         /// The optimal segments are the segments representing the data with
-        /// the smallest number of bits. For a given text, they slightly
-        /// differ depending on the QR code version. If the QR code version
-        /// is not known, the default value (20) will produce the optimal
-        /// result except for rare cases.
+        /// the smallest number of bits. They depend on the QR code version only
+        /// through the count-indicator widths, so the result is the same for all
+        /// versions of a group (1 to 9, 10 to 26, 27 to 40). If the QR code version
+        /// is not known, the default value (20) will produce the optimal result for
+        /// versions 10 to 26 and a close approximation for the others.
         /// </para>
         /// <para>
         /// The specified data can be text data that has already been encoded
@@ -242,7 +253,8 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="eci">The extended character set indicator segment to add.
         /// If <see cref="ECI.None"/> is specified, the ECI segment is omitted.
         /// If <c>null</c> is specified, the ECI designator for binary data is used.</param>
-        /// <param name="version">The QR code version.</param>
+        /// <param name="version">The QR code version. It affects the count-indicator widths and thus the optimal
+        /// segments; the result is the same for all versions of a group (1 to 9, 10 to 26, 27 to 40).</param>
         /// <param name="considerKanjiMode">Controls if Kanji mode is considered for data segments.</param>
         /// <returns>A list of QR data segments representing the data.</returns>
         public static List<DataSegment> FromBinaryData(
@@ -252,15 +264,16 @@ namespace Net.Codecrete.QrCodeGenerator
             bool considerKanjiMode = false
         )
         {
+            return PrepareBinaryData(data, eci, considerKanjiMode).ToSegments(version);
+        }
+
+        /// <summary>
+        /// Prepares binary data for segment compaction (see <see cref="FromBinaryData"/> for the parameters).
+        /// </summary>
+        internal static SegmentSource PrepareBinaryData(byte[] data, ECI eci, bool considerKanjiMode)
+        {
             Objects.RequireNonNull(data, nameof(data));
-            
-            var dataSegments = SegmentCompaction.BuildSegments(new ArraySegment<byte>(data), version, considerKanjiMode);
-            if (!Equals(eci, ECI.None))
-            {
-                dataSegments.Insert(0, new DataSegmentEci(eci ?? ECI.BinaryData));
-            }
-            
-            return dataSegments;
+            return new SegmentSource(new ArraySegment<byte>(data), eci ?? ECI.BinaryData, considerKanjiMode);
         }
 
         #endregion

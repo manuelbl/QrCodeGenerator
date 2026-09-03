@@ -21,12 +21,10 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <summary>
         /// Builds optimal segments encoding the given byte array.
         /// <para>
-        /// The optimal segments result in the shortest possible bit stream.
-        /// </para>
-        /// <para>
-        /// In edge cases, the optimal result can slightly vary depending
-        /// on the QR code version. However, the length difference is minimal.
-        /// If the version is unknown, version 10 or higher is recommended. 
+        /// The optimal segments result in the shortest possible bit stream for the given version.
+        /// The version only affects the count-indicator widths, which are the same for
+        /// versions 1 to 9, 10 to 26 and 27 to 40. So the result is identical for all versions
+        /// of the same group.
         /// </para>
         /// <para>
         /// The Kanji mode is only used if <paramref name="considerKanjiMode"/> is <c>true</c>.
@@ -40,150 +38,180 @@ namespace Net.Codecrete.QrCodeGenerator
         internal static List<DataSegment> BuildSegments(ArraySegment<byte> bytes, int version = 20,
             bool considerKanjiMode = false)
         {
-            // The algorithm first determines the best encoding mode for each byte
-            // and builds blocks of bytes with the same encoding mode.
-            var blocks = BuildBlocks(bytes, considerKanjiMode);
-            var blockCount = blocks.Length;
+            return BuildSegments(bytes, BuildBlocks(bytes, considerKanjiMode), version);
+        }
 
-            // Since switching from one mode to another and back requires additional bits,
-            // the additional cost of switching can be higher than the savings
-            // from using a more efficient mode. If this is the case, two or three blocks are merged.
-            // In the first step, short numeric blocks are merged with alphanumeric blocks.
-            // In the second step, all types of blocks are merged into byte blocks.
-            blockCount = MergeBlocks<AlphanumericRule>(blocks, blockCount, version);
-            blockCount = MergeBlocks<BinaryRule>(blocks, blockCount, version);
-
-            var segments = new List<DataSegment>(blockCount);
-            var offset = 0;
-            for (var i = 0; i < blockCount; i += 1)
+        /// <summary>
+        /// Builds optimal segments encoding the given byte array from its blocks.
+        /// <para>
+        /// The blocks do not depend on the version, so they can be built once with
+        /// <see cref="BuildBlocks"/> and reused to build the segments for several versions.
+        /// </para>
+        /// </summary>
+        /// <param name="bytes">Bytes to encode</param>
+        /// <param name="blocks">The blocks of the bytes, as built by <see cref="BuildBlocks"/></param>
+        /// <param name="version">QR code version</param>
+        /// <returns>QR segments</returns>
+        internal static List<DataSegment> BuildSegments(ArraySegment<byte> bytes, Block[] blocks, int version)
+        {
+            if (blocks.Length == 0)
             {
-                var block = blocks[i];
-                var blockBytes = bytes.MakeSlice(offset, block.Length);
-                offset += block.Length;
-                segments.Add(DataSegment.MakeSegment(block.Mode, blockBytes));
+                return new List<DataSegment>();
+            }
+
+            // Since switching from one mode to another requires additional bits, the cost of
+            // switching can be higher than the savings from using a more efficient mode.
+            // A dynamic programme assigns each block the segment mode minimizing the total bit stream.
+            var modes = AssignModes(blocks, version);
+
+            // Consecutive blocks with the same mode form a single segment.
+            var segments = new List<DataSegment>();
+            var offset = 0;
+            var length = 0;
+            for (var i = 0; i < blocks.Length; i += 1)
+            {
+                length += blocks[i].Length;
+                if (i + 1 == blocks.Length || modes[i + 1] != modes[i])
+                {
+                    segments.Add(DataSegment.MakeSegment(modes[i], bytes.MakeSlice(offset, length)));
+                    offset += length;
+                    length = 0;
+                }
             }
 
             return segments;
         }
 
-        /// <summary>
-        /// Merges blocks according to the merge rule until no further merge is possible.
-        /// </summary>
-        /// <typeparam name="TRule">The merge rule.</typeparam>
-        /// <param name="blocks">The array of blocks to process.</param>
-        /// <param name="blockCount">The number of active blocks in the array.</param>
-        /// <param name="version">The QR code version.</param>
-        /// <returns>Number of remaining blocks in array</returns>
-        private static int MergeBlocks<TRule>(Block[] blocks, int blockCount, int version)
-            where TRule : struct, IMergeRule
-        {
-            // A pass can create new merge opportunities, so repeat until nothing changes anymore.
-            var previousCount = -1;
-            while (blockCount > 1 && blockCount != previousCount)
-            {
-                previousCount = blockCount;
-                blockCount = MergePass<TRule>(blocks, blockCount, version);
-            }
+        // The modes a block can be encoded in, indexed by ModeIndex().
+        private const int NumModes = 4;
 
-            return blockCount;
+        // Bits per byte for each mode (indexed by ModeIndex()), in sixths of a bit so that all values
+        // are integers: numeric 10/3, alphanumeric 11/2, Kanji 13/2 (per byte), binary 8.
+        private static readonly int[] ByteCosts = { 20, 33, 39, 48 };
+
+        private static int ModeIndex(DataSegmentMode mode) => (int)mode - 1;
+
+        private static DataSegmentMode ModeAt(int index) => (DataSegmentMode)(index + 1);
+
+        /// <summary>
+        /// Calculates a lower bound of the bit length of any segmentation of the blocks:
+        /// the data bits if each block is encoded in its cheapest mode, without any headers.
+        /// </summary>
+        internal static int MinBitLength(Block[] blocks)
+        {
+            var cost = 0;
+            foreach (var block in blocks)
+            {
+                cost += block.Length * ByteCosts[ModeIndex(block.Mode)];
+            }
+            return cost / 6;
         }
 
+        private const int Infinity = int.MaxValue / 2;
+
         /// <summary>
-        /// Runs a single merge pass, compacting the blocks in place.
+        /// Assigns each block the mode of the segment it is encoded in such that the total bit stream is minimal.
+        /// <para>
+        /// For each block and each mode able to encode the block, the minimal cost of the bit stream up to and
+        /// including the block is computed, either by continuing the segment of the previous block or by
+        /// starting a new segment (which adds a header). Costs are tracked in sixths of a bit; a segment's
+        /// length is the sum of its byte costs rounded up to whole bits, so rounding up when a segment ends
+        /// yields the exact length.
+        /// </para>
         /// </summary>
-        /// <typeparam name="TRule">The merge rule.</typeparam>
-        /// <param name="blocks">The array of blocks to process.</param>
-        /// <param name="blockCount">The number of active blocks in the array.</param>
+        /// <param name="blocks">The blocks, each with its cheapest mode.</param>
         /// <param name="version">The QR code version.</param>
-        /// <returns>Number of remaining blocks in array</returns>
-        private static int MergePass<TRule>(Block[] blocks, int blockCount, int version)
-            where TRule : struct, IMergeRule
+        /// <returns>The segment mode for each block.</returns>
+        private static DataSegmentMode[] AssignModes(Block[] blocks, int version)
         {
-            var processedBlocks = 1; // number of processed blocks
-            var sourceIndex = 1; // blocks from this index have yet to be processed
-            while (sourceIndex < blockCount)
+            var headerCosts = new int[NumModes];
+            for (var m = 0; m < NumModes; m += 1)
             {
-                var consumed = TryMergeAt<TRule>(blocks, processedBlocks - 1, sourceIndex, blockCount, version);
-                if (consumed > 0)
+                // A block of length 0 costs exactly the segment header (mode and count indicator).
+                headerCosts[m] = 6 * new Block { Mode = ModeAt(m), Length = 0 }.GetSegmentLength(version);
+            }
+
+            var blockCount = blocks.Length;
+            var previousCosts = new int[NumModes]; // minimal cost up to the previous block, per mode
+            var costs = new int[NumModes]; // minimal cost up to the current block, per mode
+            var previousModes = new byte[blockCount * NumModes]; // mode of the previous block on the minimal path
+
+            for (var i = 0; i < blockCount; i += 1)
+            {
+                (previousCosts, costs) = (costs, previousCosts);
+                var block = blocks[i];
+                for (var m = 0; m < NumModes; m += 1)
                 {
-                    sourceIndex += consumed;
-                }
-                else
-                {
-                    blocks[processedBlocks] = blocks[sourceIndex];
-                    processedBlocks += 1;
-                    sourceIndex += 1;
+                    if (!CanEncode(ModeAt(m), block.Mode))
+                    {
+                        costs[m] = Infinity;
+                        continue;
+                    }
+
+                    var dataCost = block.Length * ByteCosts[m];
+                    if (i == 0)
+                    {
+                        costs[m] = headerCosts[m] + dataCost;
+                        continue;
+                    }
+
+                    // Continue the segment of the previous block (no header); on a tie, this is preferred.
+                    var best = previousCosts[m] + dataCost;
+                    var bestPrevious = m;
+
+                    // Or start a new segment after a segment of another mode.
+                    for (var p = 0; p < NumModes; p += 1)
+                    {
+                        var previousCost = previousCosts[p];
+                        if (p == m || previousCost >= Infinity)
+                        {
+                            continue;
+                        }
+
+                        var cost = RoundUpToBits(previousCost) + headerCosts[m] + dataCost;
+                        if (cost < best)
+                        {
+                            best = cost;
+                            bestPrevious = p;
+                        }
+                    }
+
+                    costs[m] = best;
+                    previousModes[i * NumModes + m] = (byte)bestPrevious;
                 }
             }
 
-            return processedBlocks;
+            // Pick the cheapest mode for the last block and walk the path back.
+            var mode = 0;
+            for (var m = 1; m < NumModes; m += 1)
+            {
+                if (RoundUpToBits(costs[m]) < RoundUpToBits(costs[mode]))
+                {
+                    mode = m;
+                }
+            }
+
+            var modes = new DataSegmentMode[blockCount];
+            for (var i = blockCount - 1; i >= 0; i -= 1)
+            {
+                modes[i] = ModeAt(mode);
+                mode = previousModes[i * NumModes + mode];
+            }
+
+            return modes;
         }
 
-        /// <summary>
-        /// Tries to merge the block at <paramref name="targetIndex"/> with the 2 or 1 blocks
-        /// starting at <paramref name="sourceIndex"/>, replacing the target block if successful.
-        /// </summary>
-        /// <typeparam name="TRule">The merge rule.</typeparam>
-        /// <param name="blocks">The array of blocks to process.</param>
-        /// <param name="targetIndex">The index of the last processed block.</param>
-        /// <param name="sourceIndex">The index of the first unprocessed block.</param>
-        /// <param name="blockCount">The number of active blocks in the array.</param>
-        /// <param name="version">The QR code version.</param>
-        /// <returns>Number of source blocks consumed (0 if the blocks have not been merged)</returns>
-        private static int TryMergeAt<TRule>(Block[] blocks, int targetIndex, int sourceIndex, int blockCount,
-            int version)
-            where TRule : struct, IMergeRule
-        {
-            var rule = default(TRule);
-            ref var target = ref blocks[targetIndex];
-            var first = blocks[sourceIndex];
-
-            // Case 1: merge 3 blocks (last processed one plus 2 unprocessed ones)
-            // Test if the bit stream is shorter if all 3 blocks are merged (using the rule's merged mode).
-            if (sourceIndex + 1 < blockCount)
-            {
-                var second = blocks[sourceIndex + 1];
-                if (rule.CanMerge3(target.Mode, first.Mode, second.Mode))
-                {
-                    var separateLength = target.GetSegmentLength(version) + first.GetSegmentLength(version)
-                                         + second.GetSegmentLength(version);
-                    return TryReplaceWithMerged(ref target, first.Length + second.Length, separateLength,
-                        rule.MergedMode, version) ? 2 : 0;
-                }
-            }
-
-            // Case 2: merge 2 blocks (last processed one and the current unprocessed one)
-            // Test if the bit stream is shorter if the 2 blocks are merged (using the rule's merged mode).
-            if (rule.CanMerge2(target.Mode, first.Mode))
-            {
-                var separateLength = target.GetSegmentLength(version) + first.GetSegmentLength(version);
-                return TryReplaceWithMerged(ref target, first.Length, separateLength, rule.MergedMode, version) ? 1 : 0;
-            }
-
-            return 0;
-        }
+        // Rounds a cost in sixths of a bit up to whole bits (still in sixths).
+        private static int RoundUpToBits(int cost) => (cost + 5) / 6 * 6;
 
         /// <summary>
-        /// Replaces the target block with the merged block unless the merged block
-        /// results in a longer bit stream.
+        /// Tests if a segment of the given mode can encode a block whose cheapest mode is <paramref name="blockMode"/>.
         /// </summary>
-        /// <param name="target">The block to replace, and the first block of the merged block.</param>
-        /// <param name="addedLength">The number of payload bytes of the further blocks to merge.</param>
-        /// <param name="separateLength">The bit stream length of the blocks if they are not merged.</param>
-        /// <param name="mergedMode">The data segment mode of the merged block.</param>
-        /// <param name="version">The QR code version.</param>
-        /// <returns><c>true</c> if the blocks have been merged</returns>
-        private static bool TryReplaceWithMerged(ref Block target, int addedLength, int separateLength,
-            DataSegmentMode mergedMode, int version)
+        private static bool CanEncode(DataSegmentMode segmentMode, DataSegmentMode blockMode)
         {
-            var merged = new Block { Mode = mergedMode, Length = target.Length + addedLength };
-            if (merged.GetSegmentLength(version) > separateLength)
-            {
-                return false;
-            }
-
-            target = merged;
-            return true;
+            return segmentMode == DataSegmentMode.Binary
+                   || segmentMode == blockMode
+                   || (segmentMode == DataSegmentMode.Alphanumeric && blockMode == DataSegmentMode.Numeric);
         }
 
         /// <summary>
@@ -196,7 +224,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <param name="bytes">Bytes to process</param>
         /// <param name="useKanji">If <c>true</c>, Kanji encoding is considered; if <c>false</c>, Kanji encoding is not used.</param>
         /// <returns>List of blocks</returns>
-        private static Block[] BuildBlocks(ArraySegment<byte> bytes, bool useKanji)
+        internal static Block[] BuildBlocks(ArraySegment<byte> bytes, bool useKanji)
         {
             if (bytes.Count == 0)
             {
@@ -289,66 +317,6 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             return modes;
-        }
-
-        #endregion
-
-        #region Merge Rules
-
-        /// <summary>
-        /// Rule deciding which consecutive blocks are candidates for merging,
-        /// and what the data segment mode of the merged block is.
-        /// </summary>
-        /// <remarks>
-        /// The rule is implemented as a struct and used as a generic type argument. The JIT compiler
-        /// therefore specializes the merge code per rule and inlines the checks (no delegate calls,
-        /// no allocation).
-        /// </remarks>
-        private interface IMergeRule
-        {
-            /// <summary>
-            /// Data segment mode of the merged block.
-            /// </summary>
-            DataSegmentMode MergedMode { get; }
-
-            /// <summary>
-            /// Tests if 3 consecutive blocks with the given modes are candidates for merging.
-            /// </summary>
-            bool CanMerge3(DataSegmentMode mode0, DataSegmentMode mode1, DataSegmentMode mode2);
-
-            /// <summary>
-            /// Tests if 2 consecutive blocks with the given modes are candidates for merging.
-            /// </summary>
-            bool CanMerge2(DataSegmentMode mode0, DataSegmentMode mode1);
-        }
-
-        /// <summary>
-        /// Rule merging short numeric blocks with adjacent alphanumeric blocks.
-        /// </summary>
-        private readonly struct AlphanumericRule : IMergeRule
-        {
-            public DataSegmentMode MergedMode => DataSegmentMode.Alphanumeric;
-
-            public bool CanMerge3(DataSegmentMode mode0, DataSegmentMode mode1, DataSegmentMode mode2)
-                => mode0 == DataSegmentMode.Alphanumeric && mode1 == DataSegmentMode.Numeric && mode2 == mode0;
-
-            public bool CanMerge2(DataSegmentMode mode0, DataSegmentMode mode1)
-                => (mode0 == DataSegmentMode.Alphanumeric && mode1 == DataSegmentMode.Numeric)
-                   || (mode0 == DataSegmentMode.Numeric && mode1 == DataSegmentMode.Alphanumeric);
-        }
-
-        /// <summary>
-        /// Rule merging blocks of any mode into binary blocks.
-        /// </summary>
-        private readonly struct BinaryRule : IMergeRule
-        {
-            public DataSegmentMode MergedMode => DataSegmentMode.Binary;
-
-            public bool CanMerge3(DataSegmentMode mode0, DataSegmentMode mode1, DataSegmentMode mode2)
-                => mode1 != DataSegmentMode.Binary && mode2 == mode0;
-
-            public bool CanMerge2(DataSegmentMode mode0, DataSegmentMode mode1)
-                => (mode0 == DataSegmentMode.Binary) != (mode1 == DataSegmentMode.Binary);
         }
 
         #endregion

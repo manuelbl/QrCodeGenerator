@@ -156,9 +156,58 @@ namespace Net.Codecrete.QrCodeGenerator
             Objects.RequireNonNull(text, nameof(text));
             ValidateVersion(minVersion, maxVersion);
             
-            var segments = DataSegment.FromText(text, eci: eci, encoding: encoding,
-                version: maxVersion, kanjiStrategy: kanjiStrategy);
-            return QrCodeBuilder.Build(segments, (int) minimumEcl, minVersion, maxVersion, boostEcl, encodingInfo);
+            var source = DataSegment.PrepareText(text, eci, encoding, kanjiStrategy);
+            return BuildInVersionGroups(source, (int) minimumEcl, minVersion, maxVersion, boostEcl, encodingInfo);
+        }
+
+        /// <summary>
+        /// Groups of versions sharing the same count-indicator widths (ISO/IEC 18004, Table 3).
+        /// </summary>
+        private static readonly (int Min, int Max)[] VersionGroups = { (1, 9), (10, 26), (27, 40) };
+
+        /// <summary>
+        /// Builds the smallest QR code in the version range, compacting the segments per version group.
+        /// <para>
+        /// The segment compaction depends on the version only through the count-indicator widths,
+        /// so the optimal segments are the same for all versions of a group. The groups are tried in
+        /// ascending order; the first group whose optimal segments fit yields the smallest QR code.
+        /// </para>
+        /// </summary>
+        /// <param name="source">The data prepared for segment compaction.</param>
+        /// <param name="ecc">The (minimum) error correction level.</param>
+        /// <param name="minVersion">The minimal QR code version.</param>
+        /// <param name="maxVersion">The maximal QR code version.</param>
+        /// <param name="boostEcl">If <c>true</c>, increase the error correction level if possible.</param>
+        /// <param name="encodingInfo">Optional diagnostics, or <c>null</c>.</param>
+        private static QrCode BuildInVersionGroups(SegmentSource source, int ecc, int minVersion, int maxVersion,
+            bool boostEcl, EncodingInfo encodingInfo)
+        {
+            var minBitLength = source.MinBitLength;
+
+            foreach (var (groupMin, groupMax) in VersionGroups)
+            {
+                var lowest = Math.Max(minVersion, groupMin);
+                var highest = Math.Min(maxVersion, groupMax);
+                if (lowest > highest)
+                {
+                    continue;
+                }
+
+                // The last group in range builds unconditionally so that a too long payload throws.
+                var isLastGroup = highest == maxVersion;
+                if (!isLastGroup && !VersionPlanner.Fits(minBitLength, highest, ecc))
+                {
+                    continue;
+                }
+
+                var segments = source.ToSegments(highest);
+                if (isLastGroup || VersionPlanner.Fits(segments, ecc, highest))
+                {
+                    return QrCodeBuilder.Build(segments, ecc, lowest, highest, boostEcl, encodingInfo);
+                }
+            }
+
+            throw new InvalidOperationException("Version range does not overlap any version group");
         }
 
         /// <summary>
@@ -295,8 +344,8 @@ namespace Net.Codecrete.QrCodeGenerator
         public static QrCode EncodeBinary(byte[] data, Ecc ecl, bool omitEci = false)
         {
             Objects.RequireNonNull(data, nameof(data));
-            var segments = DataSegment.FromBinaryData(data, eci: omitEci ? ECI.None : ECI.BinaryData);
-            return QrCodeBuilder.Build(segments, (int)ecl);
+            var source = DataSegment.PrepareBinaryData(data, omitEci ? ECI.None : ECI.BinaryData, false);
+            return BuildInVersionGroups(source, (int)ecl, MinVersion, MaxVersion, true, null);
         }
 
         /// <summary>

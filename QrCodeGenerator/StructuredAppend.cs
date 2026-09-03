@@ -18,10 +18,10 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <summary>
         /// The version used to compact the balanced segments once and reuse the result.
         /// <para>
-        /// The compaction depends only marginally on the version (see
-        /// <see cref="SegmentCompaction.BuildSegments"/>). Version 20 lies in the middle
-        /// count-indicator band (10&#x2013;26), so it is exact for that band and a close
-        /// approximation for the others.
+        /// The compaction depends on the version only through the count-indicator widths
+        /// (see <see cref="SegmentCompaction.BuildSegments(System.ArraySegment{byte}, int, bool)"/>).
+        /// Version 20 lies in the middle count-indicator band (10&#x2013;26), so it is exact
+        /// for that band and a close approximation for the others.
         /// </para>
         /// </summary>
         private const int CompactionVersion = 20;
