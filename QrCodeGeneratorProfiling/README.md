@@ -375,13 +375,25 @@ all used the 200 short payloads.
 
 ## Profiling
 
+### MacBook Pro M5
+
 ```
 Profile loop: 500 iterations × 400 payloads × 4 ECC levels
 Total EncodeText calls: 800'000
 Elapsed: 00:00:15.9592118 (checksum=41052000)
 ```
 
+### Dell Core Ultra 5
+
+```
+Profile loop: 500 iterations × 400 payloads × 4 ECC levels
+Total EncodeText calls: 800’000
+Elapsed: 00:00:18.1419330 (checksum=41052000)
+```
+
 ## Benchmark
+
+### MacBook Pro M5
 
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
@@ -397,6 +409,20 @@ DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
 
 Twice the payloads, and the long ones cost far more than a short one: the penalty rules scan a
 matrix that grows with the square of the version, and eight mask patterns are scored per code.
+
+### Dell Core Ultra 5
+
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
+Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
+.NET SDK 10.0.400
+  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
+|---------- |---------:|---------:|---------:|---------:|----------:|
+| EncodeAll | 35.19 ms | 0.103 ms | 0.092 ms | 800.0000 |   9.57 MB |
 
 
 # Penalty Contribution
