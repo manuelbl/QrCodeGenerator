@@ -42,9 +42,11 @@ Text/bytes → segments → codewords → matrix, in this order:
 
 ### `BitMatrix` and the transpose trick
 
-`BitMatrix` (`internal readonly struct`) is the central data structure: a square bit grid stored as 4 `ulong`s per row (256-bit rows regardless of size), in row-major order. It exposes fast whole-matrix `And`/`Xor`/`Invert`/`PopCount` and an in-place **64×64 block transpose**.
+`BitMatrix` (`internal readonly struct`) is the central data structure: a square bit grid stored in `ulong`s, row-major, with every row starting at a word boundary. It exposes fast whole-matrix `And`/`Xor`/`Invert`/`PopCount` and an in-place **64×64 block transpose**.
 
-The transpose is load-bearing, not a convenience: every penalty/format rule that operates on *columns* is implemented by transposing the matrix and reusing the *row*-wise algorithm. `ApplyBestPattern` keeps a `modules` and a `transposed` copy in lock-step, and `Penalty` takes both. `Penalty` itself is bit-parallel (operates on whole `ulong` words, not per-module) and has an early-stop path that bails once the running score exceeds the best-so-far.
+A row holds its modules in 1, 2 or 3 words (one per 64 columns) — `UsedWordsPerRow`, the matrix's **row layout**. The three layouts cover sizes 1–64 / 65–128 / 129–192, i.e. versions 1–11 / 12–27 / 28–40. The *stride* between rows (`WordsPerRow`, `RowShift`) is that count rounded up to a power of two — 1, 2 or 4 — so a row index is a shift; a 3-word row gets a 4th, always-zero padding word, which is why whole-matrix operations can run flat over `Raw`. The layout follows from the size alone, so two matrices of the same size always agree on it. It exists for `Penalty`: the narrower the row, the fewer words each rule scans, and versions 1–11 are most QR codes. Maximum size is 192 (version 40 is 177).
+
+The transpose is load-bearing, not a convenience: every penalty/format rule that operates on *columns* is implemented by transposing the matrix and reusing the *row*-wise algorithm. `ApplyBestPattern` keeps a `modules` and a `transposed` copy in lock-step, and `Penalty` takes both. `Penalty` itself is bit-parallel (operates on whole `ulong` words, not per-module) and has an early-stop path that bails once the running score exceeds the best-so-far. Each row-scanning rule has one implementation per row layout, with its loop over the words unrolled; all three compute the same score, so which one runs never changes the output.
 
 ### Performance-tuned constants
 

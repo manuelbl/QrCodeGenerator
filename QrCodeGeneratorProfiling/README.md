@@ -318,6 +318,50 @@ The 0.02 MB that remain are the packed `ulong[]` holding the remainder, which is
 than the `byte[]` it replaces.
 
 
+# Row Layouts
+
+Two changes to the penalty rules, which is where encoding spends most of its time.
+
+The finder-pattern rule no longer slides a 15-bit window one column at a time. A whole word is
+matched at once: shifting the row lines up the module at each fixed offset from a candidate start,
+so one sequence of shifts, ands and a population count finds every match beginning in that word.
+
+`BitMatrix` then gained three row layouts. A row holds its modules in one, two or three 64-bit
+words instead of always four, so a rule scans one word per row for versions 1 to 11, two for
+versions 12 to 27 and three for versions 28 to 40. Every row-scanning rule has an implementation
+per layout with its loop over the words unrolled. The stride between rows stays a power of two —
+1, 2 or 4 — so a row index is still a shift, and the three-word layout keeps a fourth, always-zero
+padding word that lets whole-matrix operations run flat over the raw array.
+
+Versions 1 to 11 are most QR codes, and the sample data is no exception. Of the 4.1 s saved on the
+profile loop, the word-parallel finder rule accounts for 1.7 s and the row layouts for 2.5 s.
+
+## Profiling
+
+```
+Profile loop: 500 iterations × 200 payloads × 4 ECC levels
+Total EncodeText calls: 400'000
+Elapsed: 00:00:03.4998049 (checksum=14696000)   [before: 00:00:07.6418913]
+```
+
+## Benchmark
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method             | Mean     | Error     | StdDev    | Gen0     | Allocated |
+|------------------- |---------:|----------:|----------:|---------:|----------:|
+| EncodeAll          | 6.428 ms | 0.0225 ms | 0.0199 ms | 382.8125 |   3.07 MB |
+
+The matrices of the smaller versions are a quarter of their former size, which is where the drop
+in allocation comes from.
+
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=6,400)

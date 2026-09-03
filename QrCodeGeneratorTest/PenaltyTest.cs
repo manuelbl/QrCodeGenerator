@@ -467,6 +467,134 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Equal(0, Penalty.CalcFinderPattern(modules));
         }
 
+        // The row-scanning rules have one implementation per BitMatrix row layout. These check all
+        // three against a straightforward per-module reference, on matrices spanning the layouts.
+        [Theory, CombinatorialData]
+        public void CalcSameColor_MatchesReference(
+            [CombinatorialValues(21, 61, 64, 65, 89, 128, 129, 177)] int size)
+        {
+            var modules = BuildRandom(size, seed: 0x5EED);
+
+            Assert.Equal(ReferenceSameColor(modules), Penalty.CalcSameColor(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void Calc2By2Blocks_MatchesReference(
+            [CombinatorialValues(21, 61, 64, 65, 89, 128, 129, 177)] int size)
+        {
+            var modules = BuildRandom(size, seed: 0x5EED);
+
+            Assert.Equal(Reference2By2Blocks(modules), Penalty.Calc2By2Blocks(modules));
+        }
+
+        [Theory, CombinatorialData]
+        public void CalcFinderPattern_MatchesReference(
+            [CombinatorialValues(21, 61, 64, 65, 89, 128, 129, 177)] int size)
+        {
+            var modules = BuildRandom(size, seed: 0x5EED);
+
+            Assert.Equal(ReferenceFinderPattern(modules), Penalty.CalcFinderPattern(modules));
+        }
+
+        private static BitMatrix BuildRandom(int size, uint seed)
+        {
+            var matrix = new BitMatrix(size);
+            var state = seed;
+            for (var y = 0; y < size; y += 1)
+            {
+                for (var x = 0; x < size; x += 1)
+                {
+                    state = state * 1664525u + 1013904223u;
+                    if ((state & 0x10000u) != 0)
+                    {
+                        matrix.Set(x, y, true);
+                    }
+                }
+            }
+            return matrix;
+        }
+
+        private static int ReferenceSameColor(BitMatrix modules)
+        {
+            var size = modules.Size;
+            var penalty = 0;
+            for (var y = 0; y < size; y += 1)
+            {
+                var runLength = 1;
+                for (var x = 1; x <= size; x += 1)
+                {
+                    if (x < size && modules.Get(x, y) == modules.Get(x - 1, y))
+                    {
+                        runLength += 1;
+                        continue;
+                    }
+                    if (runLength >= 5)
+                    {
+                        penalty += 3 + runLength - 5;
+                    }
+                    runLength = 1;
+                }
+            }
+            return penalty - BasePenaltyStreaks;
+        }
+
+        private static int Reference2By2Blocks(BitMatrix modules)
+        {
+            var size = modules.Size;
+            var count = 0;
+            for (var y = 0; y < size - 1; y += 1)
+            {
+                for (var x = 0; x < size - 1; x += 1)
+                {
+                    var color = modules.Get(x, y);
+                    if (modules.Get(x + 1, y) == color && modules.Get(x, y + 1) == color
+                        && modules.Get(x + 1, y + 1) == color)
+                    {
+                        count += 1;
+                    }
+                }
+            }
+            return count * 3 - BasePenalty2By2Blocks;
+        }
+
+        private static int ReferenceFinderPattern(BitMatrix modules)
+        {
+            var size = modules.Size;
+            var count = 0;
+            for (var y = 0; y < size; y += 1)
+            {
+                for (var x = 0; x <= size - 7; x += 1)
+                {
+                    // the 1:1:3:1:1 ratio, i.e. the module sequence "1011101"
+                    if (!(IsDark(modules, x, y) && !IsDark(modules, x + 1, y) && IsDark(modules, x + 2, y)
+                          && IsDark(modules, x + 3, y) && IsDark(modules, x + 4, y) && !IsDark(modules, x + 5, y)
+                          && IsDark(modules, x + 6, y)))
+                    {
+                        continue;
+                    }
+                    // one light module on either side ...
+                    if (IsDark(modules, x - 1, y) || IsDark(modules, x + 7, y))
+                    {
+                        continue;
+                    }
+                    // ... and three more on one side or the other
+                    var lightLeft = !IsDark(modules, x - 2, y) && !IsDark(modules, x - 3, y) && !IsDark(modules, x - 4, y);
+                    var lightRight = !IsDark(modules, x + 8, y) && !IsDark(modules, x + 9, y) && !IsDark(modules, x + 10, y);
+                    if (lightLeft || lightRight)
+                    {
+                        count += 1;
+                    }
+                }
+            }
+            return count * 40 - BasePenaltyFinderPattern;
+        }
+
+        // Modules beyond the edge of the symbol count as light.
+        private static bool IsDark(BitMatrix modules, int x, int y)
+        {
+            return x >= 0 && x < modules.Size && modules.Get(x, y);
+        }
+
         // Creates a matrix with exactly the given number of dark modules.
         private static BitMatrix WithDarkCount(int size, int darkModules)
         {

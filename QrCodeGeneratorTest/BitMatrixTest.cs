@@ -24,6 +24,52 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.True(bitMatrix.Get(190, 190));
         }
 
+        [Theory]
+        // one word of modules per 64 columns, in a stride rounded up to a power of two
+        [InlineData(1, 1, 1)]
+        [InlineData(21, 1, 1)]       // version 1
+        [InlineData(61, 1, 1)]       // version 11, the largest with a one-word row
+        [InlineData(64, 1, 1)]
+        [InlineData(65, 2, 2)]       // version 12, the smallest with a two-word row
+        [InlineData(125, 2, 2)]      // version 27
+        [InlineData(128, 2, 2)]
+        [InlineData(129, 3, 4)]      // version 28
+        [InlineData(177, 3, 4)]      // version 40, the largest QR code
+        [InlineData(BitMatrix.MaxSize, 3, 4)]
+        public void Create_UsesRowLayoutForSize(int size, int expectedUsedWords, int expectedStride)
+        {
+            var bitMatrix = new BitMatrix(size);
+
+            Assert.Equal(expectedUsedWords, bitMatrix.UsedWordsPerRow);
+            Assert.Equal(expectedStride, bitMatrix.WordsPerRow);
+            Assert.Equal(size * expectedStride, bitMatrix.Raw.Length);
+        }
+
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(BitMatrix.MaxSize + 1)]
+        public void Create_SizeOutOfRange_Throws(int size)
+        {
+            Assert.Throws<ArgumentException>(() => new BitMatrix(size));
+        }
+
+        [Theory, CombinatorialData]
+        public void Invert_ClearsPaddingBeyondLastColumn([CombinatorialValues(21, 64, 65, 128, 129, 177)] int size)
+        {
+            var bitMatrix = new BitMatrix(size);
+
+            bitMatrix.Invert();
+
+            Assert.Equal(size * size, bitMatrix.PopCount());
+            for (var y = 0; y < size; y += 1)
+            {
+                for (var x = 0; x < size; x += 1)
+                {
+                    Assert.True(bitMatrix.Get(x, y));
+                }
+            }
+        }
+
         [Fact]
         public void GetSet_Works()
         {
@@ -56,16 +102,16 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [InlineData(63, 0, 2, 1)]
         [InlineData(63, 0, 1, 1)]
         [InlineData(64, 0, 64, 1)]
-        [InlineData(10, 0, 200, 1)]
-        [InlineData(0, 0, 256, 1)]
-        [InlineData(0, 0, 256, 256)]
-        [InlineData(50, 50, 150, 150)]
-        [InlineData(127, 0, 2, 256)]
-        [InlineData(255, 255, 1, 1)]
-        [InlineData(0, 0, 1, 256)]
+        [InlineData(10, 0, 182, 1)]
+        [InlineData(0, 0, 192, 1)]
+        [InlineData(0, 0, 192, 192)]
+        [InlineData(50, 50, 142, 142)]
+        [InlineData(127, 0, 2, 192)]
+        [InlineData(191, 191, 1, 1)]
+        [InlineData(0, 0, 1, 192)]
         public void FillRect_FillsExactArea(int x, int y, int width, int height)
         {
-            const int size = 256;
+            const int size = 192;
             var bitMatrix = new BitMatrix(size);
 
             bitMatrix.FillRect(x, y, width, height);
@@ -83,18 +129,18 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void FillRect_PreservesExistingBits()
         {
-            const int size = 200;
+            const int size = 177;
             var bitMatrix = new BitMatrix(size);
 
             bitMatrix.Set(5, 5, true);
             bitMatrix.Set(150, 150, true);
-            bitMatrix.Set(199, 199, true);
+            bitMatrix.Set(176, 176, true);
 
             bitMatrix.FillRect(20, 20, 80, 80);
 
             Assert.True(bitMatrix.Get(5, 5));
             Assert.True(bitMatrix.Get(150, 150));
-            Assert.True(bitMatrix.Get(199, 199));
+            Assert.True(bitMatrix.Get(176, 176));
         }
 
         [Fact]
@@ -165,16 +211,16 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void And_WithSelf_LeavesMatrixUnchanged()
         {
-            const int size = 200;
+            const int size = 177;
             var a = new BitMatrix(size);
             a.FillRect(5, 7, 91, 33);
-            a.Set(199, 199, true);
+            a.Set(176, 176, true);
 
             var expected = a.PopCount();
             a.And(a);
 
             Assert.Equal(expected, a.PopCount());
-            Assert.True(a.Get(199, 199));
+            Assert.True(a.Get(176, 176));
         }
 
         [Fact]
@@ -212,10 +258,10 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void Xor_WithSelf_YieldsEmpty()
         {
-            const int size = 200;
+            const int size = 177;
             var a = new BitMatrix(size);
             a.FillRect(5, 7, 91, 33);
-            a.Set(199, 199, true);
+            a.Set(176, 176, true);
 
             a.Xor(a);
 
@@ -252,7 +298,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
         [Theory, CombinatorialData]
         public void Transpose_MatchesNaiveOracle(
-            [CombinatorialValues(0, 1, 2, 21, 41, 63, 64, 65, 81, 121, 127, 128, 129, 177, 192, 255, 256)] int size)
+            [CombinatorialValues(0, 1, 2, 21, 41, 63, 64, 65, 81, 121, 127, 128, 129, 177, 191, 192)] int size)
         {
             var a = BuildPattern(size, seed: 0xC0FFEE);
             var b = a.Copy();
@@ -379,19 +425,19 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void FillRect_MultipleRectsCombine()
         {
-            const int size = 256;
+            const int size = 192;
             var bitMatrix = new BitMatrix(size);
 
             bitMatrix.FillRect(0, 0, 100, 100);
-            bitMatrix.FillRect(150, 150, 50, 50);
+            bitMatrix.FillRect(130, 130, 50, 50);
 
             Assert.Equal(100 * 100 + 50 * 50, bitMatrix.PopCount());
             Assert.True(bitMatrix.Get(0, 0));
             Assert.True(bitMatrix.Get(99, 99));
             Assert.False(bitMatrix.Get(100, 100));
-            Assert.True(bitMatrix.Get(150, 150));
-            Assert.True(bitMatrix.Get(199, 199));
-            Assert.False(bitMatrix.Get(200, 200));
+            Assert.True(bitMatrix.Get(130, 130));
+            Assert.True(bitMatrix.Get(179, 179));
+            Assert.False(bitMatrix.Get(180, 180));
         }
     }
 }

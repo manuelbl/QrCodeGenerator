@@ -7,7 +7,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 #if NET6_0_OR_GREATER
 using System.Numerics;
 #endif
@@ -18,20 +17,93 @@ namespace Net.Codecrete.QrCodeGenerator
     /// Square matrix of binary pixels.
     /// <para>
     /// The bits are stored in a 64-bit unsigned integer array, in row-major order
-    /// (y-coordinates specify the row, x-coordinates specify the column).
-    /// Each row uses 4 64-bit integers, independent of the matrix size.
-    /// In each row, the bits at column positions outside the logical size are always 0.
+    /// (y-coordinates specify the row, x-coordinates specify the column). A row always starts at
+    /// a word boundary so the penalty rules can scan it word by word. In each row, the bits at
+    /// column positions outside the logical size are always 0.
     /// </para>
     /// <para>
-    /// The maximum supported size is 256 * 256 bits.
+    /// A row holds its modules in one, two or three words, one per 64 columns, which is what
+    /// <see cref="UsedWordsPerRow"/> reports. These are the library's <b>three row layouts</b>,
+    /// and each one covers a range of QR code versions:
+    /// </para>
+    /// <list type="table">
+    ///   <listheader><term>Words of modules</term><description>Sizes / versions / stride</description></listheader>
+    ///   <item><term>1</term><description>sizes 1–64, versions 1–11, stride 1</description></item>
+    ///   <item><term>2</term><description>sizes 65–128, versions 12–27, stride 2</description></item>
+    ///   <item><term>3</term><description>sizes 129–192, versions 28–40, stride 4</description></item>
+    /// </list>
+    /// <para>
+    /// The layout follows from the size alone, so two matrices of the same size always agree on it
+    /// and an <see cref="And"/> or <see cref="Xor"/> can never mix two of them. It exists for
+    /// <see cref="Penalty"/>, which has an implementation of every rule per layout and is where
+    /// encoding a QR code spends most of its time: the narrower the row, the fewer words a rule
+    /// scans, and versions 1 to 11 are most QR codes.
+    /// </para>
+    /// <para>
+    /// The <em>stride</em> from one row to the next in <see cref="Raw"/>, which
+    /// <see cref="WordsPerRow"/> reports, is that word count rounded up to a power of two, so a row
+    /// index is a shift rather than a multiplication. It differs from the word count only for a
+    /// three-word row, which is allocated a fourth, always-zero padding word: <see cref="Invert"/>
+    /// clears it, <see cref="FillRect"/> cannot reach it, and <see cref="Transpose"/> never writes
+    /// it. Operations over the whole matrix therefore ignore the distinction and run flat over
+    /// <see cref="Raw"/>.
+    /// </para>
+    /// <para>
+    /// The maximum supported size is <see cref="MaxSize"/> × <see cref="MaxSize"/> bits, the
+    /// largest with three words of modules per row. Every QR code version fits: version 40, the
+    /// largest, is 177 modules wide.
     /// </para>
     /// </summary>
     internal readonly struct BitMatrix
     {
         /// <summary>
+        /// The greatest number of 64-bit words of modules a row can hold, that of the widest layout.
+        /// </summary>
+        internal const int MaxUsedWordsPerRow = 3;
+
+        /// <summary>
+        /// The greatest stride from one row to the next, that of the widest layout.
+        /// <para>
+        /// A three-word row is allocated a fourth word so the stride stays a power of two and a row
+        /// index stays a shift. That word is always zero.
+        /// </para>
+        /// </summary>
+        internal const int MaxWordsPerRow = 4;
+
+        /// <summary>
+        /// The maximum supported size, given by the <see cref="MaxUsedWordsPerRow"/> words per row.
+        /// </summary>
+        internal const int MaxSize = 64 * MaxUsedWordsPerRow;
+
+        /// <summary>
         /// Gets the size of the matrix (number of bits in each dimension).
         /// </summary>
-        internal int Size => Raw.Length >> 2;
+        internal int Size { get; }
+
+        /// <summary>
+        /// Gets the base-2 logarithm of the stride from one row to the next: 0, 1 or 2.
+        /// </summary>
+        internal int RowShift { get; }
+
+        /// <summary>
+        /// Gets the number of 64-bit words of each row that hold modules: 1, 2 or 3.
+        /// <para>
+        /// This is the matrix's row layout, one word per 64 columns. An algorithm reading the bits
+        /// of a row scans that many words and dispatches on this to the implementation specialized
+        /// for it.
+        /// </para>
+        /// </summary>
+        internal int UsedWordsPerRow { get; }
+
+        /// <summary>
+        /// Gets the number of 64-bit words each row occupies, i.e. the stride from one row to the
+        /// next in <see cref="Raw"/>: 1, 2 or 4.
+        /// <para>
+        /// This is <see cref="UsedWordsPerRow"/> rounded up to a power of two. The two differ only
+        /// for a three-word row, whose fourth word is padding.
+        /// </para>
+        /// </summary>
+        internal int WordsPerRow => 1 << RowShift;
 
         /// <summary>
         /// Initializes a new instance with the specified size.
@@ -40,37 +112,28 @@ namespace Net.Codecrete.QrCodeGenerator
         /// </para>
         /// </summary>
         /// <param name="size">The size (number of bits in each dimension).</param>
+        /// <exception cref="ArgumentException">Thrown if the size is negative or greater than <see cref="MaxSize"/>.</exception>
         internal BitMatrix(int size)
         {
-            Raw = new ulong[4 * size];
+            if (size < 0 || size > MaxSize)
+            {
+                throw new ArgumentException($"The size must be between 0 and {MaxSize}", nameof(size));
+            }
+
+            // one word of modules per 64 columns, in a stride rounded up to a power of two
+            var shift = size <= 64 ? 0 : (size <= 128 ? 1 : 2);
+            RowShift = shift;
+            UsedWordsPerRow = size <= 64 ? 1 : (size <= 128 ? 2 : 3);
+            Size = size;
+            Raw = new ulong[size << shift];
         }
 
-        private BitMatrix(ulong[] bits)
+        private BitMatrix(ulong[] bits, int size, int rowShift, int usedWordsPerRow)
         {
             Raw = bits;
-        }
-
-        /// <summary>
-        /// Creates a new instance for the given bits.
-        /// <para>
-        /// The bits array is expected to have 4 elements for each row.
-        /// The size will be the number of rows divided by 4.
-        /// </para>
-        /// <para>
-        /// There must be no bits set outside the size of the matrix.
-        /// </para>
-        /// </summary>
-        /// <param name="bits">The raw bits.</param>
-        /// <returns>A new instance.</returns>
-        /// <exception cref="ArgumentException">Thrown if the number of elements is not a multiple of 4.</exception>
-        internal static BitMatrix FromBits(ulong[] bits)
-        {
-            if (bits.Length % 4 != 0)
-            {
-                throw new ArgumentException("The bits array must have 4 elements for each row", nameof(bits));
-            }
-            
-            return new BitMatrix(bits);
+            Size = size;
+            RowShift = rowShift;
+            UsedWordsPerRow = usedWordsPerRow;
         }
 
         /// <summary>
@@ -82,7 +145,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal bool Get(int x, int y)
         {
             var bitMask = 1ul << (x & 0x3f);
-            var index = 4 * y + (x >> 6);
+            var index = (y << RowShift) + (x >> 6);
             return (Raw[index] & bitMask) != 0;
         }
 
@@ -95,7 +158,7 @@ namespace Net.Codecrete.QrCodeGenerator
         internal void Set(int x, int y, bool bit)
         {
             var bitMask = 1ul << (x & 0x3f);
-            var index = 4 * y + (x >> 6);
+            var index = (y << RowShift) + (x >> 6);
             if (bit)
             {
                 Raw[index] |= bitMask;
@@ -129,20 +192,21 @@ namespace Net.Codecrete.QrCodeGenerator
             var startMask = ulong.MaxValue << startBit;
             var endMask = ulong.MaxValue >> (63 - endBit);
 
-            var rowBase = 4 * y;
-            var rowEnd = rowBase + 4 * height;
+            var wordsPerRow = WordsPerRow;
+            var rowBase = y << RowShift;
+            var rowEnd = rowBase + wordsPerRow * height;
 
             if (startWord == endWord)
             {
                 var mask = startMask & endMask;
-                for (var idx = rowBase + startWord; idx < rowEnd; idx += 4)
+                for (var idx = rowBase + startWord; idx < rowEnd; idx += wordsPerRow)
                 {
                     Raw[idx] |= mask;
                 }
             }
             else
             {
-                for (var row = rowBase; row < rowEnd; row += 4)
+                for (var row = rowBase; row < rowEnd; row += wordsPerRow)
                 {
                     Raw[row + startWord] |= startMask;
                     for (var w = startWord + 1; w < endWord; w += 1)
@@ -163,16 +227,17 @@ namespace Net.Codecrete.QrCodeGenerator
             var lastBit = size - 1;
             var lastWord = lastBit >> 6;
             var lastMask = ulong.MaxValue >> (63 - (lastBit & 0x3F));
+            var wordsPerRow = WordsPerRow;
 
             for (var y = 0; y < size; y += 1)
             {
-                var rowBase = 4 * y;
+                var rowBase = y << RowShift;
                 for (var w = 0; w < lastWord; w += 1)
                 {
                     Raw[rowBase + w] = ~Raw[rowBase + w];
                 }
                 Raw[rowBase + lastWord] = ~Raw[rowBase + lastWord] & lastMask;
-                for (var w = lastWord + 1; w < 4; w += 1)
+                for (var w = lastWord + 1; w < wordsPerRow; w += 1)
                 {
                     Raw[rowBase + w] = 0;
                 }
@@ -181,6 +246,11 @@ namespace Net.Codecrete.QrCodeGenerator
 
         /// <summary>
         /// Transposes this matrix in place (reflects bits across the main diagonal).
+        /// <para>
+        /// The matrix is processed as a grid of 64 × 64 bit blocks. Each block is transposed with a
+        /// sequence of delta swaps, and blocks off the diagonal are exchanged pairwise. A matrix
+        /// with a single word of modules per row is a single block.
+        /// </para>
         /// </summary>
         [SuppressMessage("csharpsquid", "S2234")]
         internal void Transpose()
@@ -197,29 +267,29 @@ namespace Net.Codecrete.QrCodeGenerator
 
             for (var br = 0; br < nBlocks; br += 1)
             {
-                GatherBlock(Raw, blockA, br, br, size);
+                GatherBlock(blockA, br, br);
                 Transpose64X64(blockA);
-                ScatterBlock(Raw, blockA, br, br, size);
+                ScatterBlock(blockA, br, br);
 
                 for (var bc = br + 1; bc < nBlocks; bc += 1)
                 {
-                    GatherBlock(Raw, blockA, br, bc, size);
-                    GatherBlock(Raw, blockB, bc, br, size);
+                    GatherBlock(blockA, br, bc);
+                    GatherBlock(blockB, bc, br);
                     Transpose64X64(blockA);
                     Transpose64X64(blockB);
-                    ScatterBlock(Raw, blockA, bc, br, size);
-                    ScatterBlock(Raw, blockB, br, bc, size);
+                    ScatterBlock(blockA, bc, br);
+                    ScatterBlock(blockB, br, bc);
                 }
             }
         }
 
-        private static void GatherBlock(ulong[] bits, ulong[] dest, int br, int bc, int size)
+        private void GatherBlock(ulong[] dest, int br, int bc)
         {
             var rowStart = br << 6;
-            var rows = Math.Min(size - rowStart, 64);
+            var rows = Math.Min(Size - rowStart, 64);
             for (var i = 0; i < rows; i += 1)
             {
-                dest[i] = bits[((rowStart + i) << 2) + bc];
+                dest[i] = Raw[((rowStart + i) << RowShift) + bc];
             }
             for (var i = rows; i < 64; i += 1)
             {
@@ -227,13 +297,13 @@ namespace Net.Codecrete.QrCodeGenerator
             }
         }
 
-        private static void ScatterBlock(ulong[] bits, ulong[] src, int br, int bc, int size)
+        private void ScatterBlock(ulong[] src, int br, int bc)
         {
             var rowStart = br << 6;
-            var rows = Math.Min(size - rowStart, 64);
+            var rows = Math.Min(Size - rowStart, 64);
             for (var i = 0; i < rows; i += 1)
             {
-                bits[((rowStart + i) << 2) + bc] = src[i];
+                Raw[((rowStart + i) << RowShift) + bc] = src[i];
             }
         }
 
@@ -264,7 +334,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentException">Thrown if the matrices have different sizes.</exception>
         internal void And(BitMatrix other)
         {
-            if (other.Raw.Length != Raw.Length)
+            if (other.Size != Size)
             {
                 throw new ArgumentException("The matrices must have the same size", nameof(other));
             }
@@ -282,7 +352,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <exception cref="ArgumentException">Thrown if the matrices have different sizes.</exception>
         internal void Xor(BitMatrix other)
         {
-            if (other.Raw.Length != Raw.Length)
+            if (other.Size != Size)
             {
                 throw new ArgumentException("The matrices must have the same size", nameof(other));
             }
@@ -299,16 +369,15 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>A new <see cref="BitMatrix"/> with the same contents.</returns>
         internal BitMatrix Copy()
         {
-            var copy = new BitMatrix(Size);
-            Array.Copy(Raw, copy.Raw, Raw.Length);
-            return copy;
+            return new BitMatrix((ulong[])Raw.Clone(), Size, RowShift, UsedWordsPerRow);
         }
 
         /// <summary>
         /// Provides access to the underlying raw data.
         /// <para>
-        /// The bits are saved in an array of 64-bit integers.
-        /// Each rows uses 4 integers (256 bits).
+        /// The bits are saved in an array of 64-bit integers, <see cref="WordsPerRow"/> integers
+        /// per row, of which the first <see cref="UsedWordsPerRow"/> hold modules.
+        /// The array is not copied: modifying it modifies this matrix.
         /// </para>
         /// </summary>
         internal ulong[] Raw { get; }

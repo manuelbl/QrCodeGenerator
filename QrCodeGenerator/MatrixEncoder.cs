@@ -136,7 +136,7 @@ namespace Net.Codecrete.QrCodeGenerator
             var size = QrCodeParameters.GetSize(version);
             var matrix = new BitMatrix(size);
 
-            // Pre-compute the 4 ulongs for each of the 12 distinct pattern rows.
+            // Pre-compute the words of each of the 12 distinct pattern rows.
             for (var y = 0; y < 12; y += 1)
             {
                 for (var x = 0; x < size; x += 1)
@@ -146,18 +146,19 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-            // Replicate the pattern vertically.
+            // Replicate the pattern vertically. All mask patterns repeat with a period of 12 rows,
+            // so each row is a word-for-word copy of the row 12 above it.
             var bits = matrix.Raw;
             var srcIndex = 0;
-            var destIndex = 4 * 12;
-            while (destIndex < size * 4)
+            var destIndex = matrix.WordsPerRow * 12;
+            while (destIndex < bits.Length)
             {
                 bits[destIndex] = bits[srcIndex];
                 srcIndex += 1;
                 destIndex += 1;
             }
 
-            return BitMatrix.FromBits(bits);
+            return matrix;
         }
 
         // Ordered by mask-selection frequency (descending) so low-penalty patterns
