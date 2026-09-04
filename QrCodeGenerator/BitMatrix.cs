@@ -170,6 +170,46 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
+        /// Returns the address of the bit at the specified coordinate, an opaque handle
+        /// <see cref="OrBit"/> writes through.
+        /// <para>
+        /// Resolving the bits once lets a loop that visits a fixed set of them write the bits
+        /// without any coordinate arithmetic. Since an address encodes the row layout, it is valid
+        /// only for matrices of the same size as this one.
+        /// </para>
+        /// <para>
+        /// An address is a <c>ushort</c> because it fits in one: it locates a word of
+        /// <see cref="Raw"/> and a bit within that word, which takes 10 and 6 bits at
+        /// <see cref="MaxSize"/> × <see cref="MaxSize"/>, the largest matrix.
+        /// </para>
+        /// <para>
+        /// The coordinate is not checked; the caller guarantees that it lies within the matrix.
+        /// </para>
+        /// </summary>
+        /// <param name="x">The x-coordinate.</param>
+        /// <param name="y">The y-coordinate.</param>
+        /// <returns>The address.</returns>
+        internal ushort Address(int x, int y)
+        {
+            return (ushort)((((y << RowShift) + (x >> 6)) << 6) | (x & 0x3f));
+        }
+
+        /// <summary>
+        /// ORs the specified bit into the bit at the specified address.
+        /// <para>
+        /// Neither argument is checked; the caller guarantees that the address comes from
+        /// <see cref="Address"/> on a matrix of this size and that the bit is 0 or 1.
+        /// </para>
+        /// </summary>
+        /// <param name="address">The bit's address.</param>
+        /// <param name="bit">The bit to OR in, 0 or 1.</param>
+        internal void OrBit(ushort address, int bit)
+        {
+            // The word index needs the full address; a shift count uses its low six bits.
+            Raw[address >> 6] |= (ulong)bit << address;
+        }
+
+        /// <summary>
         /// Sets all bits in the specified rectangular area.
         /// </summary>
         /// <param name="x">The x-coordinate of the top-left corner.</param>

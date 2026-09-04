@@ -35,7 +35,7 @@ Text/bytes → segments → codewords → matrix, in this order:
    - **`Codewords.BuildData`** — segments → `BitStream` → byte codewords + terminator + 0xEC/0x11 padding.
    - **`Codewords.AddErrorCorrection`** — splits into blocks, computes Reed-Solomon ECC (`ReedSolomon`), interleaves data and ECC codewords per spec.
    - **`MatrixEncoder.Encode`** — matrix layout then mask selection:
-     - `FixedPatterns.BuildFixedPatterns` deals with the fixed-pattern geometry of a version: one walk emits both the *drawn* matrix (finder/timing/alignment/version) and the *reserved-module* mask. The reserved mask, inverted, is the *payload-area map* (`GetPayloadAreaMap`). Then `FillPayload` zig-zags the codewords into the free modules.
+     - `FixedPatterns.BuildFixedPatterns` deals with the fixed-pattern geometry of a version: one walk emits both the *drawn* matrix (finder/timing/alignment/version) and the *reserved-module* mask. The reserved mask, inverted, is the *payload-area map* (`GetPayloadAreaMap`). Then `FillPayload` fills the codewords into the free modules through the version's precomputed table of `BitMatrix` addresses (`ComputePayloadTargets`), so the zig-zag is walked once per version, not once per encode.
      - `ApplyBestPattern` — XORs each of the 8 mask patterns, scores it (`Penalty`), keeps the lowest, and draws the format information. `EncodingInfo.ForcedDataMask` can override the choice.
 
    The ISO/IEC 18004 lookup tables these stages share live in **`QrCodeParameters`**.
@@ -50,7 +50,7 @@ The transpose is load-bearing, not a convenience: every penalty/format rule that
 
 ### Performance-tuned constants
 
-Two orderings are deliberately ordered by profiling data (see `QrCodeGeneratorProfiling/README.md`), not arbitrary: `MatrixEncoder.PatternEvaluationOrder` (evaluate likely-best masks first to tighten the early-stop bound) and the rule order inside `Penalty.CalculatePenalty`. Reordering them changes performance, not output. Per-version `BitMatrix` results are cached in `ConcurrentDictionary` instances — `FixedPatterns` caches the drawn fixed patterns and the payload-area map; `MatrixEncoder` caches the data-mask patterns. Cached `BitMatrix` instances are shared and must not be mutated (callers `Copy()` first).
+Two orderings are deliberately ordered by profiling data (see `QrCodeGeneratorProfiling/README.md`), not arbitrary: `MatrixEncoder.PatternEvaluationOrder` (evaluate likely-best masks first to tighten the early-stop bound) and the rule order inside `Penalty.CalculatePenalty`. Reordering them changes performance, not output. Per-version results are cached in `ConcurrentDictionary` instances — `FixedPatterns` caches the drawn fixed patterns and the payload-area map; `MatrixEncoder` caches the data-mask patterns and the payload target table. Cached `BitMatrix` instances are shared and must not be mutated (callers `Copy()` first).
 
 Everything is keyed by `version` (1–40) and `ecc` (0–3 = L/M/Q/H). The large `static readonly` lookup tables in `QrCodeParameters` (codeword capacity, block counts, alignment positions, format/version info bits) come straight from ISO/IEC 18004 tables — comments cite the table numbers.
 

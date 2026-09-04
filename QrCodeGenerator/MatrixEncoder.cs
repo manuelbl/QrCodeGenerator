@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Net.Codecrete.QrCodeGenerator
@@ -22,6 +21,8 @@ namespace Net.Codecrete.QrCodeGenerator
         #region Caches
 
         private static readonly ConcurrentDictionary<(int, int), MaskPair> MaskPatternCache = new ConcurrentDictionary<(int, int), MaskPair>();
+
+        private static readonly ConcurrentDictionary<int, ushort[]> PayloadTargetCache = new ConcurrentDictionary<int, ushort[]>();
 
         #endregion
 
@@ -47,52 +48,105 @@ namespace Net.Codecrete.QrCodeGenerator
 
         #region Payload
 
-        [SuppressMessage("csharpsquid", "S3776")]
-        [SuppressMessage("csharpsquid", "S127")]
+        /// <summary>
+        /// Fills the payload bits into the modules the fixed patterns leave free.
+        /// <para>
+        /// Which module a codeword bit lands on depends on the version alone, so the walk itself
+        /// is precomputed by <see cref="GetPayloadTargets"/> and this is a flat pass over that
+        /// table: one codeword bit and one target per iteration, and no coordinate arithmetic.
+        /// Nor is there a branch on the bit — a light module ORs in a zero and leaves its word
+        /// unchanged — because a codeword bit is as good as random and would mispredict half the
+        /// time.
+        /// </para>
+        /// <para>
+        /// The QR code has room for a few bits more than the codewords occupy; those remainder
+        /// bits are left light, which is why the pass stops at the codewords rather than at the
+        /// end of the table.
+        /// </para>
+        /// </summary>
+        /// <param name="modules">
+        /// The module matrix with the fixed patterns already drawn. It must have the version's
+        /// size, since the targets address its words directly, and its payload area must be clear.
+        /// </param>
+        /// <param name="codewords">The interleaved data and error correction codewords.</param>
+        /// <param name="version">The QR code version.</param>
         internal static void FillPayload(BitMatrix modules, byte[] codewords, int version)
         {
+            var targets = GetPayloadTargets(version);
+            var bitCount = Math.Min(codewords.Length * 8, targets.Length);
+
+            for (var i = 0; i < bitCount; i += 1)
+            {
+                var bit = (codewords[i >> 3] >> (7 - (i & 0x07))) & 1;
+                modules.OrBit(targets[i], bit);
+            }
+        }
+
+        /// <summary>
+        /// Returns the modules the payload occupies, in the order the codeword bits fill them.
+        /// <para>
+        /// Each entry is a <see cref="BitMatrix.Address"/>, so a caller writes the bits with
+        /// <see cref="BitMatrix.OrBit"/>. The table is as long as the payload area, one entry per
+        /// module: a version whose codewords fill the area exactly but for the remainder bits uses
+        /// all but the last few.
+        /// </para>
+        /// <para>
+        /// The returned array is shared and cached. Callers must not mutate it.
+        /// </para>
+        /// </summary>
+        /// <param name="version">The QR code version.</param>
+        /// <returns>The shared table of addresses.</returns>
+        private static ushort[] GetPayloadTargets(int version)
+        {
+            return PayloadTargetCache.GetOrAdd(version, ComputePayloadTargets);
+        }
+
+        /// <summary>
+        /// Walks the payload zigzag of a version and records the module it visits at each step.
+        /// <para>
+        /// The codewords are laid out in a zigzag of two-column strides, starting in the bottom
+        /// right corner and skipping the reserved modules. The walk covers every column but the
+        /// vertical timing pattern, which is reserved over its full height, so it visits the
+        /// payload area exactly once and its population count is the table's length.
+        /// </para>
+        /// </summary>
+        /// <param name="version">The QR code version.</param>
+        /// <returns>The table of addresses.</returns>
+        [SuppressMessage("csharpsquid", "S127")]
+        private static ushort[] ComputePayloadTargets(int version)
+        {
             var payloadArea = FixedPatterns.GetPayloadAreaMap(version);
+            var size = payloadArea.Size;
+            var targets = new ushort[payloadArea.PopCount()];
+            var count = 0;
 
-            // zigzag up and down with a 2-wide stride, starting in the right bottom corner
-            var size = modules.Size;
-            var bitLength = codewords.Length * 8;
-            var bitIndex = 0;
-
-            // go from right to left in strides of 2
+            // right to left, in strides of two columns
             for (var h = size - 1; h > 0; h -= 2)
             {
                 if (h == 6)
                 {
-                    // skip timing pattern
-                    h -= 1;
+                    h -= 1; // skip the vertical timing pattern
                 }
+
                 var upward = ((size - h - 1) & 2) == 0;
 
-                // go up or down
                 for (var v = 0; v < size; v += 1)
                 {
-                    // determine vertical direction
                     var y = upward ? size - v - 1 : v;
 
-                    // alternate between the 2 columns
+                    // alternate between the two columns of the stride
                     for (var x = h; x > h - 2; x -= 1)
                     {
-                        if (!payloadArea.Get(x, y))
+                        if (payloadArea.Get(x, y))
                         {
-                            // skip modules not intended for payload
-                            continue;
+                            targets[count] = payloadArea.Address(x, y);
+                            count += 1;
                         }
-                        if (bitIndex < bitLength
-                            && (codewords[bitIndex >> 3] & (0x80 >> (bitIndex & 0x07))) != 0)
-                        {
-                            modules.Set(x, y, true);
-                        }
-                        bitIndex += 1;
                     }
                 }
             }
 
-            Trace.Assert(bitIndex >= bitLength && bitIndex <= bitLength + 7);
+            return targets;
         }
 
         #endregion
