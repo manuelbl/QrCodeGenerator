@@ -20,29 +20,40 @@ namespace Net.Codecrete.QrCodeGenerator
     /// needs no fill-rule attribute: both the nonzero rule (the SVG default) and the even-odd rule
     /// (the XAML default) fill it to the QR code.
     /// </para>
+    /// <para>
+    /// In the SVG document, the path is drawn with <c>shape-rendering="crispEdges"</c>, so the
+    /// module boundaries stay sharp instead of being anti-aliased into gray fringes.
+    /// </para>
     /// </summary>
     internal static class SvgBuilder
     {
         // Creates a complete SVG document for the given QR code.
+        // A null background omits the background rectangle, leaving it transparent.
         internal static string ToSvgString(QrCode qrCode, int border, string foreground, string background)
         {
             if (border < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(border), "Border must be non-negative");
             }
+            Objects.RequireNonNull(foreground, nameof(foreground));
 
             var dim = qrCode.Size + border * 2;
             var sb = new StringBuilder()
                 .Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .Append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n")
-                .Append($"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 {dim} {dim}\" stroke=\"none\">\n")
-                .Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n")
-                .Append("\t<path d=\"");
+                .Append($"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 {dim} {dim}\" stroke=\"none\">\n");
+
+            if (background != null)
+            {
+                sb.Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n");
+            }
+
+            sb.Append("\t<path d=\"");
 
             AppendPath(sb, qrCode.ToOutlines(), border);
 
             return sb
-                .Append($"\" fill=\"{foreground}\"/>\n")
+                .Append($"\" fill=\"{foreground}\" shape-rendering=\"crispEdges\"/>\n")
                 .Append("</svg>\n")
                 .ToString();
         }

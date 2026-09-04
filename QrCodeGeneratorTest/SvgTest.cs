@@ -5,6 +5,7 @@
  * https://github.com/manuelbl/QrCodeGenerator
  */
 
+using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -39,6 +40,34 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             Assert.Contains("#FF0000", svg);
 
             Assert.DoesNotContain("#FFFFFF", svg);
+        }
+
+        [Fact]
+        public void SvgImageWithoutBackground()
+        {
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
+            var svg = qrCode.ToSvgString(0, "#000000", null);
+
+            // no background rectangle: the light modules and the border stay transparent
+            Assert.DoesNotContain("<rect", svg);
+            Assert.Contains("<path d=\"", svg);
+        }
+
+        [Fact]
+        public void SvgImageWithNullForeground()
+        {
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
+
+            Assert.Throws<ArgumentNullException>(() => qrCode.ToSvgString(0, null));
+        }
+
+        [Fact]
+        public void SvgImageUsesCrispEdges()
+        {
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
+
+            // the module boundaries are not anti-aliased into gray fringes
+            Assert.Contains("shape-rendering=\"crispEdges\"", qrCode.ToSvgString(0));
         }
 
         [Fact]

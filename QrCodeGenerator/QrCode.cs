@@ -491,11 +491,18 @@ namespace Net.Codecrete.QrCodeGenerator
         /// Colors are specified using CSS color data type. Examples of valid values are
         /// "#339966", "fuchsia", "rgba(137, 23, 89, 0.3)".
         /// </para>
+        /// <para>
+        /// If <paramref name="background"/> is <c>null</c>, no background rectangle is drawn and
+        /// the light modules and the border are transparent.
+        /// </para>
         /// </summary>
         /// <param name="border">The border width, as a factor of the module (QR code pixel) size.</param>
         /// <param name="foreground">The foreground color. Defaults to black.</param>
-        /// <param name="background">The background color. Defaults to white.</param>
+        /// <param name="background">The background color, or <c>null</c> for a transparent
+        /// background. Defaults to white.</param>
         /// <returns>The SVG image, as a string.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="border"/> is negative.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="foreground"/> is <c>null</c>.</exception>
         public string ToSvgString(int border, string foreground = "#000000", string background = "#ffffff")
         {
             return SvgBuilder.ToSvgString(this, border, foreground, background);
