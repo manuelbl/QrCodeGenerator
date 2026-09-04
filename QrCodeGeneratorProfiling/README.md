@@ -27,16 +27,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Introduction of BitMatrix
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:01:42.6702940 (checksum=14696000)
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -51,16 +41,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 
 # Optimized bit count (color balance)
-
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:01:30.7018893 (checksum=14696000)
-```
-
-## Benchmark
 
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
@@ -78,16 +58,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Optimized horizontal finder pattern
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:01:20.0699378 (checksum=14696000)
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -102,16 +72,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 
 # Use BitMatrix operations for patterns
-
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:01:01.5014088 (checksum=14696000)
-```
-
-## Benchmark
 
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
@@ -129,16 +89,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Pattern caching
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:01:00.5289081 (checksum=14696000)
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -155,16 +105,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Penalty Calculation with Transposed Matrix
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:51.6643934 (checksum=14696000)
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -179,16 +119,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 
 # Improved 2x2 block penalty
-
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:33.9272824 (checksum=14696000)
-```
-
-## Benchmark
 
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
@@ -205,16 +135,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Improved Calc Strides of Same Color
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:12.0364860 (checksum=14696000)
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -229,16 +149,6 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 
 # Evaluate penalty for likely patterns first
-
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:08.9226285 (checksum=14696000)
-```
-
-## Benchmark
 
 ```
 BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
@@ -260,16 +170,6 @@ to reduce the multiple memory allocations required for a dynamically
 growing list.
 
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:08.1933755 (checksum=14696000)
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.4.1 (25E253) [Darwin 25.4.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -284,23 +184,12 @@ DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
 
 
 
-
 # Reed-Solomon Product Table
 
 Cache the generator polynomial multiplied by every element of the field instead of the polynomial
 alone. The division is then a shift and an exclusive or per data codeword, eight coefficients at a
 time, with no field arithmetic left in the loop. The codewords are written straight into the
 interleaved result, at a stride, so no block needs a buffer of its own.
-
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:07.4715698 (checksum=14696000)   [before: 00:00:08.1384139]
-```
-
-## Benchmark
 
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
@@ -336,16 +225,6 @@ padding word that lets whole-matrix operations run flat over the raw array.
 Versions 1 to 11 are most QR codes, and the sample data is no exception. Of the 4.1 s saved on the
 profile loop, the word-parallel finder rule accounts for 1.7 s and the row layouts for 2.5 s.
 
-## Profiling
-
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:00:03.4998049 (checksum=14696000)   [before: 00:00:07.6418913]
-```
-
-## Benchmark
-
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
@@ -373,27 +252,7 @@ versions 1 to 11.
 The measurements below are the new baseline; they are not comparable to the sections above, which
 all used the 200 short payloads.
 
-## Profiling
-
-### MacBook Pro M5
-
-```
-Profile loop: 500 iterations × 400 payloads × 4 ECC levels
-Total EncodeText calls: 800'000
-Elapsed: 00:00:15.9592118 (checksum=41052000)
-```
-
-### Dell Core Ultra 5
-
-```
-Profile loop: 500 iterations × 400 payloads × 4 ECC levels
-Total EncodeText calls: 800’000
-Elapsed: 00:00:18.1419330 (checksum=41052000)
-```
-
-## Benchmark
-
-### MacBook Pro M5
+## MacBook Pro M5
 
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
@@ -410,7 +269,7 @@ DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
 Twice the payloads, and the long ones cost far more than a short one: the penalty rules scan a
 matrix that grows with the square of the version, and eight mask patterns are scored per code.
 
-### Dell Core Ultra 5
+## Dell Core Ultra 5
 
 ```
 BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
@@ -433,19 +292,7 @@ instead of once for the maximum version. The result is the shortest possible bit
 chosen version; the `compaction` mode reports no case where QRCoder's segments are shorter.
 The checksum differs from the sections above because some QR codes got smaller.
 
-## Profiling
-
-### MacBook Pro M5
-
-```
-Profile loop: 500 iterations × 400 payloads × 4 ECC levels
-Total EncodeText calls: 800'000
-Elapsed: 00:00:16.4908988 (checksum=40992000)
-```
-
-## Benchmark
-
-### MacBook Pro M5
+## MacBook Pro M5
 
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
@@ -462,22 +309,9 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 # Precomputed payload filling
 
-## Profiling
-
 The target for each payload bit is computed once and cached.
 
-
-### MacBook Pro M5
-
-```
-Profile loop: 500 iterations × 400 payloads × 4 ECC levels
-Total EncodeText calls: 800'000
-Elapsed: 00:00:11.3042858 (checksum=42162000)
-```
-
-## Benchmark
-
-### MacBook Pro M5
+## MacBook Pro M5
 
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
@@ -492,18 +326,34 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 | EncodeAll | 20.79 ms | 0.037 ms | 0.031 ms | 1406.2500 |  11.25 MB |
 
 
+# Modified pattern evaluation order
+
+## MacBook Pro M5
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0      | Allocated |
+|---------- |---------:|---------:|---------:|----------:|----------:|
+| EncodeAll | 20.66 ms | 0.065 ms | 0.051 ms | 1406.2500 |  11.25 MB |
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=12,800)
 
 | Bucket        | Min |  Max |    Mean |  StdDev | Share% |
 |---------------|----:|-----:|--------:|--------:|-------:|
-| 2x2Blocks     |  42 | 9996 | 1238.85 | 1778.31 |  54.55 |
-| SameColorCols |   6 | 3800 |  451.46 |  652.02 |  19.88 |
-| SameColorRows |   4 | 3470 |  430.62 |  625.21 |  18.96 |
-| FinderRows    |   0 |  840 |   77.55 |  107.26 |   3.41 |
-| FinderCols    |   0 |  800 |   72.62 |  102.40 |   3.20 |
-| ColorBalance  |   0 |   10 |    0.02 |    0.47 |   0.00 |
+| 2x2Blocks     |  36 | 9237 | 1306.61 | 1824.02 |  54.45 |
+| SameColorCols |  10 | 3687 |  476.31 |  672.00 |  19.85 |
+| SameColorRows |   8 | 3223 |  457.02 |  644.43 |  19.05 |
+| FinderRows    |   0 |  800 |   81.70 |  110.78 |   3.40 |
+| FinderCols    |   0 |  760 |   78.03 |  106.70 |   3.25 |
+| ColorBalance  |   0 |   10 |    0.03 |    0.51 |   0.00 |
 
 # Mask Pattern Selection
 
@@ -511,14 +361,14 @@ Mask pattern selection (samples=1,600)
 
 | Pattern | Count | Share% |
 |--------:|------:|-------:|
-|       2 |   724 |  45.25 |
+|       2 |   667 |  41.69 |
 |       4 |   175 |  10.94 |
-|       6 |   164 |  10.25 |
-|       3 |   162 |  10.12 |
-|       7 |   145 |   9.06 |
-|       5 |   103 |   6.44 |
-|       1 |    77 |   4.81 |
-|       0 |    50 |   3.12 |
+|       6 |   174 |  10.88 |
+|       3 |   166 |  10.38 |
+|       7 |   163 |  10.19 |
+|       1 |    91 |   5.69 |
+|       5 |    87 |   5.44 |
+|       0 |    77 |   4.81 |
 
 # Version Distribution
 
@@ -526,46 +376,44 @@ Version distribution (samples=1,600)
 
 | Version | Count | Share% |
 |--------:|------:|-------:|
-|       1 |    84 |   5.25 |
-|       2 |   105 |   6.56 |
-|       3 |   175 |  10.94 |
-|       4 |   191 |  11.94 |
-|       5 |   228 |  14.25 |
-|       6 |   165 |  10.31 |
-|       7 |    83 |   5.19 |
-|       8 |   136 |   8.50 |
-|       9 |    67 |   4.19 |
-|      10 |    36 |   2.25 |
+|       1 |    50 |   3.12 |
+|       2 |    89 |   5.56 |
+|       3 |   189 |  11.81 |
+|       4 |   250 |  15.62 |
+|       5 |   205 |  12.81 |
+|       6 |   174 |  10.88 |
+|       7 |    77 |   4.81 |
+|       8 |   109 |   6.81 |
+|       9 |    55 |   3.44 |
+|      10 |    38 |   2.38 |
 |      11 |    14 |   0.88 |
-|      12 |     7 |   0.44 |
-|      13 |     2 |   0.12 |
-|      14 |     5 |   0.31 |
-|      15 |    11 |   0.69 |
-|      16 |    10 |   0.62 |
-|      17 |    19 |   1.19 |
-|      18 |    15 |   0.94 |
-|      19 |    25 |   1.56 |
-|      20 |    21 |   1.31 |
-|      21 |    21 |   1.31 |
-|      22 |    24 |   1.50 |
-|      23 |    23 |   1.44 |
-|      24 |    24 |   1.50 |
-|      25 |    11 |   0.69 |
-|      26 |    15 |   0.94 |
-|      27 |    15 |   0.94 |
-|      28 |    12 |   0.75 |
-|      29 |    12 |   0.75 |
-|      30 |    12 |   0.75 |
-|      31 |     7 |   0.44 |
-|      32 |     9 |   0.56 |
-|      33 |     7 |   0.44 |
-|      34 |     6 |   0.38 |
-|      35 |     2 |   0.12 |
-|      36 |     1 |   0.06 |
+|      12 |    11 |   0.69 |
+|      13 |     4 |   0.25 |
+|      14 |     1 |   0.06 |
+|      15 |     7 |   0.44 |
+|      16 |    12 |   0.75 |
+|      17 |    22 |   1.38 |
+|      18 |    21 |   1.31 |
+|      19 |    28 |   1.75 |
+|      20 |    28 |   1.75 |
+|      21 |    18 |   1.12 |
+|      22 |    22 |   1.38 |
+|      23 |    25 |   1.56 |
+|      24 |    28 |   1.75 |
+|      25 |    15 |   0.94 |
+|      26 |    13 |   0.81 |
+|      27 |    19 |   1.19 |
+|      28 |    21 |   1.31 |
+|      29 |     9 |   0.56 |
+|      30 |    15 |   0.94 |
+|      31 |     8 |   0.50 |
+|      32 |     8 |   0.50 |
+|      33 |    10 |   0.62 |
+|      34 |     5 |   0.31 |
 
-- Versions 1-11 (one word per row): 1,284 (80.25%)
-- Versions 12-27 (two words per row): 248 (15.50%)
-- Versions 28-40 (three words per row): 68 (4.25%)
+- Versions 1-11 (one word per row): 1,250 (78.12%)
+- Versions 12-27 (two words per row): 274 (17.12%)
+- Versions 28-40 (three words per row): 76 (4.75%)
 
 
 # Comparison with other libraries
@@ -601,11 +449,10 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 | Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
 |---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
-| QrCodeGenerator |    21.81 ms | 0.040 ms | 0.036 ms |  1.00 |    0.00 |  1406.2500 |         - |  11718.46 KB |        1.00 |
-| QRCoder         | 1,795.21 ms | 2.640 ms | 2.470 ms | 82.29 |    0.17 |  1000.0000 |         - |   15708.1 KB |        1.34 |
-| SkiaSharpQrCode |    24.22 ms | 0.023 ms | 0.018 ms |  1.11 |    0.00 |    93.7500 |         - |    865.32 KB |        0.07 |
-| ZXingNet        | 1,231.79 ms | 3.232 ms | 3.024 ms | 56.47 |    0.16 | 58000.0000 | 1000.0000 | 476209.76 KB |       40.64 |
-
+| QrCodeGenerator |    22.02 ms | 0.153 ms | 0.143 ms |  1.00 |    0.01 |  1406.2500 |         - |  11718.46 KB |        1.00 |
+| QRCoder         | 1,806.44 ms | 3.816 ms | 3.569 ms | 82.03 |    0.54 |  1000.0000 |         - |   15708.1 KB |        1.34 |
+| SkiaSharpQrCode |    24.29 ms | 0.072 ms | 0.060 ms |  1.10 |    0.01 |    93.7500 |         - |    865.32 KB |        0.07 |
+| ZXingNet        | 1,169.48 ms | 3.126 ms | 2.924 ms | 53.11 |    0.36 | 58000.0000 | 1000.0000 | 476209.76 KB |       40.64 |
 
 ### Dell Core Ultra 5
 

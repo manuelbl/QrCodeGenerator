@@ -219,7 +219,7 @@ namespace Net.Codecrete.QrCodeGenerator
         // set a tight lowestPenalty early, maximizing early-stop bailouts in
         // Penalty.Calculate(). See QrCodeGeneratorProfiling/README.md
         // "Mask Pattern Selection".
-        private static readonly int[] PatternEvaluationOrder = { 2, 3, 7, 4, 6, 5, 0, 1 };
+        private static readonly int[] PatternEvaluationOrder = { 2, 4, 6, 3, 7, 5, 1, 0 };
 
         private static readonly Func<int, int, bool>[] PatternFunctions =
         {
