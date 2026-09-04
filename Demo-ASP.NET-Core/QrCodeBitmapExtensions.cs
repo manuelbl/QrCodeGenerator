@@ -41,20 +41,34 @@ namespace Net.Codecrete.QrCodeGenerator
             // create bitmap
             SKBitmap bitmap = new SKBitmap(dim, dim, SKColorType.Rgb888x, SKAlphaType.Opaque);
 
-            using (SKCanvas canvas = new SKCanvas(bitmap))
+            using (var canvas = new SKCanvas(bitmap))
             {
                 // draw background
-                using (SKPaint paint = new SKPaint { Color = background })
+                using (var paint = new SKPaint { Color = background })
                 {
                     canvas.DrawRect(0, 0, dim, dim, paint);
                 }
 
-                // draw modules
-                using (SKPaint paint = new SKPaint { Color = foreground })
+                using (var path = new SKPath())
                 {
-                    foreach (var rect in qrCode.ToRectangles())
+                    // create path from outline
+                    foreach (var polygon in qrCode.ToOutlines())
                     {
-                        canvas.DrawRect((rect.X + border) * scale, (rect.Y + border) * scale, rect.Width * scale, rect.Height * scale, paint);
+                        var vertices = polygon.Vertices;
+                        path.MoveTo(vertices[0].X, vertices[0].Y);
+                        for (var i = 1; i < vertices.Count; i++)
+                        {
+                            path.LineTo(vertices[i].X, vertices[i].Y);
+                        }
+                        path.Close();
+                    }
+
+                    path.Transform(SKMatrix.CreateScaleTranslation(scale, scale, scale * border, scale * border));
+
+                    // draw modules
+                    using (var paint = new SKPaint { Color = foreground })
+                    {
+                        canvas.DrawPath(path, paint);
                     }
                 }
             }
