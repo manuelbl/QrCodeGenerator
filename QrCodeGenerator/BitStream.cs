@@ -134,17 +134,13 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         /// <summary>
-        /// Copies the QR code bit stream as 8-bit codewords to the specified array.
+        /// The array the bit stream is written into, as long as the capacity the stream was created with.
         /// <para>
-        /// If the bit stream is not a multiple of 8 bits, the last codeword will be padded with zeros.
+        /// The bytes past the bit stream are zero. A caller that sized the stream to the final
+        /// codeword block can take this array as the block and fill the remainder itself, instead
+        /// of copying the codewords into a second array of the same length.
         /// </para>
         /// </summary>
-        /// <param name="codewords">The destination array to copy the codewords to.</param>
-        /// <param name="index">The starting index in the destination array.</param>
-        internal void CopyCodewords(byte[] codewords, int index)
-        {
-            var resultLength = (Length + 7) >> 3;
-            Array.Copy(_codewords, 0, codewords, index, resultLength);
-        }
+        internal byte[] Buffer => _codewords;
     }
 }

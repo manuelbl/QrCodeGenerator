@@ -302,8 +302,8 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             var nBlocks = (size + 63) >> 6;
-            var blockA = new ulong[64];
-            var blockB = new ulong[64];
+            var blockA = BlockA ?? (BlockA = new ulong[64]);
+            var blockB = BlockB ?? (BlockB = new ulong[64]);
 
             for (var br = 0; br < nBlocks; br += 1)
             {
@@ -322,6 +322,12 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
         }
+
+        // Scratch space for Transpose(), one set per thread so that transposing allocates nothing.
+        // Transpose() runs to completion without recursion, callbacks or awaits, so a call has the
+        // buffers to itself; keep it that way.
+        [ThreadStatic] private static ulong[] BlockA;
+        [ThreadStatic] private static ulong[] BlockB;
 
         private void GatherBlock(ulong[] dest, int br, int bc)
         {

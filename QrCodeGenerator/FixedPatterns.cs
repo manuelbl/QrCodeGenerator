@@ -5,6 +5,7 @@
  * https://github.com/manuelbl/QrCodeGenerator
  */
 
+using System;
 using System.Collections.Concurrent;
 
 namespace Net.Codecrete.QrCodeGenerator
@@ -46,9 +47,13 @@ namespace Net.Codecrete.QrCodeGenerator
         private static readonly ConcurrentDictionary<int, (BitMatrix Drawn, BitMatrix PayloadAreaMap)> Cache
             = new ConcurrentDictionary<int, (BitMatrix, BitMatrix)>();
 
+        // The factory is held in a field: a method group passed to GetOrAdd would allocate a
+        // delegate on every lookup, and lookups happen on every encode.
+        private static readonly Func<int, (BitMatrix, BitMatrix)> ComputeCachedFunc = ComputeCached;
+
         private static (BitMatrix Drawn, BitMatrix PayloadAreaMap) GetCached(int version)
         {
-            return Cache.GetOrAdd(version, ComputeCached);
+            return Cache.GetOrAdd(version, ComputeCachedFunc);
         }
 
         private static (BitMatrix Drawn, BitMatrix PayloadAreaMap) ComputeCached(int version)

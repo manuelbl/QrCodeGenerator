@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
@@ -331,6 +332,11 @@ namespace Net.Codecrete.QrCodeGenerator
         /// And many encodings are only available if
         /// <c>Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)</c>
         /// has been called beforehand.
+        /// <para>
+        /// The returned instance is shared between all calls for the same ECI value.
+        /// <see cref="Encoding"/> instances are safe to use from multiple threads; do not
+        /// modify the returned instance.
+        /// </para>
         /// </remarks>
         /// <returns>Encoding.</returns>
         public Encoding GetEncoding()
@@ -350,7 +356,7 @@ namespace Net.Codecrete.QrCodeGenerator
             {
                 try
                 {
-                    return Encoding.GetEncoding(codePage, new EncoderExceptionFallback(), new DecoderExceptionFallback());
+                    return EncodingCache.GetOrAdd(codePage, CreateEncodingFunc);
                 }
                 catch (NotSupportedException)
                 {
@@ -360,7 +366,21 @@ namespace Net.Codecrete.QrCodeGenerator
 
             throw new ECIException($"Unsupported ECI value: {Value}. Character set encoding is required but not available on this platform.");
         }
-        
+
+        // Because of the custom fallbacks, Encoding.GetEncoding() cannot serve an encoding from
+        // its own cache and clones one on every call, so the encodings are cached here instead.
+        // A code page the platform does not support throws and is not cached, so registering an
+        // encoding provider later still takes effect.
+        private static readonly ConcurrentDictionary<int, Encoding> EncodingCache
+            = new ConcurrentDictionary<int, Encoding>();
+
+        private static readonly Func<int, Encoding> CreateEncodingFunc = CreateEncoding;
+
+        private static Encoding CreateEncoding(int codePage)
+        {
+            return Encoding.GetEncoding(codePage, new EncoderExceptionFallback(), new DecoderExceptionFallback());
+        }
+
         private static readonly int[] CodePages = new int[]
         {
             437,   // 0  - CP437

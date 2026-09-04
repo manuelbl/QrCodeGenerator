@@ -136,20 +136,24 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         }
 
         [Fact]
-        public void CopyCodewords()
+        public void Buffer_HasCapacityLength_AndIsZeroPadded()
         {
             var stream = new BitStream(10);
             stream.AppendBits(0x41, 8);
             stream.AppendBits(0xa7, 8);
             stream.AppendBits(0x20, 8);
             stream.AppendBits(0x38, 8);
-        
-            var codewords = new byte[4];
-            stream.CopyCodewords(codewords, 0);
+
+            var codewords = stream.Buffer;
+            Assert.Equal(10, codewords.Length);
             Assert.Equal(0x41, codewords[0]);
             Assert.Equal(0xa7, codewords[1]);
             Assert.Equal(0x20, codewords[2]);
             Assert.Equal(0x38, codewords[3]);
+            for (var i = 4; i < codewords.Length; i += 1)
+            {
+                Assert.Equal(0, codewords[i]);
+            }
         }
     }
 }

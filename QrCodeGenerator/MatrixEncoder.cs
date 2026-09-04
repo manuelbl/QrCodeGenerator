@@ -24,6 +24,12 @@ namespace Net.Codecrete.QrCodeGenerator
 
         private static readonly ConcurrentDictionary<int, ushort[]> PayloadTargetCache = new ConcurrentDictionary<int, ushort[]>();
 
+        // The factories are held in fields: a method group passed to GetOrAdd would allocate a
+        // delegate on every lookup, and the mask pair alone is looked up nine times per encode.
+        private static readonly Func<int, ushort[]> ComputePayloadTargetsFunc = ComputePayloadTargets;
+
+        private static readonly Func<(int, int), MaskPair> CreateMaskPairFunc = CreateMaskPair;
+
         #endregion
 
         #region Encode
@@ -98,7 +104,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>The shared table of addresses.</returns>
         private static ushort[] GetPayloadTargets(int version)
         {
-            return PayloadTargetCache.GetOrAdd(version, ComputePayloadTargets);
+            return PayloadTargetCache.GetOrAdd(version, ComputePayloadTargetsFunc);
         }
 
         /// <summary>
@@ -165,7 +171,7 @@ namespace Net.Codecrete.QrCodeGenerator
         /// <returns>A shared mask pair.</returns>
         private static MaskPair GetMaskPair(int patternIndex, int version)
         {
-            return MaskPatternCache.GetOrAdd((patternIndex, version), CreateMaskPair);
+            return MaskPatternCache.GetOrAdd((patternIndex, version), CreateMaskPairFunc);
         }
 
         private static MaskPair CreateMaskPair((int patternIndex, int version) key)

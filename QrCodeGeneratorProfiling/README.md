@@ -356,6 +356,40 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
 |---------- |---------:|---------:|---------:|---------:|----------:|
 | EncodeAll | 19.57 ms | 0.050 ms | 0.047 ms | 937.5000 |  11.25 MB |
 
+
+# Reduced memory allocation
+
+## MacBook Pro M5
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
+|---------- |---------:|---------:|---------:|---------:|----------:|
+| EncodeAll | 19.60 ms | 0.183 ms | 0.171 ms | 906.2500 |   7.38 MB |
+
+
+## Dell Core Ultra 5
+
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
+Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
+.NET SDK 10.0.400
+  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
+|---------- |---------:|---------:|---------:|---------:|----------:|
+| EncodeAll | 19.57 ms | 0.050 ms | 0.047 ms | 937.5000 |  11.25 MB |
+
+
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=12,800)
@@ -461,12 +495,13 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
   DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
 ```
 
-| Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
-|---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
-| QrCodeGenerator |    22.02 ms | 0.153 ms | 0.143 ms |  1.00 |    0.01 |  1406.2500 |         - |  11718.46 KB |        1.00 |
-| QRCoder         | 1,806.44 ms | 3.816 ms | 3.569 ms | 82.03 |    0.54 |  1000.0000 |         - |   15708.1 KB |        1.34 |
-| SkiaSharpQrCode |    24.29 ms | 0.072 ms | 0.060 ms |  1.10 |    0.01 |    93.7500 |         - |    865.32 KB |        0.07 |
-| ZXingNet        | 1,169.48 ms | 3.126 ms | 2.924 ms | 53.11 |    0.36 | 58000.0000 | 1000.0000 | 476209.76 KB |       40.64 |
+| Method          | Mean        | Error     | StdDev    | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
+|---------------- |------------:|----------:|----------:|------:|--------:|-----------:|----------:|-------------:|------------:|
+| QrCodeGenerator |    19.49 ms |  0.046 ms |  0.036 ms |  1.00 |    0.00 |   906.2500 |         - |    7542.1 KB |        1.00 |
+| QRCoder         | 1,833.25 ms |  2.939 ms |  2.749 ms | 94.07 |    0.22 |  1000.0000 |         - |   15708.1 KB |        2.08 |
+| SkiaSharpQrCode |    24.21 ms |  0.093 ms |  0.087 ms |  1.24 |    0.00 |    93.7500 |         - |    865.32 KB |        0.11 |
+| ZXingNet        | 1,165.69 ms | 12.416 ms | 11.614 ms | 59.82 |    0.59 | 58000.0000 | 1000.0000 | 476209.76 KB |       63.14 |
+
 
 ### Dell Core Ultra 5
 

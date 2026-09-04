@@ -34,9 +34,9 @@ namespace Net.Codecrete.QrCodeGenerator
             var bitStream = DataSegment.CreateBitStream(dataSegments, version, capacity);
             var bitstreamLength = bitStream.Length;
 
-            // TODO: avoid allocation of another array
-            var result = new byte[capacity];
-            bitStream.CopyCodewords(result, 0);
+            // The bit stream was created with the capacity of the data codewords, so its buffer is
+            // already the result: the segments occupy its head, and the padding goes into its tail.
+            var result = bitStream.Buffer;
 
             // add padding
             for (var index = (bitstreamLength + 7) / 8; index < capacity; index += 2)

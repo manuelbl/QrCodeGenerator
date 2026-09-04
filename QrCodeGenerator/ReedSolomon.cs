@@ -90,8 +90,12 @@ namespace Net.Codecrete.QrCodeGenerator
                     "Error correction capacity must be between 1 and " + MaxCapacity);
             }
 
-            return GeneratorCache.GetOrAdd(capacity, CreateForCapacity);
+            return GeneratorCache.GetOrAdd(capacity, CreateForCapacityFunc);
         }
+
+        // The factory is held in a field: a method group passed to GetOrAdd would allocate a
+        // delegate on every lookup, and there is one lookup per encode.
+        private static readonly Func<int, ReedSolomon> CreateForCapacityFunc = CreateForCapacity;
 
         private static ReedSolomon CreateForCapacity(int capacity)
         {

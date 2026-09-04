@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -169,7 +170,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return 0;
             }
 
-            var edgeMask = BuildEdgeMask(size - 4);
+            var edgeMask = GetEdgeMask(size - 4);
             var fiveWindowCount = 0;
             var run5StartCount = 0;
 
@@ -213,7 +214,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return 0;
             }
 
-            var edgeMask = BuildEdgeMask(size - 4);
+            var edgeMask = GetEdgeMask(size - 4);
             var fiveWindowCount = 0;
             var run5StartCount = 0;
 
@@ -313,7 +314,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return 0;
             }
 
-            var edgeMask = BuildEdgeMask(size - 1);
+            var edgeMask = GetEdgeMask(size - 1);
             var count = 0;
 
             for (var y = 0; y < size - 1; y += 1)
@@ -347,7 +348,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 return 0;
             }
 
-            var edgeMask = BuildEdgeMask(size - 1);
+            var edgeMask = GetEdgeMask(size - 1);
             var count = 0;
 
             for (var y = 0; y < size - 1; y += 1)
@@ -508,6 +509,19 @@ namespace Net.Codecrete.QrCodeGenerator
         }
 
         #endregion
+
+        // The edge mask depends on the matrix size alone, and the rules ask for one on every
+        // scan of a wide matrix — up to three per mask pattern evaluated. The cached instances
+        // are shared and must not be mutated.
+        private static readonly ConcurrentDictionary<int, ulong[]> EdgeMaskCache
+            = new ConcurrentDictionary<int, ulong[]>();
+
+        private static readonly Func<int, ulong[]> BuildEdgeMaskFunc = BuildEdgeMask;
+
+        private static ulong[] GetEdgeMask(int validBits)
+        {
+            return EdgeMaskCache.GetOrAdd(validBits, BuildEdgeMaskFunc);
+        }
 
         // Builds a per-word mask keeping the lowest validBits bits of a wide row and clearing the
         // rest, so the padding past the last column cannot produce a spurious match.

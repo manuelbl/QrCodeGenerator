@@ -178,18 +178,17 @@ namespace Net.Codecrete.QrCodeGenerator
         {
             Objects.RequireNonNull(text, nameof(text));
             eci = eci ?? ECI.Automatic;
-            byte[] data = null;
-            
+
             switch (eci.Value)
             {
                 case ECI.AutomaticValue:
-                    // try ISO-8859-1 encoding
-                    try
+                    if (IsLatin1(text))
                     {
-                        data = ECI.Latin1.GetEncoding().GetBytes(text);
+                        // ISO-8859-1 is the default QR code text encoding, so no ECI is needed
+                        encoding = ECI.Latin1.GetEncoding();
                         eci = ECI.None;
                     }
-                    catch (EncoderFallbackException)
+                    else
                     {
                         // Cannot encode as ISO-8859-1 without loss, use UTF-8
                         eci = ECI.UTF8;
@@ -211,7 +210,7 @@ namespace Net.Codecrete.QrCodeGenerator
                     break;
             }
 
-            data = data ?? encoding.GetBytes(text);
+            var data = encoding.GetBytes(text);
 
             bool considerKanjiMode;
             switch (kanjiStrategy)
@@ -228,6 +227,26 @@ namespace Net.Codecrete.QrCodeGenerator
             }
             
             return new SegmentSource(new ArraySegment<byte>(data), eci, considerKanjiMode);
+        }
+
+        /// <summary>
+        /// Tests if the text can be encoded in Latin-1 / ISO-8859-1 without loss.
+        /// <para>
+        /// Latin-1 maps the code points U+0000 to U+00FF one-to-one onto its 256 bytes and
+        /// encodes nothing else, so a character above U+00FF (a surrogate included) is lossy.
+        /// </para>
+        /// </summary>
+        private static bool IsLatin1(string text)
+        {
+            foreach (var c in text)
+            {
+                if (c > 0xFF)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
