@@ -8,11 +8,13 @@
 //
 
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
+using System.Numerics;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -41,6 +43,22 @@ namespace Net.Codecrete.QrCodeGenerator
                 throw new ArgumentOutOfRangeException(nameof(scale), "Scale or border too large");
             }
 
+            // create path from outline
+            var pathBuilder = new PathBuilder();
+            foreach (var polygon in qrCode.ToOutlines())
+            {
+                var vertices = polygon.Vertices;
+                pathBuilder.MoveTo(new PointF(vertices[0].X, vertices[0].Y));
+                for (var i = 1; i < vertices.Count; i++)
+                {
+                    pathBuilder.LineTo(new PointF(vertices[i].X, vertices[i].Y));
+                }
+                pathBuilder.CloseFigure();
+            }
+            var path = pathBuilder.Build()
+                .Transform(Matrix3x2.CreateScale(scale))
+                .Translate(border * scale, border * scale);
+
             // create bitmap
             var image = new Image<Rgb24>(dim, dim);
 
@@ -49,11 +67,8 @@ namespace Net.Codecrete.QrCodeGenerator
                 // draw background
                 img.Fill(background);
 
-                // draw modules
-                foreach (var rect in qrCode.ToRectangles())
-                {
-                    img.Fill(foreground, new Rectangle((rect.X + border) * scale, (rect.Y + border) * scale, rect.Width * scale, rect.Height * scale));
-                }
+                // draw QR code modules
+                img.Fill(foreground, path);
             });
 
             return image;
