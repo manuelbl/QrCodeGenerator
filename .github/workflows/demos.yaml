@@ -28,18 +28,21 @@ jobs:
 
       - name: Create local NuGet source
         run: |
+          $PSNativeCommandUseErrorActionPreference = $true
           mkdir ..\LocalPackages
           $pkgdir = Resolve-Path ..\LocalPackages
           dotnet nuget add source $pkgdir --name Local
 
       - name: Build library package
         run: |
+          $PSNativeCommandUseErrorActionPreference = $true
           dotnet restore
           dotnet tool restore
           dotnet pack --verbosity normal
 
       - name: Install library package
         run: |
+          $PSNativeCommandUseErrorActionPreference = $true
           $pkg = Resolve-Path QrCodeGenerator\bin\Release\Net.Codecrete.QrCodeGenerator.*.nupkg
           nuget push $pkg -Source Local
           $version = $pkg.Path -replace '.*Net\.Codecrete\.QrCodeGenerator\.(.+)\.nupkg$', '$1'
@@ -47,51 +50,61 @@ jobs:
 
       - name: Build Basic-Example
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Basic-Example
       - name: Build Demo-ImageSharp
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-ImageSharp
       - name: Build Demo-ASP.NET-Core
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-ASP.NET-Core
       - name: Build Demo-ImageMagick
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-ImageMagick
       - name: Build Demo-SkiaSharp
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-SkiaSharp
       - name: Build Demo-System-Drawing
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-System-Drawing
       - name: Build Demo-VCard
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-VCard
       - name: Build Demo-WindowsPresentationFoundation
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-WindowsPresentationFoundation
       - name: Build Demo-WinForms
         run: |
-          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-WinForms
       - name: Build Demo-WinUI
         run: |
-          dotnet add Demo-WinUI\Demo-WinUI.csproj package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion --source Local
+          $PSNativeCommandUseErrorActionPreference = $true
+          dotnet add Demo-WinUI\Demo-WinUI.csproj package Net.Codecrete.QrCodeGenerator --version $env:PkgVersion
           dotnet build
         working-directory: Demo-WinUI
