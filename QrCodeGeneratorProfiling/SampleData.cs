@@ -52,7 +52,8 @@ internal static class SampleData
     [
         "products", "catalog", "article", "profile", "order", "checkout",
         "news", "2026", "user", "settings", "download", "help", "support",
-        "gallery", "images", "docs", "reference", "faq", "privacy", "terms"
+        "gallery", "images", "docs", "reference", "faq", "privacy", "terms",
+        "D7443263-87A9-4005-AA3C-29C9022AAA82", "9282048710236882340483"
     ];
 
     private static readonly string[] QueryKeys =
@@ -67,7 +68,8 @@ internal static class SampleData
         "electronics", "best-seller", "2026-04", "a1b2c3d4", "trending", "organic",
         "pk_live_ABC123", "user%2F42", "100%25off", "free+shipping", "price%3C50",
         "cHJlc2VudHNsZXB0Y2xpbWJ", "83.2328", "9830212",
-        "3D8EBAD8-9E22-4CBC-B83B-3FD9477DE657"
+        "3D8EBAD8-9E22-4CBC-B83B-3FD9477DE657", "A608C518-54E0-44DB-BC35-746BD7BBBB21",
+        "ADDRESS,PHONE", "39D5B3A9C01FF37E0"
     ];
 
     private static readonly string[] Sentences =
@@ -126,6 +128,7 @@ internal static class SampleData
         "Piraeus"
     ];
 
+    [SuppressMessage("csharpsquid", "S2479")]
     private static readonly string[] Messages =
     [
         "On my way! 🏃‍♂️💨",
@@ -144,6 +147,7 @@ internal static class SampleData
 
     public static IReadOnlyList<string> Payloads { get; } = BuildPayloads();
 
+    [SuppressMessage("csharpsquid", "S2245")]
     private static string[] BuildPayloads()
     {
         var random = new Random(Seed);
@@ -277,7 +281,7 @@ internal static class SampleData
 
         if (random.NextDouble() < 0.5)
         {
-            builder.Append(random.Next(1, 1_000_000));
+            builder.Append(random.NextInt64(1, 1_000_000_000_000_000));
             builder.Append(delimiter);
         }
 

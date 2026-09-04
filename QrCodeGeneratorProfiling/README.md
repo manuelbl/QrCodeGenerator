@@ -460,6 +460,38 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 | EncodeAll | 32.17 ms | 0.051 ms | 0.040 ms | 1312.5000 |  10.68 MB |
 
 
+# Precomputed payload filling
+
+## Profiling
+
+The target for each payload bit is computed once and cached.
+
+
+### MacBook Pro M5
+
+```
+Profile loop: 500 iterations × 400 payloads × 4 ECC levels
+Total EncodeText calls: 800'000
+Elapsed: 00:00:11.3042858 (checksum=42162000)
+```
+
+## Benchmark
+
+### MacBook Pro M5
+
+```
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
+Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
+.NET SDK 10.0.203
+  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0      | Allocated |
+|---------- |---------:|---------:|---------:|----------:|----------:|
+| EncodeAll | 20.79 ms | 0.037 ms | 0.031 ms | 1406.2500 |  11.25 MB |
+
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=12,800)
@@ -569,10 +601,11 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 | Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
 |---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
-| QrCodeGenerator |    32.96 ms | 0.239 ms | 0.212 ms |  1.00 |    0.01 |  1312.5000 |         - |  11127.98 KB |        1.00 |
-| QRCoder         | 1,696.62 ms | 1.367 ms | 1.067 ms | 51.48 |    0.32 |  1000.0000 |         - |  15181.69 KB |        1.36 |
-| SkiaSharpQrCode |    22.41 ms | 0.066 ms | 0.058 ms |  0.68 |    0.00 |    93.7500 |         - |     815.7 KB |        0.07 |
-| ZXingNet        | 1,076.99 ms | 1.552 ms | 1.296 ms | 32.68 |    0.21 | 54000.0000 | 1000.0000 | 441372.72 KB |       39.66 |
+| QrCodeGenerator |    21.81 ms | 0.040 ms | 0.036 ms |  1.00 |    0.00 |  1406.2500 |         - |  11718.46 KB |        1.00 |
+| QRCoder         | 1,795.21 ms | 2.640 ms | 2.470 ms | 82.29 |    0.17 |  1000.0000 |         - |   15708.1 KB |        1.34 |
+| SkiaSharpQrCode |    24.22 ms | 0.023 ms | 0.018 ms |  1.11 |    0.00 |    93.7500 |         - |    865.32 KB |        0.07 |
+| ZXingNet        | 1,231.79 ms | 3.232 ms | 3.024 ms | 56.47 |    0.16 | 58000.0000 | 1000.0000 | 476209.76 KB |       40.64 |
+
 
 ### Dell Core Ultra 5
 
@@ -601,7 +634,7 @@ Average QR code version (samples=1'600)
 
 | Library          | Avg. version |
 |----------------- |-------------:|
-| QrCodeGenerator  |         8.56 |
-| QRCoder          |         8.57 |
-| SkiaSharp.QrCode |         8.63 |
-| ZXing.Net        |         8.67 |
+| QrCodeGenerator  |         8.93 |
+| QRCoder          |         8.98 |
+| SkiaSharp.QrCode |         9.12 |
+| ZXing.Net        |         9.16 |
