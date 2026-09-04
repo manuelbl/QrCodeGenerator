@@ -30,7 +30,7 @@ public static class QrCodeImageExtensions
     /// <param name="border">The number of border modules to add to each of the four sides.</param>
     /// <param name="background">The background color.</param>
     /// <param name="foreground">The foreground color.</param>
-    /// <returns></returns>
+    /// <returns>The new image</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static MagickImage ToImage(this QrCode qrCode, int scale, int border, MagickColor foreground, MagickColor background)
     {
@@ -57,17 +57,27 @@ public static class QrCodeImageExtensions
             Format = MagickFormat.Png,
         };
 
-        var drawables = new Drawables();
-        drawables.FillColor(foreground);
-
-        foreach (var rect in qrCode.ToRectangles())
+        // build a single path with the outline of the dark modules, in module coordinates
+        var paths = new Paths();
+        foreach (var polygon in qrCode.ToOutlines())
         {
-            var pointerX = (rect.X + border) * scale;
-            var pointerY = (rect.Y + border) * scale;
-            drawables.Rectangle(pointerX, pointerY, pointerX + rect.Width * scale - 1, pointerY + rect.Height * scale - 1);
+            var vertices = polygon.Vertices;
+            paths.MoveToAbs(vertices[0].X, vertices[0].Y);
+            for (var i = 1; i < vertices.Count; i++)
+            {
+                paths.LineToAbs(vertices[i].X, vertices[i].Y);
+            }
+            paths.Close();
         }
 
-        drawables.Draw(image);
+        // draw it, scaled to pixel coordinates and offset by the border
+        new Drawables()
+            .FillColor(foreground)
+            .Translation(border * scale, border * scale)
+            .Scaling(scale, scale)
+            .Path(paths)
+            .Draw(image);
+
         return image;
     }
 
