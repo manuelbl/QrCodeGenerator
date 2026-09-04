@@ -9,8 +9,10 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
@@ -123,18 +125,26 @@ namespace Net.Codecrete.QrCodeGenerator
             // draw background
             if (background != Color.Transparent)
             {
-                using SolidBrush brush = new SolidBrush(background);
-                graphics.FillRectangle(brush, 0, 0, dim, dim);
+                using var backgroundBrush = new SolidBrush(background);
+                graphics.FillRectangle(backgroundBrush, 0, 0, dim, dim);
             }
 
-            // draw modules
-            using (SolidBrush brush = new SolidBrush(foreground))
+            // create path from polygon outline
+            using var path = new GraphicsPath();
+            foreach (var polygon in qrCode.ToOutlines())
             {
-                foreach (var rect in qrCode.ToRectangles())
-                {
-                    graphics.FillRectangle(brush, (rect.X + border) * scale, (rect.Y + border) * scale, rect.Width * scale, rect.Height * scale);
-                }
+                path.AddPolygon(polygon.Vertices.Select(point => new Point(point.X, point.Y)).ToArray());
             }
+
+            // scale and translate
+            var matrix = new Matrix();
+            matrix.Translate(scale * border, scale * border);
+            matrix.Scale(scale, scale);
+            path.Transform(matrix);
+
+            // draw modules
+            using var foregroundBrush = new SolidBrush(foreground);
+            graphics.FillPath(foregroundBrush, path);
         }
 
         /// <inheritdoc cref="ToPng(QrCode, int, int)"/>
