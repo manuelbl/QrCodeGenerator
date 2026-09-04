@@ -106,7 +106,6 @@ public sealed partial class QrCodeControl : UserControl
 
         var code = QrCode.EncodeText(Text, ErrorCorrectionLevel);
         var scale = (float)(sender.ActualWidth / (code.Size + 2 * BorderWidth));
-        args.DrawingSession.Transform = Matrix3x2.CreateScale(scale, scale);
-        QrCodeDrawing.Draw(code, args.DrawingSession, BorderWidth, ForegroundColor, BackgroundColor);
+        QrCodeDrawing.Draw(code, args.DrawingSession, scale, BorderWidth, ForegroundColor, BackgroundColor);
     }
 }
