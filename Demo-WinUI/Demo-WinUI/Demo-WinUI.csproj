@@ -34,7 +34,7 @@
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
-    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.*-*" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.*" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
