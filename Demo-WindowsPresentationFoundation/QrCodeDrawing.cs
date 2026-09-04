@@ -77,11 +77,9 @@ namespace Net.Codecrete.QrCodeGenerator.Demo
             }
 
             // draw the modules
-            foreach (var r in qrCode.ToRectangles())
-            {
-                var rect = new Rect(r.X + borderWidth, r.Y + borderWidth, r.Width, r.Height);
-                drawingContext.DrawRectangle(foreground, null, rect);
-            }
+            var geometry = Geometry.Parse(qrCode.ToGraphicsPath());
+            drawingContext.PushTransform(new TranslateTransform(borderWidth, borderWidth));
+            drawingContext.DrawGeometry(foreground, null, geometry);
         }
 
         /// <summary>
