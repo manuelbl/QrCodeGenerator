@@ -23,7 +23,7 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 | Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
 |---------- |---------:|--------:|--------:|---------:|----------:|
 | EncodeAll | 201.7 ms | 0.23 ms | 0.19 ms | 333.3333 |   3.85 MB |
-
+`
 
 # Introduction of BitMatrix
 
@@ -386,8 +386,7 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
 
 | Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
 |---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 19.57 ms | 0.050 ms | 0.047 ms | 937.5000 |  11.25 MB |
-
+| EncodeAll | 18.30 ms | 0.092 ms | 0.072 ms | 593.7500 |   7.22 MB |
 
 
 # Penalty Contribution
@@ -515,10 +514,10 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
 
 | Method          | Mean        | Error    | StdDev   | Ratio  | RatioSD | Gen0       | Allocated    | Alloc Ratio |
 |---------------- |------------:|---------:|---------:|-------:|--------:|-----------:|-------------:|------------:|
-| QrCodeGenerator |    20.94 ms | 0.060 ms | 0.053 ms |   1.00 |    0.00 |   937.5000 |  11718.46 KB |        1.00 |
-| QRCoder         | 2,292.55 ms | 4.503 ms | 3.992 ms | 109.49 |    0.33 |  1000.0000 |   15708.1 KB |        1.34 |
-| SkiaSharpQrCode |    22.21 ms | 0.019 ms | 0.016 ms |   1.06 |    0.00 |    62.5000 |    866.16 KB |        0.07 |
-| ZXingNet        | 1,328.42 ms | 1.902 ms | 1.686 ms |  63.44 |    0.17 | 38000.0000 | 476209.76 KB |       40.64 |
+| QrCodeGenerator |    19.11 ms | 0.042 ms | 0.037 ms |   1.00 |    0.00 |   593.7500 |    7542.1 KB |        1.00 |
+| QRCoder         | 2,318.54 ms | 1.793 ms | 1.677 ms | 121.30 |    0.24 |  1000.0000 |   15708.1 KB |        2.08 |
+| SkiaSharpQrCode |    22.14 ms | 0.022 ms | 0.019 ms |   1.16 |    0.00 |    62.5000 |    866.16 KB |        0.11 |
+| ZXingNet        | 1,319.97 ms | 1.408 ms | 1.248 ms |  69.06 |    0.14 | 38000.0000 | 476209.76 KB |       63.14 |
 
 
 ## Versions
