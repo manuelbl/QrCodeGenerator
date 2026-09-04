@@ -342,6 +342,20 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 |---------- |---------:|---------:|---------:|----------:|----------:|
 | EncodeAll | 20.66 ms | 0.065 ms | 0.051 ms | 1406.2500 |  11.25 MB |
 
+## Dell Core Ultra 5
+
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
+Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
+.NET SDK 10.0.400
+  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
+```
+
+| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
+|---------- |---------:|---------:|---------:|---------:|----------:|
+| EncodeAll | 19.57 ms | 0.050 ms | 0.047 ms | 937.5000 |  11.25 MB |
+
 # Penalty Contribution
 
 Penalty contribution statistics (samples=12,800)
@@ -464,13 +478,12 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
   DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
 ```
 
-| Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Allocated    | Alloc Ratio |
-|---------------- |------------:|---------:|---------:|------:|--------:|-----------:|-------------:|------------:|
-| QrCodeGenerator |    40.95 ms | 0.434 ms | 0.406 ms |  1.00 |    0.01 |   769.2308 |  10052.68 KB |        1.00 |
-| QRCoder         | 2,174.83 ms | 7.653 ms | 7.158 ms | 53.11 |    0.54 |  1000.0000 |  15181.69 KB |        1.51 |
-| SkiaSharpQrCode |    20.44 ms | 0.027 ms | 0.025 ms |  0.50 |    0.00 |    62.5000 |    816.26 KB |        0.08 |
-| ZXingNet        | 1,291.49 ms | 5.552 ms | 4.922 ms | 31.54 |    0.32 | 36000.0000 | 441372.72 KB |       43.91 |
-
+| Method          | Mean        | Error    | StdDev   | Ratio  | RatioSD | Gen0       | Allocated    | Alloc Ratio |
+|---------------- |------------:|---------:|---------:|-------:|--------:|-----------:|-------------:|------------:|
+| QrCodeGenerator |    20.94 ms | 0.060 ms | 0.053 ms |   1.00 |    0.00 |   937.5000 |  11718.46 KB |        1.00 |
+| QRCoder         | 2,292.55 ms | 4.503 ms | 3.992 ms | 109.49 |    0.33 |  1000.0000 |   15708.1 KB |        1.34 |
+| SkiaSharpQrCode |    22.21 ms | 0.019 ms | 0.016 ms |   1.06 |    0.00 |    62.5000 |    866.16 KB |        0.07 |
+| ZXingNet        | 1,328.42 ms | 1.902 ms | 1.686 ms |  63.44 |    0.17 | 38000.0000 | 476209.76 KB |       40.64 |
 
 
 ## Versions
