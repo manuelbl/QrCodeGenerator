@@ -19,7 +19,7 @@ Additional information on [GitHub project page](https://github.com/manuelbl/QrCo
 Core features:
 
 - Supports encoding all 40 versions (sizes) and all 4 error correction levels, as per the QR Code Model 2 standard
-- Output formats: Raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see project home page.
+- Output formats: List of rectangles, outline polygons, raw modules/pixels of the QR symbol, SVG, XAML path, PNG and BMP files. For other raster bitmap formats, see project home page.
 - Computes optimal segment modes for smallest possible QR code.
 - High speed: 10x faster than comparable libraries
 - Open source code under the permissive *MIT License*

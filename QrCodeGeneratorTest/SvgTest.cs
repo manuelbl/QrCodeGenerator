@@ -47,8 +47,19 @@ namespace Net.Codecrete.QrCodeGenerator.Test
             var qrCode = EncodeText(CodeText, Ecc.Medium);
             var path = qrCode.ToGraphicsPath(3);
 
-            Assert.StartsWith("M3,3h", path);
-            Assert.EndsWith("h1v1h-1z", path);
+            // one closed sub-path per outline polygon, offset by the border;
+            // the first polygon is the outer boundary of the top-left finder pattern
+            Assert.StartsWith("M3,3h7v7h-7z ", path);
+            Assert.EndsWith("z", path);
+            Assert.Equal(qrCode.ToOutlines().Count, path.Split('z').Length - 1);
+        }
+
+        [Fact]
+        public void SvgPath_IsThePathOfTheSvgImage()
+        {
+            var qrCode = EncodeText(CodeText, Ecc.Medium);
+
+            Assert.Contains($"d=\"{qrCode.ToGraphicsPath(4)}\"", qrCode.ToSvgString(4));
         }
 
         [Theory]
@@ -73,7 +84,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
                 var qrCode = EncodeText("A", Ecc.Medium);
                 var svg = qrCode.ToSvgString(0);
-                Assert.Contains("d=\"M0,0h7v1h-7z", svg);
+                Assert.Contains("d=\"M0,0h7v7h-7z", svg);
             }
             finally
             {

@@ -7,17 +7,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 
 namespace Net.Codecrete.QrCodeGenerator
 {
     /// <summary>
-    /// Creates SVG images and SVG/XAML graphics paths from a list of QR code rectangles.
+    /// Creates SVG images and SVG/XAML graphics paths from the outline of a QR code.
+    /// <para>
+    /// The dark modules are drawn as a single path of closed sub-paths, one per outline polygon.
+    /// A single path has no seams between adjacent shapes, where anti-aliased rendering would
+    /// otherwise show hairlines. The polygons wind holes the other way than groups, so the path
+    /// needs no fill-rule attribute: both the nonzero rule (the SVG default) and the even-odd rule
+    /// (the XAML default) fill it to the QR code.
+    /// </para>
     /// </summary>
     internal static class SvgBuilder
     {
-        // Creates a complete SVG document for the given rectangles.
+        // Creates a complete SVG document for the given QR code.
         internal static string ToSvgString(QrCode qrCode, int border, string foreground, string background)
         {
             if (border < 0)
@@ -33,7 +39,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 .Append($"\t<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>\n")
                 .Append("\t<path d=\"");
 
-            AppendPath(sb, qrCode.ToRectangles(), border);
+            AppendPath(sb, qrCode.ToOutlines(), border);
 
             return sb
                 .Append($"\" fill=\"{foreground}\"/>\n")
@@ -41,7 +47,7 @@ namespace Net.Codecrete.QrCodeGenerator
                 .ToString();
         }
 
-        // Creates an SVG/XAML graphics path for the given rectangles.
+        // Creates an SVG/XAML graphics path for the given QR code.
         internal static string ToGraphicsPath(QrCode qrCode, int border)
         {
             if (border < 0)
@@ -50,28 +56,45 @@ namespace Net.Codecrete.QrCodeGenerator
             }
 
             var path = new StringBuilder();
-            AppendPath(path, qrCode.ToRectangles(), border);
+            AppendPath(path, qrCode.ToOutlines(), border);
             return path.ToString();
         }
 
-        // Append an SVG/XAML path for the QR code rectangles to the provided string builder.
-        private static void AppendPath(StringBuilder path, IReadOnlyList<QrRectangle> rectangles, int border)
+        // Append an SVG/XAML path for the QR code outline to the provided string builder.
+        // The edges of a polygon are strictly axis-parallel, so each becomes a relative "h" or "v"
+        // command; "z" draws the closing edge.
+        private static void AppendPath(StringBuilder path, IReadOnlyList<QrPolygon> polygons, int border)
         {
-            for (var i = 0; i < rectangles.Count; i++)
+            for (var i = 0; i < polygons.Count; i++)
             {
-                var rect = rectangles[i];
+                var vertices = polygons[i].Vertices;
 
-                // append path command (no leading space before the first rectangle)
+                // append path command (no leading space before the first polygon)
                 if (i != 0)
                 {
                     path.Append(' ');
                 }
 
-                // Different locales use different minus signs.
-                FormattableString pathElement =
-                    $"M{rect.X + border},{rect.Y + border}h{rect.Width}v{rect.Height}h{-rect.Width}z";
-                path.Append(pathElement.ToString(CultureInfo.InvariantCulture));
+                // Different locales use different digits and minus signs.
+                var first = vertices[0];
+                path.Append(FormattableString.Invariant($"M{first.X + border},{first.Y + border}"));
+
+                for (var j = 1; j < vertices.Count; j++)
+                {
+                    var from = vertices[j - 1];
+                    var to = vertices[j];
+                    if (to.Y == from.Y)
+                    {
+                        path.Append(FormattableString.Invariant($"h{to.X - from.X}"));
+                    }
+                    else
+                    {
+                        path.Append(FormattableString.Invariant($"v{to.Y - from.Y}"));
+                    }
+                }
+                path.Append('z');
             }
         }
     }
 }
+

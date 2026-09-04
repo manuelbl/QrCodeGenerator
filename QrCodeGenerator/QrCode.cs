@@ -38,6 +38,7 @@ namespace Net.Codecrete.QrCodeGenerator
     /// SVG (<see cref="ToSvgString"/>) or BMP (<see cref="ToBmpBitmap"/>) image.
     /// Or the QR code can be drawn or printed with custom code by either
     /// processing a list of rectangles covering the dark modules (<see cref="ToRectangles"/>),
+    /// by filling the outline of the dark modules (<see cref="ToOutlines"/>),
     /// or by querying the color of individual modules with <see cref="GetModule"/>.
     /// </para>
     /// </summary>
@@ -512,8 +513,15 @@ namespace Net.Codecrete.QrCodeGenerator
         /// automatically derived, at least the right and bottom border will be missing.
         /// </para>
         /// <para>
-        /// The path will look like this: <c>M3,3h7v1h-7z M12,3h1v4h-1z ... M70,71h1v1h-1z</c>. It
-        /// is valid for SVG (<c>&lt;path d="M3,3h..." /&gt;</c>) and for XAML
+        /// The path consists of one closed sub-path per outline polygon (see
+        /// <see cref="ToOutlines"/>) and will look like this:
+        /// <c>M3,3h7v7h-7z M4,4v5h5v-5z ... M70,71h1v1h-1z</c>. As the polygons around holes wind
+        /// the other way than the polygons around groups of dark modules, no fill rule needs to be
+        /// specified: the nonzero rule (the SVG default) and the even-odd rule (the XAML default)
+        /// both fill the path to the QR code.
+        /// </para>
+        /// <para>
+        /// The path is valid for SVG (<c>&lt;path d="M3,3h..." /&gt;</c>) and for XAML
         /// (<c>&lt;Path Data="M3,3h..." /&gt;</c>). For programmatic geometry creation in WPF see
         /// <a href="https://docs.microsoft.com/en-us/dotnet/api/system.windows.media.geometry.parse?view=windowsdesktop-6.0">Geometry.Parse(String)</a>.
         /// </para>
@@ -543,7 +551,9 @@ namespace Net.Codecrete.QrCodeGenerator
         /// </para>
         /// <para>
         /// This method is intended for rendering the QR code to graphics formats that are not
-        /// directly supported by this library.
+        /// directly supported by this library. Where adjacent shapes leave hairline gaps
+        /// (typically with anti-aliasing), fill a single path built from <see cref="ToOutlines"/>
+        /// instead.
         /// </para>
         /// </summary>
         /// <returns>The list of rectangles covering the dark modules.</returns>
@@ -551,6 +561,30 @@ namespace Net.Codecrete.QrCodeGenerator
         public IReadOnlyList<QrRectangle> ToRectangles()
         {
             return RectangleBuilder.Build(_modules);
+        }
+
+        /// <summary>
+        /// Gets the outline of the dark modules of this QR code, as a list of closed polygons.
+        /// <para>
+        /// Each polygon traces the boundary of a group of dark modules connected horizontally or
+        /// vertically, or of a hole within such a group &#x2014; most notably the light ring of a
+        /// finder pattern. Polygons around groups run clockwise, polygons around holes
+        /// counterclockwise, so filling all of them as one path produces the QR code under both the
+        /// nonzero and the even-odd fill rule. This is the geometry the SVG and XAML output is built
+        /// from: a single filled path has no seams between adjacent shapes, where anti-aliased
+        /// rendering would otherwise show hairlines.
+        /// </para>
+        /// <para>
+        /// The vertices use the same coordinate system as <see cref="GetModule"/>, on the grid of
+        /// module corners: the top-left corner of the QR code is at (x=0, y=0) and each unit is one
+        /// module (no border is included).
+        /// </para>
+        /// </summary>
+        /// <returns>The polygons, ordered by their start vertex in reading order.</returns>
+        /// <seealso cref="QrPolygon"/>
+        public IReadOnlyList<QrPolygon> ToOutlines()
+        {
+            return OutlineBuilder.Build(_modules);
         }
 
         /// <summary>
