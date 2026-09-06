@@ -61,8 +61,8 @@ namespace Net.Codecrete.QrCodeGenerator
 
             // Since switching from one mode to another requires additional bits, the cost of
             // switching can be higher than the savings from using a more efficient mode.
-            // A dynamic programme assigns each block the segment mode minimizing the total bit stream.
-            var modes = AssignModes(blocks, version);
+            // A dynamic program assigns each block the segment mode minimizing the total bit stream.
+            AssignModes(blocks, version);
 
             // Consecutive blocks with the same mode form a single segment.
             var segments = new List<DataSegment>();
@@ -71,9 +71,9 @@ namespace Net.Codecrete.QrCodeGenerator
             for (var i = 0; i < blocks.Length; i += 1)
             {
                 length += blocks[i].Length;
-                if (i + 1 == blocks.Length || modes[i + 1] != modes[i])
+                if (i + 1 == blocks.Length || blocks[i + 1].Mode != blocks[i].Mode)
                 {
-                    segments.Add(DataSegment.MakeSegment(modes[i], bytes.MakeSlice(offset, length)));
+                    segments.Add(DataSegment.MakeSegment(blocks[i].Mode, bytes.MakeSlice(offset, length)));
                     offset += length;
                     length = 0;
                 }
@@ -121,14 +121,13 @@ namespace Net.Codecrete.QrCodeGenerator
         /// </summary>
         /// <param name="blocks">The blocks, each with its cheapest mode.</param>
         /// <param name="version">The QR code version.</param>
-        /// <returns>The segment mode for each block.</returns>
-        private static DataSegmentMode[] AssignModes(Block[] blocks, int version)
+        private static void AssignModes(Block[] blocks, int version)
         {
             var headerCosts = new int[NumModes];
             for (var m = 0; m < NumModes; m += 1)
             {
                 // A block of length 0 costs exactly the segment header (mode and count indicator).
-                headerCosts[m] = 6 * new Block { Mode = ModeAt(m), Length = 0 }.GetSegmentLength(version);
+                headerCosts[m] = 6 * GetSegmentHeaderLength(ModeAt(m), version);
             }
 
             var blockCount = blocks.Length;
@@ -191,14 +190,11 @@ namespace Net.Codecrete.QrCodeGenerator
                 }
             }
 
-            var modes = new DataSegmentMode[blockCount];
             for (var i = blockCount - 1; i >= 0; i -= 1)
             {
-                modes[i] = ModeAt(mode);
+                blocks[i].Mode = ModeAt(mode);
                 mode = previousModes[i * NumModes + mode];
             }
-
-            return modes;
         }
 
         // Rounds a cost in sixths of a bit up to whole bits (still in sixths).
@@ -318,6 +314,26 @@ namespace Net.Codecrete.QrCodeGenerator
 
             return modes;
         }
+        
+        private static int GetSegmentHeaderLength(DataSegmentMode mode, int version)
+        {
+            // Duplicated code for performance
+            switch (mode)
+            {
+                case DataSegmentMode.Binary:
+                    return 12 + (version <= 9 ? 0 : 8);
+                case DataSegmentMode.Numeric:
+                    return 14 + (version + 7) / 17 * 2;
+                case DataSegmentMode.Alphanumeric:
+                    return 13 + (version + 7) / 17 * 2;
+                case DataSegmentMode.Kanji:
+                    return 12 + (version + 7) / 17;
+                default:
+                    Debug.Assert(false, "data segment mode not supported by this function");
+                    return 0;
+            }
+        }
+
 
         #endregion
 
