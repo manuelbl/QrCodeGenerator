@@ -1,275 +1,81 @@
-# Baseline
+# Profiling
 
-MacBook M5 Pro
+`QrCodeGeneratorProfiling` measures the performance of the QR code generator. It is a .NET 10
+console application that combines BenchmarkDotNet benchmarks, a plain encoding loop for use with an
+external profiler, and a statistics collector. A single executable serves all of them; the first
+argument selects the mode.
 
-## Profiling
+## Usage
 
-```
-Profile loop: 500 iterations × 200 payloads × 4 ECC levels
-Total EncodeText calls: 400'000
-Elapsed: 00:01:41.0574210 (checksum=14696000)
-```
+| Command | Purpose |
+| ------- | ------- |
+| `dotnet run -c Release -- benchmark` | Measure `QrCode.EncodeText` over the sample data with BenchmarkDotNet. |
+| `dotnet run -c Release -- compare` | Compare generation speed and QR code size with other .NET libraries. |
+| `dotnet run -c Release -- profile [N]` | Run a plain encoding loop, `N` iterations (default 500). |
+| `dotnet run -c Release -- stats` | Collect penalty, mask pattern and version statistics as Markdown tables. |
+| `dotnet run -c Release -- help` | Print the same list. |
 
-## Benchmark
+Run the commands from this directory, and always in the `Release` configuration. A `Debug` build
+measures unoptimized code, and BenchmarkDotNet refuses to run in it.
 
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
+`profile` is the mode to attach a profiler to, such as JetBrains dotTrace or dotMemory. It has no
+measurement harness of its own — just a warm-up pass and a timed loop — so the profiler sees the
+encoding work and little else. The loop prints a checksum, both to keep the compiler from eliminating
+it and to detect when a change alters the generated QR codes.
 
-| Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
-|---------- |---------:|--------:|--------:|---------:|----------:|
-| EncodeAll | 201.7 ms | 0.23 ms | 0.19 ms | 333.3333 |   3.85 MB |
-`
+`stats` produces the tables in the last three sections of this file, in the same order. To refresh
+them, run it and replace the tables with its output.
 
-# Introduction of BitMatrix
+`benchmark` and `compare` write their reports (Markdown, CSV and HTML) to
+`BenchmarkDotNet.Artifacts/results/`. That directory is not checked in.
 
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
+All modes use the same sample data: 400 deterministic payloads assembled from sentences, names,
+towns, URLs, numbers and messages, each encoded at all four error correction levels. One payload in
+five is a long text of 400 to 900 characters, so the larger QR code versions are covered as well.
 
-| Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
-|---------- |---------:|--------:|--------:|---------:|----------:|
-| EncodeAll | 205.0 ms | 0.32 ms | 0.28 ms | 333.3333 |   3.63 MB |
+[LOG.md](LOG.md) records the benchmark results of every optimization step of the library.
 
+## Comparison with Other Libraries
 
-# Optimized bit count (color balance)
+The `compare` mode measures QR code generation only, with no rendering: 400 payloads × 4 error
+correction levels per invocation, each library with its default settings except ZXing.Net.
 
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
+### Differences Between the Libraries
 
-| Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
-|---------- |---------:|--------:|--------:|---------:|----------:|
-| EncodeAll | 181.9 ms | 0.32 ms | 0.28 ms | 333.3333 |   3.63 MB |
+- *QrCodeGenerator* (this library) always compacts the data segments and generates the smallest
+  possible QR codes.
+- [*ZXing.Net*](https://github.com/micjahn/zxing.net) runs without segment compaction, so several of
+  its QR codes are bigger than they need to be. Compaction can be enabled, but ZXing.Net's
+  implementation is expensive. The library is also told to use UTF-8; otherwise it uses
+  ISO-8859-1 and replaces characters it cannot represent with `?`. The other libraries prefer
+  ISO-8859-1 but fall back to UTF-8 when needed.
+- The upcoming [*FeatherQR*](https://github.com/guitarrapc/FeatherQR) library (formerly known as
+  *SkiaSharp.QrCode*) does not compact data segments by default and produces bigger QR codes than
+  needed. The currently released *SkiaSharp.QrCode* also depends on *SkiaSharp*, which makes it
+  large and adds architecture-specific native libraries.
+- [*QRCoder*](https://github.com/Shane32/QRCoder) compacts data segments but does not produce the
+  smallest QR code in every case. It comes close though.
 
+The libraries also differ in when they insert an ECI segment to declare the character set.
 
-
-# Optimized horizontal finder pattern
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
-|---------- |---------:|--------:|--------:|---------:|----------:|
-| EncodeAll | 160.5 ms | 0.80 ms | 0.75 ms | 250.0000 |   3.62 MB |
-
-
-# Use BitMatrix operations for patterns
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error   | StdDev  | Gen0      | Allocated |
-|---------- |---------:|--------:|--------:|----------:|----------:|
-| EncodeAll | 124.7 ms | 0.14 ms | 0.11 ms | 2250.0000 |  19.88 MB |
-
-
-
-# Pattern caching
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
-|---------- |---------:|--------:|--------:|---------:|----------:|
-| EncodeAll | 119.9 ms | 0.10 ms | 0.10 ms | 200.0000 |   3.08 MB |
-
-
-
-# Penalty Calculation with Transposed Matrix
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error   | StdDev  | Gen0     | Allocated |
-|---------- |---------:|--------:|--------:|---------:|----------:|
-| EncodeAll | 103.2 ms | 0.08 ms | 0.07 ms | 600.0000 |    5.2 MB |
-
-
-# Improved 2x2 block penalty
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 67.76 ms | 0.577 ms | 0.512 ms | 625.0000 |    5.2 MB |
-
-
-# Improved Calc Strides of Same Color
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 23.53 ms | 0.142 ms | 0.126 ms | 625.0000 |    5.2 MB |
-
-
-# Evaluate penalty for likely patterns first
-
-```
-BenchmarkDotNet v0.14.0, macOS 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.201
-  [Host]     : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 10.0.5 (10.0.526.15411), Arm64 RyuJIT AdvSIMD
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 17.08 ms | 0.082 ms | 0.072 ms | 625.0000 |    5.2 MB |
-
-
-# Data Segment Compaction
-
-Use a fixed array for the blocks and merge them in-place in order
-to reduce the multiple memory allocations required for a dynamically
-growing list.
-
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.4.1 (25E253) [Darwin 25.4.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 15.98 ms | 0.131 ms | 0.109 ms | 593.7500 |   4.77 MB |
-
-
-
-# Reed-Solomon Product Table
-
-Cache the generator polynomial multiplied by every element of the field instead of the polynomial
-alone. The division is then a shift and an exclusive or per data codeword, eight coefficients at a
-time, with no field arithmetic left in the loop. The codewords are written straight into the
-interleaved result, at a stride, so no block needs a buffer of its own.
+### Speed and Memory on a MacBook Pro M5
 
 ```
 BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
 Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 .NET SDK 10.0.203
-[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
 ```
 
-| Method             | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|------------------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll          | 14.65 ms | 0.044 ms | 0.039 ms | 546.8750 |    4.4 MB |
+| Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
+|---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
+| QrCodeGenerator |    19.81 ms | 0.038 ms | 0.034 ms |  1.00 |    0.00 |   843.7500 |         - |   7082.33 KB |        1.00 |
+| QRCoder         | 1,828.37 ms | 1.059 ms | 0.885 ms | 92.28 |    0.16 |  1000.0000 |         - |   15708.1 KB |        2.22 |
+| SkiaSharpQrCode |    24.51 ms | 0.044 ms | 0.041 ms |  1.24 |    0.00 |    93.7500 |         - |    865.32 KB |        0.12 |
+| ZXingNet        | 1,162.58 ms | 3.297 ms | 3.084 ms | 58.68 |    0.18 | 58000.0000 | 1000.0000 | 476209.76 KB |       67.24 |
 
-The 0.02 MB that remain are the packed `ulong[]` holding the remainder, which is a little larger
-than the `byte[]` it replaces.
-
-
-# Row Layouts
-
-Two changes to the penalty rules, which is where encoding spends most of its time.
-
-The finder-pattern rule no longer slides a 15-bit window one column at a time. A whole word is
-matched at once: shifting the row lines up the module at each fixed offset from a candidate start,
-so one sequence of shifts, ands and a population count finds every match beginning in that word.
-
-`BitMatrix` then gained three row layouts. A row holds its modules in one, two or three 64-bit
-words instead of always four, so a rule scans one word per row for versions 1 to 11, two for
-versions 12 to 27 and three for versions 28 to 40. Every row-scanning rule has an implementation
-per layout with its loop over the words unrolled. The stride between rows stays a power of two —
-1, 2 or 4 — so a row index is still a shift, and the three-word layout keeps a fourth, always-zero
-padding word that lets whole-matrix operations run flat over the raw array.
-
-Versions 1 to 11 are most QR codes, and the sample data is no exception. Of the 4.1 s saved on the
-profile loop, the word-parallel finder rule accounts for 1.7 s and the row layouts for 2.5 s.
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method             | Mean     | Error     | StdDev    | Gen0     | Allocated |
-|------------------- |---------:|----------:|----------:|---------:|----------:|
-| EncodeAll          | 6.428 ms | 0.0225 ms | 0.0199 ms | 382.8125 |   3.07 MB |
-
-The matrices of the smaller versions are a quarter of their former size, which is where the drop
-in allocation comes from.
-
-
-# Larger Sample Data
-
-The sample data covered versions 1 to 13 only, so the two- and three-word row layouts of
-`BitMatrix` were barely measured. It now holds 400 payloads instead of 200, and one in five of
-them is a long text of 400 to 900 characters assembled from the same fragments (sentences, names,
-towns, URLs, numbers, messages). Long payloads reach versions 12 to 36, the short ones stay in
-versions 1 to 11.
-
-The measurements below are the new baseline; they are not comparable to the sections above, which
-all used the 200 short payloads.
-
-## MacBook Pro M5
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-[Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method             | Mean     | Error     | StdDev    | Gen0      | Allocated |
-|------------------- |---------:|----------:|----------:|----------:|----------:|
-| EncodeAll          | 31.17 ms | 0.052 ms  | 0.043 ms  | 1187.5000 |   9.57 MB |
-
-Twice the payloads, and the long ones cost far more than a short one: the penalty rules scan a
-matrix that grows with the square of the version, and eight mask patterns are scored per code.
-
-## Dell Core Ultra 5
+### Speed and Memory on a Dell Core Ultra 5
 
 ```
 BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
@@ -279,117 +85,38 @@ Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
   DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
 ```
 
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 35.19 ms | 0.103 ms | 0.092 ms | 800.0000 |   9.57 MB |
+| Method          | Mean        | Error    | StdDev   | Ratio  | RatioSD | Gen0       | Allocated    | Alloc Ratio |
+|---------------- |------------:|---------:|---------:|-------:|--------:|-----------:|-------------:|------------:|
+| QrCodeGenerator |    19.11 ms | 0.042 ms | 0.037 ms |   1.00 |    0.00 |   593.7500 |    7542.1 KB |        1.00 |
+| QRCoder         | 2,318.54 ms | 1.793 ms | 1.677 ms | 121.30 |    0.24 |  1000.0000 |   15708.1 KB |        2.08 |
+| SkiaSharpQrCode |    22.14 ms | 0.022 ms | 0.019 ms |   1.16 |    0.00 |    62.5000 |    866.16 KB |        0.11 |
+| ZXingNet        | 1,319.97 ms | 1.408 ms | 1.248 ms |  69.06 |    0.14 | 38000.0000 | 476209.76 KB |       63.14 |
 
+### QR Code Size
 
-# Optimal Segment Compaction
+Average QR code version (samples=1'600)
 
-The segment compaction now assigns the segment modes by a dynamic programme over the blocks
-instead of two greedy merge passes, and the compaction runs per version group (1–9, 10–26, 27–40)
-instead of once for the maximum version. The result is the shortest possible bit stream for the
-chosen version; the `compaction` mode reports no case where QRCoder's segments are shorter.
-The checksum differs from the sections above because some QR codes got smaller.
+| Library          | Avg. version |
+|----------------- |-------------:|
+| QrCodeGenerator  |         8.93 |
+| QRCoder          |         8.98 |
+| SkiaSharp.QrCode |         9.12 |
+| ZXing.Net        |         9.16 |
 
-## MacBook Pro M5
+The version says how compactly a library encodes the payload: for the same text and the same error
+correction level, a lower version is a physically smaller QR code. The average is taken over all 400
+payloads at all four error correction levels. The version is compared instead of the module size
+because some libraries include the quiet zone in the size they report.
 
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
+The spread is small, from 8.93 to 9.16, because all four libraries compact data segments to some
+degree. Segment compaction is a tiebreaker between these libraries, not a decisive difference.
 
-| Method    | Mean     | Error    | StdDev   | Gen0      | Allocated |
-|---------- |---------:|---------:|---------:|----------:|----------:|
-| EncodeAll | 32.17 ms | 0.051 ms | 0.040 ms | 1312.5000 |  10.68 MB |
+## Penalty Contribution
 
-
-# Precomputed payload filling
-
-The target for each payload bit is computed once and cached.
-
-## MacBook Pro M5
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0      | Allocated |
-|---------- |---------:|---------:|---------:|----------:|----------:|
-| EncodeAll | 20.79 ms | 0.037 ms | 0.031 ms | 1406.2500 |  11.25 MB |
-
-
-# Modified pattern evaluation order
-
-## MacBook Pro M5
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0      | Allocated |
-|---------- |---------:|---------:|---------:|----------:|----------:|
-| EncodeAll | 20.66 ms | 0.065 ms | 0.051 ms | 1406.2500 |  11.25 MB |
-
-## Dell Core Ultra 5
-
-```
-BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
-Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
-.NET SDK 10.0.400
-  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
-  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 19.57 ms | 0.050 ms | 0.047 ms | 937.5000 |  11.25 MB |
-
-
-# Reduced memory allocation
-
-## MacBook Pro M5
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 19.60 ms | 0.183 ms | 0.171 ms | 906.2500 |   7.38 MB |
-
-
-## Dell Core Ultra 5
-
-```
-BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
-Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
-.NET SDK 10.0.400
-  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
-  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
-```
-
-| Method    | Mean     | Error    | StdDev   | Gen0     | Allocated |
-|---------- |---------:|---------:|---------:|---------:|----------:|
-| EncodeAll | 18.30 ms | 0.092 ms | 0.072 ms | 593.7500 |   7.22 MB |
-
-
-# Penalty Contribution
+The `stats` mode reports how much each penalty rule contributes to the total penalty score. The
+buckets are the rules of the standard; `Share%` is the share of the total score. `Penalty.Calculate`
+evaluates the rules in exactly this order, from the largest share to the smallest, so its early-stop
+path reaches the cut-off as soon as possible.
 
 Penalty contribution statistics (samples=12,800)
 
@@ -402,7 +129,12 @@ Penalty contribution statistics (samples=12,800)
 | FinderCols    |   0 |  760 |   78.03 |  106.70 |   3.25 |
 | ColorBalance  |   0 |   10 |    0.03 |    0.51 |   0.00 |
 
-# Mask Pattern Selection
+## Mask Pattern Selection
+
+How often each of the eight data mask patterns wins, that is, scores the lowest penalty. Pattern 2
+wins in more than 40% of all cases. `MatrixEncoder.PatternEvaluationOrder` evaluates the patterns in
+this order (2, 4, 6, 3, 7, 5, 1, 0), so a low penalty score is usually found early and the
+early-stop path can discard the remaining patterns sooner.
 
 Mask pattern selection (samples=1,600)
 
@@ -417,7 +149,11 @@ Mask pattern selection (samples=1,600)
 |       5 |    87 |   5.44 |
 |       0 |    77 |   4.81 |
 
-# Version Distribution
+## Version Distribution
+
+The versions of the QR codes generated from the sample data. The grouping at the end matters for
+performance: it is the share of each `BitMatrix` row layout, and the narrower the row, the fewer
+words the penalty rules scan per row. Most QR codes fit into a single word per row.
 
 Version distribution (samples=1,600)
 
@@ -461,74 +197,3 @@ Version distribution (samples=1,600)
 - Versions 1-11 (one word per row): 1,250 (78.12%)
 - Versions 12-27 (two words per row): 274 (17.12%)
 - Versions 28-40 (three words per row): 76 (4.75%)
-
-
-# Comparison with other libraries
-
-`compare` mode: QR code generation only (no rendering), 400 payloads × 4 ECC levels per invocation,
-library defaults (except ZXing.Net, see below).
-
-## Differences between libraries
-
-- *QrCodeGenerator* (this library) will always compact the data segments and generate to smallest possible QR code.
-- *ZXing.NET* is run without segment compaction. So several generated QR codes are bigger than they need to be.
-Segment compaction could be enabled but the ZXing.NET implementation is expensive.
-The library is told to use UTF-8. Otherwise, it uses ISO-8859-1 and replaces characters that cannot be represented with `?`.
-The other libraries prefer ISO-8859-1 but automatically fall back to UTF-8 if needed. 
-- *SkiaSharp.QrCode* does not compact data segments and produces bigger QR codes than needed.
-The library also depends on *SkiaSharp*. Thus, it is big and depends on native architecture specific DLLs.
-- *QrCoder* compacts data segments but does not generate the smallest QR code in all cases. But it is close.
-
-The libraries have also different strategies determining if they insert an ECI segment to indicate the character set.
-
-
-## Performance 
-
-### MacBook Pro M5
-
-```
-BenchmarkDotNet v0.15.8, macOS Tahoe 26.6.2 (25G83) [Darwin 25.6.0]
-Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
-.NET SDK 10.0.203
-  [Host]     : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-  DefaultJob : .NET 10.0.7 (10.0.7, 10.0.726.21808), Arm64 RyuJIT armv8.0-a
-```
-
-| Method          | Mean        | Error     | StdDev    | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
-|---------------- |------------:|----------:|----------:|------:|--------:|-----------:|----------:|-------------:|------------:|
-| QrCodeGenerator |    19.49 ms |  0.046 ms |  0.036 ms |  1.00 |    0.00 |   906.2500 |         - |    7542.1 KB |        1.00 |
-| QRCoder         | 1,833.25 ms |  2.939 ms |  2.749 ms | 94.07 |    0.22 |  1000.0000 |         - |   15708.1 KB |        2.08 |
-| SkiaSharpQrCode |    24.21 ms |  0.093 ms |  0.087 ms |  1.24 |    0.00 |    93.7500 |         - |    865.32 KB |        0.11 |
-| ZXingNet        | 1,165.69 ms | 12.416 ms | 11.614 ms | 59.82 |    0.59 | 58000.0000 | 1000.0000 | 476209.76 KB |       63.14 |
-
-
-### Dell Core Ultra 5
-
-```
-BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.9168/25H2/2025Update/HudsonValley2)
-Intel Core Ultra 5 235T 2.20GHz, 1 CPU, 14 logical and 14 physical cores
-.NET SDK 10.0.400
-  [Host]     : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
-  DefaultJob : .NET 10.0.11 (10.0.11, 10.0.1126.37416), X64 RyuJIT x86-64-v3
-```
-
-| Method          | Mean        | Error    | StdDev   | Ratio  | RatioSD | Gen0       | Allocated    | Alloc Ratio |
-|---------------- |------------:|---------:|---------:|-------:|--------:|-----------:|-------------:|------------:|
-| QrCodeGenerator |    19.11 ms | 0.042 ms | 0.037 ms |   1.00 |    0.00 |   593.7500 |    7542.1 KB |        1.00 |
-| QRCoder         | 2,318.54 ms | 1.793 ms | 1.677 ms | 121.30 |    0.24 |  1000.0000 |   15708.1 KB |        2.08 |
-| SkiaSharpQrCode |    22.14 ms | 0.022 ms | 0.019 ms |   1.16 |    0.00 |    62.5000 |    866.16 KB |        0.11 |
-| ZXingNet        | 1,319.97 ms | 1.408 ms | 1.248 ms |  69.06 |    0.14 | 38000.0000 | 476209.76 KB |       63.14 |
-
-
-## Versions
-
-The average version shows how compactly each library encodes the payloads (data segment compaction).
-
-Average QR code version (samples=1'600)
-
-| Library          | Avg. version |
-|----------------- |-------------:|
-| QrCodeGenerator  |         8.93 |
-| QRCoder          |         8.98 |
-| SkiaSharp.QrCode |         9.12 |
-| ZXing.Net        |         9.16 |

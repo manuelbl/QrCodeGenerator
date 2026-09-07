@@ -107,14 +107,14 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         // Rasterizes the loops again and compares against the modules, once under the nonzero rule
         // and once under the even-odd rule.
         //
-        // A scanline through the centre of a module row collects the vertical edges crossing it,
+        // A scanline through the center of a module row collects the vertical edges crossing it,
         // each at its x grid line with its direction; sweeping the row left to right, the crossings
-        // passed so far give the winding number and the crossing parity at each module centre.
+        // passed so far give the winding number and the crossing parity at each module center.
         private static void AssertFillsToTheDarkModules(IReadOnlyList<QrPolygon> polygons, QrCode qrCode)
         {
             var size = qrCode.Size;
             // one extra column: the QR code's right border produces crossings at grid line x = size,
-            // to the right of every module centre
+            // to the right of every module center
             var crossings = new int[size, size + 1];
 
             foreach (var polygon in polygons)
@@ -168,7 +168,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         [Fact]
         public void Hole_IsWoundTheOtherWay()
         {
-            // a 3×3 block with a light centre
+            // a 3×3 block with a light center
             var modules = new BitMatrix(6);
             modules.FillRect(1, 1, 3, 3);
             modules.Set(2, 2, false);
@@ -216,7 +216,7 @@ namespace Net.Codecrete.QrCodeGenerator.Test
         public void DarkCentreInsideHole_IsItsOwnLoop()
         {
             // The structure of a finder pattern: a 7×7 ring, a light ring inside it, a dark 3×3
-            // centre. Three loops: the outer boundary and the centre clockwise, the hole in
+            // center. Three loops: the outer boundary and the center clockwise, the hole in
             // between counterclockwise.
             var modules = new BitMatrix(9);
             modules.FillRect(0, 0, 7, 7);

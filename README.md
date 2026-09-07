@@ -111,7 +111,7 @@ QR Code Generator for .NET requires a .NET implementation compatible with .NET S
 
 ### Raster Images / Bitmaps
 
-Starting with .NET 6, *System.Drawing* is only supported on the Windows operating system and thus cannot be used for multi-platform libraries like this one. Therefore, `ToBitmap()` has been removed.
+Starting with .NET 6, *System.Drawing* is only supported on the Windows operating system and thus cannot be used for multi-platform libraries like this one.
 
 Two raster bitmap formats are supported without the need for additional libraries:
 
@@ -148,6 +148,12 @@ namespace Examples
     }
 }
 ```
+
+## Performance
+
+QrCodeGenerator is optimized for speed and compares favorably with other libraries.
+See [Profiling](QrCodeGeneratorProfiling/README.md) for the benchmarks and the details.
+
 
 ## Demo Projects
 

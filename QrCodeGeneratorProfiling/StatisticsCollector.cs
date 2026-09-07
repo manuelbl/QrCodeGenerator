@@ -25,7 +25,7 @@ namespace Net.Codecrete.QrCodeGenerator.Profiling;
 /// </para>
 /// <para>
 /// Passing an <see cref="EncodingInfo"/> forces the library to fully evaluate the penalty
-/// score for all eight mask patterns (disabling the early-stop optimisation), which is what
+/// score for all eight mask patterns (disabling the early-stop optimization), which is what
 /// makes the per-bucket breakdown available.
 /// </para>
 /// </remarks>
