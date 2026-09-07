@@ -335,10 +335,6 @@ Setting `info.ForcedDataMask` to a value between 0 and 7 before the call pins th
 letting the library choose. This is meant for analysis. A hand-picked mask can produce a QR code
 that is hard to scan.
 
-[QrCodeAnalyzer](QrCodeAnalyzer), a Windows UI application in this repository, is built on these
-diagnostics. It shows the chosen segments, the score of every mask and the resulting QR code, and
-it lets you force a mask to see what the others would look like.
-
 
 ## Requirements
 
