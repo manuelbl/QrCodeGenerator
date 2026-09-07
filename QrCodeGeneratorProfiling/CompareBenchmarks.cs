@@ -13,7 +13,7 @@ using ZXing;
 using ZXing.QrCode.Internal;
 using ZXingEncoder = ZXing.QrCode.Internal.Encoder;
 using QRCoderGenerator = QRCoder.QRCodeGenerator;
-using SkiaQrGenerator = SkiaSharp.QrCode.QRCodeGenerator;
+using FeatherQrGenerator = FeatherQR.QRCodeGenerator;
 
 namespace Net.Codecrete.QrCodeGenerator.Profiling;
 
@@ -50,7 +50,7 @@ public class CompareBenchmarks
     [
         ("QrCodeGenerator", CreateQrCodeGeneratorEncoder),
         ("QRCoder", CreateQRCoderEncoder),
-        ("SkiaSharp.QrCode", CreateSkiaSharpQrCodeEncoder),
+        ("FeatherQR", CreateFeatherQrEncoder),
         ("ZXing.Net", CreateZXingNetEncoder)
     ];
 
@@ -76,7 +76,7 @@ public class CompareBenchmarks
     public int QRCoder() => EncodeAll(CreateQRCoderEncoder());
 
     [Benchmark]
-    public int SkiaSharpQrCode() => EncodeAll(CreateSkiaSharpQrCodeEncoder());
+    public int FeatherQr() => EncodeAll(CreateFeatherQrEncoder());
 
     [Benchmark]
     public int ZXingNet() => EncodeAll(CreateZXingNetEncoder());
@@ -119,14 +119,14 @@ public class CompareBenchmarks
         };
     }
 
-    private static readonly SkiaSharp.QrCode.ECCLevel[] SkiaEccLevels =
+    private static readonly FeatherQR.ECCLevel[] FeatherEccLevels =
     [
-        SkiaSharp.QrCode.ECCLevel.L, SkiaSharp.QrCode.ECCLevel.M, SkiaSharp.QrCode.ECCLevel.Q, SkiaSharp.QrCode.ECCLevel.H
+        FeatherQR.ECCLevel.L, FeatherQR.ECCLevel.M, FeatherQR.ECCLevel.Q, FeatherQR.ECCLevel.H
     ];
 
-    private static Encoder CreateSkiaSharpQrCodeEncoder()
+    private static Encoder CreateFeatherQrEncoder()
     {
-        return (payload, ecc) => SkiaQrGenerator.CreateQrCode(payload, SkiaEccLevels[ecc]).Version;
+        return (payload, ecc) => FeatherQrGenerator.CreateQrCode(payload, FeatherEccLevels[ecc]).Version;
     }
 
     private static readonly ErrorCorrectionLevel[] ZXingEccLevels =

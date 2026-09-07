@@ -49,10 +49,9 @@ correction levels per invocation, each library with its default settings except 
   implementation is expensive. The library is also told to use UTF-8; otherwise it uses
   ISO-8859-1 and replaces characters it cannot represent with `?`. The other libraries prefer
   ISO-8859-1 but fall back to UTF-8 when needed.
-- The upcoming [*FeatherQR*](https://github.com/guitarrapc/FeatherQR) library (formerly known as
-  *SkiaSharp.QrCode*) does not compact data segments by default and produces bigger QR codes than
-  needed. The currently released *SkiaSharp.QrCode* also depends on *SkiaSharp*, which makes it
-  large and adds architecture-specific native libraries.
+- A pre-release version of [*FeatherQR*](https://github.com/guitarrapc/FeatherQR) (the successor of *SkiaSharp.QrCode*, with
+  the rendering split off into a separate *FeatherQR.SkiaSharp* package) does not compact data
+  segments by default and produces bigger QR codes than needed. Compaction can be enabled per call.
 - [*QRCoder*](https://github.com/Shane32/QRCoder) compacts data segments but does not produce the
   smallest QR code in every case. It comes close though.
 
@@ -70,10 +69,10 @@ Apple M5 Pro, 1 CPU, 18 logical and 18 physical cores
 
 | Method          | Mean        | Error    | StdDev   | Ratio | RatioSD | Gen0       | Gen1      | Allocated    | Alloc Ratio |
 |---------------- |------------:|---------:|---------:|------:|--------:|-----------:|----------:|-------------:|------------:|
-| QrCodeGenerator |    19.81 ms | 0.038 ms | 0.034 ms |  1.00 |    0.00 |   843.7500 |         - |   7082.33 KB |        1.00 |
-| QRCoder         | 1,828.37 ms | 1.059 ms | 0.885 ms | 92.28 |    0.16 |  1000.0000 |         - |   15708.1 KB |        2.22 |
-| SkiaSharpQrCode |    24.51 ms | 0.044 ms | 0.041 ms |  1.24 |    0.00 |    93.7500 |         - |    865.32 KB |        0.12 |
-| ZXingNet        | 1,162.58 ms | 3.297 ms | 3.084 ms | 58.68 |    0.18 | 58000.0000 | 1000.0000 | 476209.76 KB |       67.24 |
+| QrCodeGenerator |    21.66 ms | 0.086 ms | 0.067 ms |  1.00 |    0.00 |   843.7500 |         - |   7082.33 KB |        1.00 |
+| QRCoder         | 1,810.15 ms | 5.806 ms | 5.431 ms | 83.55 |    0.35 |  1000.0000 |         - |   15708.1 KB |        2.22 |
+| FeatherQr       |    20.69 ms | 0.034 ms | 0.030 ms |  0.96 |    0.00 |    93.7500 |         - |    865.32 KB |        0.12 |
+| ZXingNet        | 1,152.09 ms | 2.468 ms | 2.061 ms | 53.18 |    0.18 | 58000.0000 | 1000.0000 | 476209.76 KB |       67.24 |
 
 ### Speed and Memory on a Dell Core Ultra 5
 
@@ -100,7 +99,7 @@ Average QR code version (samples=1'600)
 |----------------- |-------------:|
 | QrCodeGenerator  |         8.93 |
 | QRCoder          |         8.98 |
-| SkiaSharp.QrCode |         9.12 |
+| FeatherQR        |         9.12 |
 | ZXing.Net        |         9.16 |
 
 The version says how compactly a library encodes the payload: for the same text and the same error
