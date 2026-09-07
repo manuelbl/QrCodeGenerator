@@ -5167,7 +5167,8 @@ namespace Net.Codecrete.QrCodeGenerator.Test
 
         public IEnumerator<object[]> GetEnumerator()
         {
-            WriteSourceCode();
+            // WriteSourceCode();
+
             foreach (var testCase in TestCases)
             {
                 yield return new object[] { testCase };
